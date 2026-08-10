@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* MUIとTailwindの競合を避ける */
+* {
+  box-sizing: border-box;
+}
+

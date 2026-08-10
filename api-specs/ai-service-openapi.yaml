@@ -1,0 +1,289 @@
+openapi: 3.0.3
+info:
+  title: AI Service API
+  description: |
+    GameDay Workflow システムのAI問い合わせサービスAPI
+    Lambda (Go) で実装されたAI機能を提供します。
+    申請の提案生成、申請分析、チャット問い合わせなどの機能を提供します。
+  version: 1.0.0
+  contact:
+    name: GameDay Workflow Team
+servers:
+  - url: http://localhost:8004
+    description: ローカル開発環境
+  - url: https://api.gameday-workflow.example.com/ai-service
+    description: 本番環境（Lambda関数のエンドポイント）
+
+tags:
+  - name: AI Suggestions
+    description: AIによる申請提案生成
+  - name: AI Analysis
+    description: AIによる申請分析
+  - name: AI Chat
+    description: AIチャット問い合わせ
+
+paths:
+  /suggest:
+    post:
+      tags:
+        - AI Suggestions
+      summary: 申請提案生成
+      description: |
+        AIを使用して申請の提案を生成します。
+        ユーザーの入力プロンプトに基づいて、申請内容の提案を返します。
+      operationId: generateApplicationSuggestion
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuggestionRequest'
+            example:
+              prompt: "東京で技術カンファレンスに参加したい"
+      responses:
+        '200':
+          description: 申請提案生成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionResponse'
+              example:
+                suggestion: "以下の内容で申請を作成することをお勧めします:\n\nタイトル: 東京技術カンファレンス参加のための出張申請\n\n説明: 技術カンファレンスに参加し、最新の技術動向を学ぶため東京へ出張します。\n\n開始日: 2024-04-15\n終了日: 2024-04-17\n日数: 3日間"
+        '400':
+          description: リクエストが不正です
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "VALIDATION_ERROR"
+                message: "プロンプトが空です"
+        '401':
+          description: 認証が必要です
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: AIサービスが利用できません
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "SERVICE_UNAVAILABLE"
+                message: "AIサービスが一時的に利用できません"
+
+  /analyze/{applicationId}:
+    get:
+      tags:
+        - AI Analysis
+      summary: 申請分析
+      description: |
+        AIを使用して申請を分析し、リスク評価とサマリーを返します。
+        申請内容を分析して、承認リスクや注意点を評価します。
+      operationId: analyzeApplication
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          description: 申請ID
+          schema:
+            type: string
+            example: "1"
+      responses:
+        '200':
+          description: 申請分析成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+              example:
+                risk: "low"
+                summary: "この申請は標準的な内容で、承認可能です。出張期間も適切で、予算内に収まっています。"
+        '401':
+          description: 認証が必要です
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: 申請が見つかりません
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Application not found"
+                message: "指定された申請IDの申請が見つかりません"
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: AIサービスが利用できません
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /chat:
+    post:
+      tags:
+        - AI Chat
+      summary: AIチャット問い合わせ
+      description: |
+        AIアシスタントに質問を送信し、回答を取得します。
+        システムの使い方や申請に関する質問などに回答します。
+      operationId: askChat
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            example:
+              question: "申請の作成方法を教えてください"
+      responses:
+        '200':
+          description: チャット問い合わせ成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              example:
+                answer: "申請の作成方法についてご説明します。\n\n1. ダッシュボードから「新規申請」をクリックします\n2. 申請タイプ（出張、経費精算、有給休暇など）を選択します\n3. 必要事項を入力して送信します\n\n詳細については、各申請タイプのヘルプページもご参照ください。"
+        '400':
+          description: リクエストが不正です
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "VALIDATION_ERROR"
+                message: "質問が空です"
+        '401':
+          description: 認証が必要です
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: AIサービスが利用できません
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "SERVICE_UNAVAILABLE"
+                message: "AIサービスが一時的に利用できません"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWTトークンによる認証
+
+  schemas:
+    SuggestionRequest:
+      type: object
+      required:
+        - prompt
+      properties:
+        prompt:
+          type: string
+          description: 申請提案を生成するためのプロンプト
+          example: "東京で技術カンファレンスに参加したい"
+          minLength: 1
+          maxLength: 1000
+
+    SuggestionResponse:
+      type: object
+      required:
+        - suggestion
+      properties:
+        suggestion:
+          type: string
+          description: AIが生成した申請提案
+          example: "以下の内容で申請を作成することをお勧めします:\n\nタイトル: 東京技術カンファレンス参加のための出張申請\n\n説明: 技術カンファレンスに参加し、最新の技術動向を学ぶため東京へ出張します。\n\n開始日: 2024-04-15\n終了日: 2024-04-17\n日数: 3日間"
+
+    AnalysisResponse:
+      type: object
+      required:
+        - risk
+        - summary
+      properties:
+        risk:
+          $ref: '#/components/schemas/RiskLevel'
+        summary:
+          type: string
+          description: 申請の分析サマリー
+          example: "この申請は標準的な内容で、承認可能です。出張期間も適切で、予算内に収まっています。"
+
+    RiskLevel:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+      description: リスクレベル
+      example: low
+
+    ChatRequest:
+      type: object
+      required:
+        - question
+      properties:
+        question:
+          type: string
+          description: ユーザーの質問
+          example: "申請の作成方法を教えてください"
+          minLength: 1
+          maxLength: 2000
+
+    ChatResponse:
+      type: object
+      required:
+        - answer
+      properties:
+        answer:
+          type: string
+          description: AIからの回答
+          example: "申請の作成方法についてご説明します。\n\n1. ダッシュボードから「新規申請」をクリックします\n2. 申請タイプ（出張、経費精算、有給休暇など）を選択します\n3. 必要事項を入力して送信します\n\n詳細については、各申請タイプのヘルプページもご参照ください。"
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: エラーコード
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: エラーメッセージ
+          example: "プロンプトが空です"
+

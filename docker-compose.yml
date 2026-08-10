@@ -1,0 +1,118 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/arm64  # M1 Mac対応
+    image: gameday-workflow-frontend:latest
+    platform: linux/arm64  # M1 Mac対応
+    container_name: gameday-workflow-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # スタブモードを無効化（実際のサービスに接続）
+      # スタブモードを使用する場合は、環境変数で USE_DOWNSTREAM_STUBS=true を設定
+      - USE_DOWNSTREAM_STUBS=${USE_DOWNSTREAM_STUBS:-false}
+      # ダウンストリームサービスのURL（コンテナ名またはサービス名で接続）
+      # 注意: 各サービスのdocker-compose.ymlで定義されたコンテナ名/サービス名を使用
+      - USER_SERVICE_URL=http://gameday_workflow_user_api:80
+      - APPLICATION_SERVICE_URL=http://gameday-workflow-application-approval-service:8002
+      - WORKFLOW_SERVICE_URL=http://workflow-notification-service:8003
+      # ワークフローサービスのエンドポイントパス（必要に応じて変更）
+      - WORKFLOW_APPROVALS_PATH=${WORKFLOW_APPROVALS_PATH:-/api/v1/notifications/history}
+      - WORKFLOW_APPROVALS_BY_APP_PATH=${WORKFLOW_APPROVALS_BY_APP_PATH:-/api/v1/applications/{applicationId}/approvals}
+      # Next.js設定
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    networks:
+      - gameday-workflow-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # スタブモード用のフロントエンドサービス
+  frontend-stubs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/arm64  # M1 Mac対応
+    image: gameday-workflow-frontend:latest
+    platform: linux/arm64  # M1 Mac対応
+    container_name: gameday-workflow-frontend-stubs
+    ports:
+      - "3000:3000"
+    environment:
+      # スタブモードを有効化
+      - USE_DOWNSTREAM_STUBS=true
+      # Next.js設定
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    profiles:
+      - stubs
+
+  # サービスが起動するまで待機（オプション）
+  # 統合テスト時は、既存のサービスが起動していることを前提とする
+  wait-for-services:
+    image: curlimages/curl:latest
+    platform: linux/arm64  # M1 Mac対応
+    container_name: gameday-workflow-frontend-wait
+    command: >
+      sh -c "
+        echo 'Checking user service...' &&
+        for i in 1 2 3 4 5; do
+          if curl -f http://gameday_workflow_user_api:80/health 2>/dev/null; then
+            echo 'User service is ready!';
+            break;
+          fi;
+          echo 'User service not ready, waiting...';
+          sleep 2;
+        done &&
+        echo 'Checking application service...' &&
+        for i in 1 2 3 4 5; do
+          if curl -f http://gameday-workflow-application-approval-service:8002/health 2>/dev/null; then
+            echo 'Application service is ready!';
+            break;
+          fi;
+          echo 'Application service not ready, waiting...';
+          sleep 2;
+        done &&
+        echo 'Checking workflow service...' &&
+        for i in 1 2 3 4 5; do
+          if curl -f http://workflow-notification-service:8003/health 2>/dev/null; then
+            echo 'Workflow service is ready!';
+            break;
+          fi;
+          echo 'Workflow service not ready, waiting...';
+          sleep 2;
+        done &&
+        echo 'Service check completed!'
+      "
+    networks:
+      - gameday-workflow-network
+    profiles:
+      - wait
+
+networks:
+  gameday-workflow-network:
+    external: true
+    name: gameday-workflow-network
+

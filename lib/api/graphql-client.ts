@@ -1,0 +1,386 @@
+/**
+ * GraphQLクライアント
+ * すべてのAPI通信はNext.jsのGraphQLエンドポイント（/api/graphql）を通して行う
+ * スタブモードの場合は、実際のHTTPリクエストを送らずにスタブデータを返す
+ */
+
+import type {
+  LoginRequest,
+  LoginResponse,
+  User,
+  Application,
+  CreateApplicationRequest,
+  Approval,
+  UpdateApprovalRequest,
+} from './types';
+import { handleGraphQLStub } from './graphql-stub-handler';
+
+// テスト環境で実際のサーバーに接続する場合は、フルURLを指定
+const GRAPHQL_ENDPOINT = 
+  process.env.NODE_ENV === 'test' && process.env.NEXT_PUBLIC_USE_STUBS !== 'true'
+    ? (process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:3000/api/graphql')
+    : '/api/graphql';
+
+/**
+ * GraphQLリクエストを送信
+ */
+async function graphqlRequest<T>(query: string, variables?: Record<string, any>): Promise<T> {
+  // スタブモードの判定: NEXT_PUBLIC_USE_STUBSがtrueの場合のみスタブを使用
+  // テスト環境でもNEXT_PUBLIC_USE_STUBS=falseの場合は実際のサーバーに接続
+  const useStubs = process.env.NEXT_PUBLIC_USE_STUBS === 'true';
+  
+  // サーバー側（SSR）: スタブモードのみサポート
+  if (typeof window === 'undefined' && process.env.NODE_ENV !== 'test') {
+    if (useStubs) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[GraphQL Client] サーバー側 - スタブモード: GraphQLクエリをスタブデータで処理');
+        console.log('[GraphQL Client] Query:', query.trim().substring(0, 100));
+        console.log('[GraphQL Client] Variables:', variables);
+      }
+      const stubData = await handleGraphQLStub(query, variables);
+      return stubData as T;
+    }
+    // サーバー側でスタブモードでない場合はエラー（サーバー側ではGraphQLエンドポイントにリクエストできない）
+    throw new Error('Server-side GraphQL requests are only supported in stub mode. Set NEXT_PUBLIC_USE_STUBS=true for server-side rendering.');
+  }
+  
+  // テスト環境: スタブモードまたは実際のサーバーに接続
+  if (process.env.NODE_ENV === 'test') {
+    if (useStubs) {
+      if (process.env.NODE_ENV === 'test') {
+        console.log('[GraphQL Client] テスト環境 - スタブモード: GraphQLクエリをスタブデータで処理');
+        console.log('[GraphQL Client] Query:', query.trim().substring(0, 100));
+        console.log('[GraphQL Client] Variables:', variables);
+      }
+      const stubData = await handleGraphQLStub(query, variables);
+      return stubData as T;
+    }
+    // テスト環境でスタブモードでない場合は、実際のサーバーに接続
+    // この場合は、クライアント側の処理に進む
+  }
+
+  // クライアント側（ブラウザ環境またはテスト環境）: GraphQLリクエストを実行
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[GraphQL Client] クライアント側 - 本番モード: GraphQLエンドポイントにリクエスト送信');
+    console.log('[GraphQL Client] Endpoint:', GRAPHQL_ENDPOINT);
+    console.log('[GraphQL Client] Query:', query.trim().substring(0, 100));
+    console.log('[GraphQL Client] Variables:', variables);
+  }
+  
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: JSON.stringify({
+      query,
+      variables,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[GraphQL Client] Request failed:', response.status, errorText);
+    throw new Error(`GraphQL request failed: ${response.statusText}`);
+  }
+
+  const result = await response.json();
+
+  if (result.errors) {
+    console.error('[GraphQL Client] GraphQL errors:', result.errors);
+    throw new Error(result.errors[0]?.message || 'GraphQL error');
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[GraphQL Client] Response:', result.data);
+  }
+
+  return result.data;
+}
+
+/**
+ * GraphQLクライアント実装
+ */
+export const graphqlClient = {
+  // 認証
+  auth: {
+    async login(credentials: LoginRequest): Promise<LoginResponse> {
+      const query = `
+        mutation Login($input: LoginInput!) {
+          login(input: $input) {
+            token
+            user {
+              id
+              name
+              email
+              role
+              department
+              companyId
+            }
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ login: LoginResponse }>(query, {
+        input: credentials,
+      });
+      return data.login;
+    },
+
+    async getUser(id: string): Promise<User> {
+      const query = `
+        query GetUser($id: ID!) {
+          user(id: $id) {
+            id
+            name
+            email
+            role
+            department
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ user: User }>(query, { id });
+      return data.user;
+    },
+  },
+
+  // 申請
+  applications: {
+    async getApplications(applicantId?: string): Promise<Application[]> {
+      const query = `
+        query GetApplications($applicantId: ID) {
+          applications(applicantId: $applicantId) {
+            id
+            type
+            title
+            description
+            amount
+            startDate
+            endDate
+            days
+            status
+            applicantId
+            applicantName
+            applicantDepartment
+            currentStep
+            totalSteps
+            nextApproverId
+            nextApproverName
+            nextApproverDepartment
+            createdAt
+            updatedAt
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ applications: Application[] }>(query, { applicantId });
+      return data.applications;
+    },
+
+    async getApplication(id: string): Promise<Application> {
+      const query = `
+        query GetApplication($id: ID!) {
+          application(id: $id) {
+            id
+            type
+            title
+            description
+            amount
+            startDate
+            endDate
+            days
+            status
+            applicantId
+            applicantName
+            applicantDepartment
+            currentStep
+            totalSteps
+            nextApproverId
+            nextApproverName
+            nextApproverDepartment
+            createdAt
+            updatedAt
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ application: Application }>(query, { id });
+      return data.application;
+    },
+
+    async createApplication(data: CreateApplicationRequest): Promise<Application> {
+      const query = `
+        mutation CreateApplication($input: CreateApplicationInput!) {
+          createApplication(input: $input) {
+            id
+            type
+            title
+            description
+            amount
+            startDate
+            endDate
+            days
+            status
+            applicantId
+            applicantName
+            applicantDepartment
+            currentStep
+            totalSteps
+            nextApproverId
+            nextApproverName
+            nextApproverDepartment
+            createdAt
+            updatedAt
+          }
+        }
+      `;
+      const result = await graphqlRequest<{ createApplication: Application }>(query, {
+        input: data,
+      });
+      return result.createApplication;
+    },
+  },
+
+  // 承認
+  approvals: {
+    async getApprovals(): Promise<Approval[]> {
+      const query = `
+        query GetApprovals {
+          approvals {
+            id
+            applicationId
+            approverId
+            approverName
+            approverDepartment
+            status
+            comment
+            step
+            createdAt
+            updatedAt
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ approvals: Approval[] }>(query);
+      return data.approvals;
+    },
+
+    async getApproval(id: string): Promise<Approval> {
+      const query = `
+        query GetApproval($id: ID!) {
+          approval(id: $id) {
+            id
+            applicationId
+            approverId
+            approverName
+            approverDepartment
+            status
+            comment
+            step
+            createdAt
+            updatedAt
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ approval: Approval }>(query, { id });
+      return data.approval;
+    },
+
+    async getApprovalsByApplication(applicationId: string): Promise<Approval[]> {
+      const query = `
+        query GetApprovalsByApplication($applicationId: ID!) {
+          approvalsByApplication(applicationId: $applicationId) {
+            id
+            applicationId
+            approverId
+            approverName
+            approverDepartment
+            status
+            comment
+            step
+            createdAt
+            updatedAt
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ approvalsByApplication: Approval[] }>(query, {
+        applicationId,
+      });
+      return data.approvalsByApplication;
+    },
+
+    async updateApproval(id: string, data: UpdateApprovalRequest): Promise<Approval> {
+      const query = `
+        mutation UpdateApproval($id: ID!, $input: UpdateApprovalInput!) {
+          updateApproval(id: $id, input: $input) {
+            id
+            applicationId
+            approverId
+            approverName
+            approverDepartment
+            status
+            comment
+            step
+            createdAt
+            updatedAt
+          }
+        }
+      `;
+      const result = await graphqlRequest<{ updateApproval: Approval }>(query, {
+        id,
+        input: {
+          status: data.status,
+          comment: data.comment,
+          approverId: data.approverId,
+          applicationId: data.applicationId,
+        },
+      });
+      return result.updateApproval;
+    },
+  },
+
+  // AI
+  ai: {
+    async generateApplicationSuggestion(prompt: string): Promise<string> {
+      const query = `
+        mutation GenerateApplicationSuggestion($prompt: String!) {
+          generateApplicationSuggestion(prompt: $prompt)
+        }
+      `;
+      const data = await graphqlRequest<{ generateApplicationSuggestion: string }>(query, {
+        prompt,
+      });
+      return data.generateApplicationSuggestion;
+    },
+
+    async analyzeApplication(applicationId: string): Promise<{
+      risk: 'low' | 'medium' | 'high';
+      summary: string;
+    }> {
+      const query = `
+        query AnalyzeApplication($applicationId: ID!) {
+          analyzeApplication(applicationId: $applicationId) {
+            risk
+            summary
+          }
+        }
+      `;
+      const data = await graphqlRequest<{
+        analyzeApplication: { risk: 'low' | 'medium' | 'high'; summary: string };
+      }>(query, { applicationId });
+      return data.analyzeApplication;
+    },
+
+    async askChat(question: string): Promise<string> {
+      const query = `
+        mutation AskChat($question: String!) {
+          askChat(question: $question)
+        }
+      `;
+      const data = await graphqlRequest<{ askChat: string }>(query, {
+        question,
+      });
+      return data.askChat;
+    },
+  },
+};
+

@@ -1,0 +1,214 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import {
+  Container,
+  Box,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  CircularProgress,
+  Alert,
+  Button,
+} from '@mui/material';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/api/client';
+import type { Application, Approval } from '@/lib/api/types';
+import { getCurrentUserId, getUserRoleFromId } from '@/lib/utils/auth';
+
+export default function DashboardPage() {
+  const router = useRouter();
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [approvals, setApprovals] = useState<Approval[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const userId = getCurrentUserId();
+        const [applicationsData, approvalsData] = await Promise.all([
+          apiClient.applications.getApplications(userId ?? undefined),
+          apiClient.approvals.getApprovals(),
+        ]);
+        
+        // プロモーション申請は上長だけに表示（申請は既に userId で絞り込み済み）
+        const userRole = getUserRoleFromId(userId);
+        const filteredApplications = applicationsData.filter((application) => {
+          if (application.type === 'promotion') {
+            return userRole === 'manager';
+          }
+          return true;
+        });
+        
+        setApplications(filteredApplications);
+        setApprovals(approvalsData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'データの取得に失敗しました');
+        console.error('ダッシュボードデータ取得エラー:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const pendingApplications = applications.filter((app) => app.status === 'pending');
+  const approvedApplications = applications.filter((app) => app.status === 'approved');
+  const rejectedApplications = applications.filter((app) => app.status === 'rejected');
+  const pendingApprovals = approvals.filter((app) => app.status === 'pending');
+
+  const handleLogout = () => {
+    // localStorageからトークンとユーザー情報を削除
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
+    // ログインページにリダイレクト
+    router.push('/login');
+  };
+
+  if (loading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" component="h1" fontWeight="bold">
+          ダッシュボード
+        </Typography>
+        <Button
+          variant="outlined"
+          color="error"
+          startIcon={<LogoutIcon />}
+          onClick={handleLogout}
+        >
+          ログアウト
+        </Button>
+      </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3, mt: 3 }} onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
+
+      <Grid container spacing={3} sx={{ mt: 2 }}>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                申請一覧
+              </Typography>
+              <Typography variant="h4" component="p" fontWeight="bold" color="primary">
+                {applications.length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                総申請数
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                sx={{ mt: 2 }}
+                onClick={() => router.push('/dashboard/applications')}
+              >
+                詳細を見る
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                承認待ち
+              </Typography>
+              <Typography variant="h4" component="p" fontWeight="bold" color="warning.main">
+                {pendingApprovals.length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                承認待ちの申請
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                sx={{ mt: 2 }}
+                onClick={() => router.push('/dashboard/approvals')}
+              >
+                詳細を見る
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                統計
+              </Typography>
+              <Box sx={{ mt: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    承認済み:
+                  </Typography>
+                  <Typography variant="body2" fontWeight="bold" color="success.main">
+                    {approvedApplications.length}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    却下:
+                  </Typography>
+                  <Typography variant="body2" fontWeight="bold" color="error.main">
+                    {rejectedApplications.length}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    承認待ち:
+                  </Typography>
+                  <Typography variant="body2" fontWeight="bold" color="warning.main">
+                    {pendingApplications.length}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                マニュアル
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                各種申請の書き方や承認フローの説明
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                sx={{ mt: 2 }}
+                onClick={() => router.push('/dashboard/manual')}
+              >
+                詳細を見る
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Container>
+  );
+}
+

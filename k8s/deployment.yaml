@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gameday-workflow-frontend
+  namespace: gameday-workflow
+  labels:
+    app: gameday-workflow-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gameday-workflow-frontend
+  template:
+    metadata:
+      labels:
+        app: gameday-workflow-frontend
+    spec:
+      containers:
+        - name: gameday-workflow-frontend
+          # CIのdeploy.ymlが `kubectl set image` で実際のECRイメージに差し替える。初回applyのみこのタグが使われる。
+          image: gameday-workflow-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: NEXT_TELEMETRY_DISABLED
+              value: "1"
+            - name: PORT
+              value: "3000"
+            - name: HOSTNAME
+              value: "0.0.0.0"
+            - name: USE_DOWNSTREAM_STUBS
+              value: "false"
+            - name: USER_SERVICE_URL
+              value: "http://gameday-workflow-user.gameday-workflow.svc.cluster.local"
+            - name: APPLICATION_SERVICE_URL
+              value: "http://gameday-workflow-application-approval.gameday-workflow.svc.cluster.local:8002"
+            - name: WORKFLOW_SERVICE_URL
+              value: "http://gameday-workflow-workflow-notification.gameday-workflow.svc.cluster.local:8003"
+            - name: WORKFLOW_APPROVALS_PATH
+              value: "/api/v1/notifications/history"
+            - name: WORKFLOW_APPROVALS_BY_APP_PATH
+              value: "/api/v1/applications/{applicationId}/approvals"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
