@@ -17,13 +17,10 @@ interface GameProgressResponse {
   virtualDateOffsetDays: number;
 }
 
-// application-approvalサービスのベースURL（ブラウザから直接呼び出すためNEXT_PUBLIC_を使用）
-const APPLICATION_SERVICE_URL =
-  process.env.NEXT_PUBLIC_APPLICATION_SERVICE_URL || 'http://localhost:8002';
-
-// game_progress取得エンドポイントのパス
-const GAME_PROGRESS_PATH =
-  process.env.NEXT_PUBLIC_GAME_PROGRESS_PATH || '/api/v1/game-progress';
+// フロントエンド自身のBFF（app/api/game-progress/route.ts）経由で取得する。
+// application-approvalはクラスタ内部専用のServiceでブラウザから直接到達できないため、
+// 相対パスでフロントエンド自身のオリジンに問い合わせ、サーバーサイドで中継してもらう。
+const GAME_PROGRESS_PATH = '/api/game-progress';
 
 /**
  * localStorageから認証トークンを取得する
@@ -37,7 +34,7 @@ function getAuthToken(): string | null {
 }
 
 /**
- * application-approvalサービスの GET /game-progress を呼び出し、
+ * BFF（app/api/game-progress/route.ts）経由で game_progress を取得し、
  * virtualDateOffsetDays を取得する。
  * 取得に失敗した場合は 0（＝実際の今日をそのまま使う）を返す。
  */
@@ -45,7 +42,7 @@ async function fetchVirtualDateOffsetDays(): Promise<number> {
   const token = getAuthToken();
 
   try {
-    const response = await fetch(`${APPLICATION_SERVICE_URL}${GAME_PROGRESS_PATH}`, {
+    const response = await fetch(GAME_PROGRESS_PATH, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
