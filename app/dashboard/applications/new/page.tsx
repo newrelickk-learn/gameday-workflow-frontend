@@ -199,7 +199,8 @@ export default function NewApplicationPage() {
         router.push('/dashboard/applications');
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '申請の作成に失敗しました');
+      // 画面には詳細を出さず、原因はNew Relicで確認する運用にしている
+      setError('申請できませんでした');
       console.error('申請作成エラー:', err);
     } finally {
       setLoading(false);
