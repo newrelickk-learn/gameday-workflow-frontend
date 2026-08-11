@@ -20,6 +20,11 @@ COPY --chown=nextjs:nodejs .next/static ./.next/static
 # node_modules全体をビルド時の完全な状態で上書きし、取り込み漏れそのものをなくす
 COPY --chown=nextjs:nodejs node_modules ./node_modules
 
+# newrelicエージェントはnewrelic.jsをrequire/importではなく
+# process.cwd()からのファイル読み込みで探すため、Next.jsのトレースでは
+# 拾われない。明示的にコピーしないとデフォルト設定にフォールバックする
+COPY --chown=nextjs:nodejs newrelic.js ./newrelic.js
+
 USER nextjs
 
 EXPOSE 3000
