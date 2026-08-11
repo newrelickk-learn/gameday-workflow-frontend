@@ -1,9 +1,7 @@
 Dockerfile
 .dockerignore
-node_modules
-# newrelicはNext.jsのoutput file tracingで一部ファイルが取り込み漏れするため、
-# Dockerfileでパッケージ全体を明示的にコピーする（そのためビルドコンテキストに含める）
-!node_modules/newrelic
+# node_modulesはDockerfileでビルドコンテキストからそのままコピーするため除外しない
+# （newrelicの推移的依存がNext.jsのoutput file tracingで取り込み漏れするため）
 npm-debug.log
 .next/cache
 .git

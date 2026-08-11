@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -14,11 +14,11 @@ RUN mkdir .next && chown nextjs:nodejs .next
 COPY --chown=nextjs:nodejs .next/standalone ./
 COPY --chown=nextjs:nodejs .next/static ./.next/static
 
-# Next.jsのoutput file tracingは、newrelicパッケージの一部ファイル
-# （message-broker-description.js, reservoir.js等、動的requireで参照される
-# ファイル）を静的解析で見つけられず取り込み漏れするため、パッケージ全体を
-# 上書きコピーして補う
-COPY --chown=nextjs:nodejs node_modules/newrelic ./node_modules/newrelic
+# Next.jsのoutput file tracingは、newrelicパッケージが動的require（require-in-the-middle等）
+# で参照する一部の推移的依存（message-broker-description.js, meriyah等）を静的解析で
+# 検出できず取り込み漏れする。1ファイルずつ追いかけるといたちごっこになるため、
+# node_modules全体をビルド時の完全な状態で上書きし、取り込み漏れそのものをなくす
+COPY --chown=nextjs:nodejs node_modules ./node_modules
 
 USER nextjs
 

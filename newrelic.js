@@ -21,6 +21,9 @@ exports.config = {
   },
   logging: {
     level: 'info',
+    // コンテナ内では/appが非rootユーザーの書き込み権限を持たないため、
+    // ログファイルへの書き込み（EACCES）を避けてstdoutに出す
+    filepath: 'stdout',
   },
   allow_all_headers: true,
   attributes: {
