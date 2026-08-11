@@ -207,6 +207,26 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </Grid>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" component="h2" gutterBottom>
+                通知一覧
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                承認依頼や承認完了などのお知らせ
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                sx={{ mt: 2 }}
+                onClick={() => router.push('/dashboard/notifications')}
+              >
+                詳細を見る
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
     </Container>
   );

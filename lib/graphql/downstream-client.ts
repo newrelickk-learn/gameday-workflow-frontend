@@ -579,11 +579,38 @@ export class DownstreamClient {
     }
     const url = new URL(`${this.workflowServiceUrl}/api/v1/notifications/history`);
     url.searchParams.append('recipient_id', recipientId);
-    return this.request<Notification[]>(
+
+    // ワークフローサービス（Rust）はスネークケースでレスポンスを返すため、
+    // GraphQLスキーマ（camelCase）に合わせて変換する
+    interface NotificationHistoryResponse {
+      id: string;
+      notification_type: Notification['notificationType'];
+      channel: Notification['channel'];
+      recipient_id: string;
+      recipient_email: string | null;
+      subject: string;
+      body: string;
+      sent_at: string | null;
+      created_at: string;
+    }
+
+    const notifications = await this.request<NotificationHistoryResponse[]>(
       url.toString(),
       { method: 'GET' },
       token
     );
+
+    return notifications.map((n) => ({
+      id: n.id,
+      notificationType: n.notification_type,
+      channel: n.channel,
+      recipientId: n.recipient_id,
+      recipientEmail: n.recipient_email,
+      subject: n.subject,
+      body: n.body,
+      sentAt: n.sent_at,
+      createdAt: n.created_at,
+    }));
   }
 
   async sendNotification(

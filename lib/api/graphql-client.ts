@@ -12,6 +12,7 @@ import type {
   CreateApplicationRequest,
   Approval,
   UpdateApprovalRequest,
+  Notification,
 } from './types';
 import { handleGraphQLStub } from './graphql-stub-handler';
 
@@ -335,6 +336,31 @@ export const graphqlClient = {
         },
       });
       return result.updateApproval;
+    },
+  },
+
+  // 通知
+  notifications: {
+    async getNotificationHistory(recipientId: string): Promise<Notification[]> {
+      const query = `
+        query NotificationHistory($recipientId: String!) {
+          notificationHistory(recipientId: $recipientId) {
+            id
+            notificationType
+            channel
+            recipientId
+            recipientEmail
+            subject
+            body
+            sentAt
+            createdAt
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ notificationHistory: Notification[] }>(query, {
+        recipientId,
+      });
+      return data.notificationHistory;
     },
   },
 
