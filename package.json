@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
@@ -20,6 +20,7 @@
     "@mui/material": "^5.15.0",
     "graphql": "^16.8.1",
     "graphql-yoga": "^5.0.0",
+    "newrelic": "^14.3.7",
     "next": "^16.1.6",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",

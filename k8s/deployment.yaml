@@ -44,6 +44,13 @@ spec:
               value: "/api/v1/notifications/history"
             - name: WORKFLOW_APPROVALS_BY_APP_PATH
               value: "/api/v1/applications/{applicationId}/approvals"
+            - name: NEW_RELIC_APP_NAME
+              value: "gameday-workflow-frontend"
+            - name: NEW_RELIC_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: gameday-workflow-newrelic-secrets
+                  key: license-key
           resources:
             requests:
               memory: "256Mi"
