@@ -14,6 +14,12 @@ RUN mkdir .next && chown nextjs:nodejs .next
 COPY --chown=nextjs:nodejs .next/standalone ./
 COPY --chown=nextjs:nodejs .next/static ./.next/static
 
+# Next.jsのoutput file tracingは、newrelicパッケージの一部ファイル
+# （message-broker-description.js, reservoir.js等、動的requireで参照される
+# ファイル）を静的解析で見つけられず取り込み漏れするため、パッケージ全体を
+# 上書きコピーして補う
+COPY --chown=nextjs:nodejs node_modules/newrelic ./node_modules/newrelic
+
 USER nextjs
 
 EXPOSE 3000
