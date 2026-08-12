@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Container,
   Box,
@@ -23,6 +23,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
 import { getCurrentUserId, isManager } from '@/lib/utils/auth';
+import { getVirtualToday } from '@/lib/utils/virtual-date';
 
 const getTypeLabel = (type: string) => {
   switch (type) {
@@ -52,6 +53,13 @@ export default function NewApplicationPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [virtualToday, setVirtualToday] = useState<Date | null>(null);
+
+  // フォーム内の注意表示も、サーバー側の判定基準（仮想今日 = 実際の今日 + virtualDateOffsetDays）
+  // に合わせる必要があるため、素の new Date() ではなく getVirtualToday() を使う
+  useEffect(() => {
+    getVirtualToday().then(setVirtualToday);
+  }, []);
 
   const isExpenseType = type === 'expense';
   const isBusinessTripType = type === 'business-trip';
@@ -62,13 +70,12 @@ export default function NewApplicationPage() {
   const TWO_WEEK_RULE_DAYS = 14;
 
   // 出発日（開始日）までの残り日数と、2週間前ルールを満たしているかをチェックする
-  // TODO: 日付基準の実装は要検討
   const businessTripDepartureCheck = useMemo(() => {
-    if (!isBusinessTripType || !startDate) {
+    if (!isBusinessTripType || !startDate || !virtualToday) {
       return null;
     }
 
-    const today = new Date();
+    const today = new Date(virtualToday);
     today.setHours(0, 0, 0, 0);
 
     const departureDate = new Date(startDate);
@@ -81,7 +88,7 @@ export default function NewApplicationPage() {
       daysUntilDeparture,
       meetsTwoWeekRule: daysUntilDeparture >= TWO_WEEK_RULE_DAYS,
     };
-  }, [isBusinessTripType, startDate]);
+  }, [isBusinessTripType, startDate, virtualToday]);
 
   // 開始日と終了日から日数を自動計算
   const calculateDays = (start: string, end: string): number => {
