@@ -3,7 +3,7 @@ import type { LoginRequest, LoginResponse, User } from '../types';
 /**
  * ユーザーIDから役割を判定
  */
-function getUserRoleFromId(userId: string): 'director' | 'accounting' | 'manager' | 'engineer' | 'unknown' {
+function getUserRoleFromId(userId: string): 'director' | 'accounting' | 'manager' | 'engineer' | 'hr' | 'unknown' {
   const id = parseInt(userId, 10);
   if (isNaN(id)) {
     return 'unknown';
@@ -24,6 +24,10 @@ function getUserRoleFromId(userId: string): 'director' | 'accounting' | 'manager
   // ユーザーID: 28151-28961: 開発エンジニア
   if (id >= 28151 && id <= 28961) {
     return 'engineer';
+  }
+  // ユーザーID: 31051-31261: 人事部
+  if (id >= 31051 && id <= 31261) {
+    return 'hr';
   }
 
   return 'unknown';
@@ -54,7 +58,11 @@ function calculateCompanyId(userId: string): number {
   if (id >= 28151 && id <= 28200) {
     return id - 28151 + 1;
   }
-  
+  // 人事部: ID 31051-31100 -> CompanyId 1-50
+  if (id >= 31051 && id <= 31100) {
+    return id - 31051 + 1;
+  }
+
   return 1; // デフォルト
 }
 
@@ -107,7 +115,7 @@ function getRoleFromEmail(email: string): 'director' | 'accounting' | 'manager' 
 /**
  * 役割からユーザー名を生成
  */
-function getUserNameByRole(role: 'director' | 'accounting' | 'manager' | 'engineer'): string {
+function getUserNameByRole(role: 'director' | 'accounting' | 'manager' | 'engineer' | 'hr'): string {
   switch (role) {
     case 'director':
       return '開発本部長';
@@ -117,6 +125,8 @@ function getUserNameByRole(role: 'director' | 'accounting' | 'manager' | 'engine
       return '上長';
     case 'engineer':
       return '開発エンジニア';
+    case 'hr':
+      return '人事';
     default:
       return '開発エンジニア';
   }
@@ -125,7 +135,7 @@ function getUserNameByRole(role: 'director' | 'accounting' | 'manager' | 'engine
 /**
  * 役割から部署名を取得
  */
-function getDepartmentByRole(role: 'director' | 'accounting' | 'manager' | 'engineer'): string {
+function getDepartmentByRole(role: 'director' | 'accounting' | 'manager' | 'engineer' | 'hr'): string {
   switch (role) {
     case 'director':
       return '開発組織';
@@ -135,6 +145,8 @@ function getDepartmentByRole(role: 'director' | 'accounting' | 'manager' | 'engi
       return '開発組織';
     case 'engineer':
       return '開発組織';
+    case 'hr':
+      return '人事部';
     default:
       return '開発組織';
   }
@@ -172,6 +184,14 @@ const users: Record<string, User> = {
     email: 'accounting@example.com',
     role: 'accounting',
     department: '管理組織',
+    companyId: 1,
+  },
+  '31051': {
+    id: '31051',
+    name: '人事',
+    email: 'hr@example.com',
+    role: 'hr',
+    department: '人事部',
     companyId: 1,
   },
 };
@@ -241,7 +261,7 @@ export const stubUserService = {
       id,
       name: userName,
       email: `${role}@example.com`,
-      role: role === 'director' ? 'director' : role === 'accounting' ? 'accounting' : role === 'manager' ? 'manager' : 'engineer',
+      role,
       department,
       companyId,
     };
@@ -249,6 +269,19 @@ export const stubUserService = {
     // キャッシュに保存
     users[id] = user;
     return user;
+  },
+
+  // 人事部専用: 自社(companyId=1固定、スタブの簡易実装)のユーザー一覧
+  async getUsersByCompany(): Promise<User[]> {
+    return Object.values(users).filter((u) => u.companyId === 1);
+  },
+
+  // 人事部専用: 直属の上長を更新
+  async updateUserManager(id: string, managerId: number | null): Promise<User> {
+    const existing = users[id] ?? (await this.getUser(id));
+    const updated: User = { ...existing, managerId };
+    users[id] = updated;
+    return updated;
   },
 };
 

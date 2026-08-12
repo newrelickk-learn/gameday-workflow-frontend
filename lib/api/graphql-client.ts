@@ -147,6 +147,66 @@ export const graphqlClient = {
     },
   },
 
+  // 人事部専用: 自社ユーザー一覧・直属の上長編集
+  users: {
+    async getCompanyUsers(): Promise<User[]> {
+      const query = `
+        query UsersByCompany {
+          usersByCompany {
+            id
+            name
+            email
+            role
+            department
+            companyId
+            managerId
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ usersByCompany: User[] }>(query);
+      return data.usersByCompany;
+    },
+
+    async getUserDetail(id: string): Promise<User> {
+      const query = `
+        query GetUserDetail($id: ID!) {
+          user(id: $id) {
+            id
+            name
+            email
+            role
+            department
+            companyId
+            managerId
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ user: User }>(query, { id });
+      return data.user;
+    },
+
+    async updateManager(id: string, managerId: number | null): Promise<User> {
+      const query = `
+        mutation UpdateUserManager($id: ID!, $input: UpdateUserManagerInput!) {
+          updateUserManager(id: $id, input: $input) {
+            id
+            name
+            email
+            role
+            department
+            companyId
+            managerId
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ updateUserManager: User }>(query, {
+        id,
+        input: { managerId },
+      });
+      return data.updateUserManager;
+    },
+  },
+
   // 申請
   applications: {
     async getApplications(applicantId?: string): Promise<Application[]> {

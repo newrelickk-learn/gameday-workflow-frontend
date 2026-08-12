@@ -34,6 +34,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<User>;
+    usersByCompany: (
+      parent: unknown,
+      args: {},
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<User[]>;
     applications: (
       parent: unknown,
       args: { applicantId?: string },
@@ -84,6 +90,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<LoginResponse>;
+    updateUserManager: (
+      parent: unknown,
+      args: { id: string; input: UpdateUserManagerInput },
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<User>;
     createApplication: (
       parent: unknown,
       args: { input: CreateApplicationInput },
@@ -133,6 +145,10 @@ export interface Resolvers {
       info: GraphQLResolveInfo
     ) => Promise<SendNotificationResponse>;
   };
+}
+
+export interface UpdateUserManagerInput {
+  managerId?: number | null;
 }
 
 export interface CreateApplicationInput {

@@ -128,6 +128,18 @@ export const resolvers: Resolvers & {
       }
     },
 
+    usersByCompany: async (_, __, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.getUsersByCompany(token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to fetch company users: ${errorMessage}`, {
+          extensions: { code: 'USERS_BY_COMPANY_FETCH_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
     applications: async (_, { applicantId }, context) => {
       try {
         const token = getTokenFromRequest(context.request);
@@ -234,6 +246,18 @@ export const resolvers: Resolvers & {
   },
 
   Mutation: {
+    updateUserManager: async (_, { id, input }, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.updateUserManager(id, input.managerId ?? null, token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to update manager: ${errorMessage}`, {
+          extensions: { code: 'UPDATE_USER_MANAGER_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
     login: async (_, { input }) => {
       try {
         return await downstreamClient.login({

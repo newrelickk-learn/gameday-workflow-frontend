@@ -10,6 +10,7 @@ export const typeDefs = `#graphql
     role: UserRole!
     department: String
     companyId: Int
+    managerId: Int
   }
 
   enum UserRole {
@@ -18,6 +19,11 @@ export const typeDefs = `#graphql
     admin
     director
     accounting
+    hr
+  }
+
+  input UpdateUserManagerInput {
+    managerId: Int
   }
 
   type LoginResponse {
@@ -207,7 +213,10 @@ export const typeDefs = `#graphql
   type Query {
     # ユーザー
     user(id: ID!): User
-    
+
+    # 人事部専用: 自社ユーザー一覧
+    usersByCompany: [User!]!
+
     # 申請
     applications(applicantId: ID): [Application!]!
     application(id: ID!): Application
@@ -228,7 +237,10 @@ export const typeDefs = `#graphql
   type Mutation {
     # 認証
     login(input: LoginInput!): LoginResponse!
-    
+
+    # 人事部専用: 自社ユーザーの直属の上長を更新
+    updateUserManager(id: ID!, input: UpdateUserManagerInput!): User!
+
     # 申請
     createApplication(input: CreateApplicationInput!): Application!
     

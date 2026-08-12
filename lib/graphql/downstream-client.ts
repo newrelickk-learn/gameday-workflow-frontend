@@ -141,6 +141,39 @@ export class DownstreamClient {
     );
   }
 
+  // 人事部専用: 自社ユーザー一覧
+  async getUsersByCompany(token?: string): Promise<User[]> {
+    if (this.useStubs) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Downstream Client] Using stub for getUsersByCompany');
+      }
+      return stubUserService.getUsersByCompany();
+    }
+    return this.request<User[]>(
+      `${this.userServiceUrl}/users/company`,
+      { method: 'GET' },
+      token
+    );
+  }
+
+  // 人事部専用: 自社ユーザーの直属の上長を更新
+  async updateUserManager(id: string, managerId: number | null, token?: string): Promise<User> {
+    if (this.useStubs) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Downstream Client] Using stub for updateUserManager');
+      }
+      return stubUserService.updateUserManager(id, managerId);
+    }
+    return this.request<User>(
+      `${this.userServiceUrl}/users/${id}/manager`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ managerId }),
+      },
+      token
+    );
+  }
+
   // 申請サービス
   async getApplications(token?: string, applicantId?: string): Promise<Application[]> {
     if (this.useStubs) {

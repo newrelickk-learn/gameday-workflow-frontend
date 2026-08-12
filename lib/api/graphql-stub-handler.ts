@@ -45,6 +45,20 @@ export async function handleGraphQLStub(
     return { user: result };
   }
 
+  // UsersByCompany query (人事部専用)
+  if (normalizedQuery.includes('query UsersByCompany') || normalizedQuery.includes('usersByCompany')) {
+    const result = await stubUserService.getUsersByCompany();
+    return { usersByCompany: result };
+  }
+
+  // UpdateUserManager mutation (人事部専用)
+  if (normalizedQuery.includes('mutation UpdateUserManager') || normalizedQuery.includes('updateUserManager(id:')) {
+    const id = variables?.id as string;
+    const managerId = (variables?.input as { managerId: number | null } | undefined)?.managerId ?? null;
+    const result = await stubUserService.updateUserManager(id, managerId);
+    return { updateUserManager: result };
+  }
+
   // GetApplications query
   if (normalizedQuery.includes('query GetApplications') || normalizedQuery.includes('applications {')) {
     const result = await stubApplicationService.getApplications();

@@ -13,9 +13,10 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'engineer' | 'manager' | 'admin' | 'director' | 'accounting';
+  role: 'engineer' | 'manager' | 'admin' | 'director' | 'accounting' | 'hr';
   department?: string; // 所属
   companyId?: number; // 会社ID
+  managerId?: number | null; // 直属の上長
 }
 
 // 申請関連の型

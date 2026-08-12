@@ -31,7 +31,7 @@ export function getCurrentUserId(): string | null {
 /**
  * ユーザーIDから役割を判定
  */
-export type UserRole = 'director' | 'accounting' | 'manager' | 'engineer' | 'unknown';
+export type UserRole = 'director' | 'accounting' | 'manager' | 'engineer' | 'hr' | 'unknown';
 
 export function getUserRoleFromId(userId: string | null): UserRole {
   if (!userId) {
@@ -59,6 +59,10 @@ export function getUserRoleFromId(userId: string | null): UserRole {
   if (id >= 28151 && id <= 28961) {
     return 'engineer';
   }
+  // ユーザーID: 31051-31261: 人事部
+  if (id >= 31051 && id <= 31261) {
+    return 'hr';
+  }
 
   return 'unknown';
 }
@@ -69,5 +73,13 @@ export function getUserRoleFromId(userId: string | null): UserRole {
 export function isManager(): boolean {
   const userId = getCurrentUserId();
   return getUserRoleFromId(userId) === 'manager';
+}
+
+/**
+ * 現在のユーザーが人事部かどうかを判定
+ */
+export function isHr(): boolean {
+  const userId = getCurrentUserId();
+  return getUserRoleFromId(userId) === 'hr';
 }
 

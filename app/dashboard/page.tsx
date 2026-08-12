@@ -16,7 +16,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
 import type { Application, Approval } from '@/lib/api/types';
-import { getCurrentUserId, getUserRoleFromId } from '@/lib/utils/auth';
+import { getCurrentUserId, getUserRoleFromId, isHr } from '@/lib/utils/auth';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -227,6 +227,28 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </Grid>
+        {isHr() && (
+          <Grid item xs={12} md={3}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" component="h2" gutterBottom>
+                  人事部
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  自社ユーザーの直属の上長を編集
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{ mt: 2 }}
+                  onClick={() => router.push('/dashboard/hr')}
+                >
+                  詳細を見る
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
       </Grid>
     </Container>
   );
