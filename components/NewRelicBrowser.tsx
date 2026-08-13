@@ -23,13 +23,15 @@ export default function NewRelicBrowser() {
     import('@newrelic/browser-agent/loaders/browser-agent').then(({ BrowserAgent }) => {
       const options = {
         init: {
-          distributed_tracing: { enabled: true },
+          browser_consent_mode: { enabled: false },
           privacy: { cookies_enabled: true },
-          ajax: { deny_list: ['bam.nr-data.net'] },
+          distributed_tracing: { enabled: true },
+          performance: { capture_measures: true },
+          ajax: { deny_list: ['bam.jp.nr-data.net'], capture_payloads: 'none' as const },
         },
         info: {
-          beacon: 'bam.nr-data.net',
-          errorBeacon: 'bam.nr-data.net',
+          beacon: 'bam.jp.nr-data.net',
+          errorBeacon: 'bam.jp.nr-data.net',
           licenseKey,
           applicationID,
           sa: 1,
