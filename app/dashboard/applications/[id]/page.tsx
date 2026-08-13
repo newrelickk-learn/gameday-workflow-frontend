@@ -269,6 +269,33 @@ export default function ApplicationDetailPage({ params }: PageProps) {
               </Grid>
             )}
 
+            {/* レシート画像（経費精算） */}
+            {application.type === 'expense' && application.receiptImageUrls && application.receiptImageUrls.length > 0 && (
+              <>
+                <Grid item xs={12}>
+                  <Divider sx={{ mt: 2, mb: 2 }} />
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom>
+                    レシート画像（{application.receiptImageUrls.length}枚）
+                  </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                    {application.receiptImageUrls.map((url, index) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={index}
+                        src={url}
+                        alt={`レシート${index + 1}`}
+                        style={{ width: 200, height: 300, objectFit: 'cover', borderRadius: 4 }}
+                      />
+                    ))}
+                  </Box>
+                </Grid>
+              </>
+            )}
+
             {/* 承認履歴 */}
             {approvals.length > 0 && (
               <>

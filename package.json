@@ -18,6 +18,7 @@
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.15.0",
     "@mui/material": "^5.15.0",
+    "@newrelic/browser-agent": "^1.320.0",
     "graphql": "^16.8.1",
     "graphql-yoga": "^5.0.0",
     "newrelic": "^14.3.7",

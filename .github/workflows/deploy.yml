@@ -38,6 +38,9 @@ jobs:
           NEXT_TELEMETRY_DISABLED: 1
           COMMIT_SHA: ${{ github.sha }}
           RELEASE_TAG: ${{ github.ref_name }}
+          NEXT_PUBLIC_NEW_RELIC_BROWSER_LICENSE_KEY: ${{ secrets.NEXT_PUBLIC_NEW_RELIC_BROWSER_LICENSE_KEY }}
+          NEXT_PUBLIC_NEW_RELIC_BROWSER_APP_ID: ${{ secrets.NEXT_PUBLIC_NEW_RELIC_BROWSER_APP_ID }}
+          NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

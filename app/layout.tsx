@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import ThemeRegistry from '@/lib/theme/ThemeRegistry';
 import { ChatWidget } from '@/components/ui/ChatWidget';
+import NewRelicBrowser from '@/components/NewRelicBrowser';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body>
+        <NewRelicBrowser />
         <ThemeRegistry>
           {children}
           <ChatWidget />

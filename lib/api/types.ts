@@ -39,6 +39,7 @@ export interface Application {
   nextApproverName?: string; // 次の承認者名（表示用）
   nextApproverDepartment?: string; // 次の承認者所属（表示用）
   latestComment?: string | null; // 最新のコメント本文（表示用）
+  receiptImageUrls?: string[] | null; // 経費精算のレシート画像URL一覧（表示用）
   createdAt: string;
   updatedAt: string;
 }
