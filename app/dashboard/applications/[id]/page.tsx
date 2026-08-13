@@ -19,6 +19,7 @@ import { apiClient } from '@/lib/api/client';
 import type { Application, Approval } from '@/lib/api/types';
 import { getCurrentUserId, getUserRoleFromId } from '@/lib/utils/auth';
 import WorkflowProgress from '@/components/ui/WorkflowProgress';
+import ReceiptCarousel from '@/components/ReceiptCarousel';
 
 const getStatusColor = (status: 'pending' | 'approved' | 'rejected') => {
   switch (status) {
@@ -115,6 +116,11 @@ export default function ApplicationDetailPage({ params }: PageProps) {
     return new Date(dateString).toLocaleString('ja-JP');
   };
 
+  const hasReceipts =
+    application?.type === 'expense' &&
+    !!application.receiptImageUrls &&
+    application.receiptImageUrls.length > 0;
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
@@ -147,204 +153,192 @@ export default function ApplicationDetailPage({ params }: PageProps) {
           <CircularProgress />
         </Box>
       ) : application ? (
-        <Paper sx={{ p: 4 }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h5" component="h2" fontWeight="bold">
-                  {application.title}
-                </Typography>
-                <Chip
-                  label={getStatusLabel(application.status)}
-                  color={getStatusColor(application.status) as any}
-                  size="medium"
-                />
-              </Box>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Divider />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                申請タイプ
-              </Typography>
-              <Typography variant="body1">{getTypeLabel(application.type)}</Typography>
-            </Grid>
-
-            {application.type === 'expense' && application.amount !== undefined && (
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  金額
-                </Typography>
-                <Typography variant="body1" fontWeight="bold" color="primary">
-                  ¥{application.amount.toLocaleString()}
-                </Typography>
-              </Grid>
-            )}
-
-            {application.type === 'business-trip' && application.startDate && application.endDate && (
-              <>
-                <Grid item xs={12} md={4}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    開始日
-                  </Typography>
-                  <Typography variant="body1">
-                    {new Date(application.startDate).toLocaleDateString('ja-JP')}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    終了日
-                  </Typography>
-                  <Typography variant="body1">
-                    {new Date(application.endDate).toLocaleDateString('ja-JP')}
-                  </Typography>
-                </Grid>
-                {application.days !== undefined && (
-                  <Grid item xs={12} md={4}>
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                      日数
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={hasReceipts ? 8 : 12}>
+            <Paper sx={{ p: 4 }}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h5" component="h2" fontWeight="bold">
+                      {application.title}
                     </Typography>
-                    <Typography variant="body1" fontWeight="bold" color="primary">
-                      {application.days}日
-                    </Typography>
-                  </Grid>
-                )}
-              </>
-            )}
-
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                申請ID
-              </Typography>
-              <Typography variant="body1">{application.id}</Typography>
-            </Grid>
-
-            {/* 申請者情報 */}
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                申請者
-              </Typography>
-              <Box>
-                <Typography variant="body1" fontWeight="bold">
-                  {application.applicantName || `ID: ${application.applicantId}`}
-                </Typography>
-                {application.applicantDepartment && (
-                  <Typography variant="body2" color="text.secondary">
-                    {application.applicantDepartment}
-                  </Typography>
-                )}
-              </Box>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                説明
-              </Typography>
-              <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                {application.description}
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                作成日時
-              </Typography>
-              <Typography variant="body1">{formatDate(application.createdAt)}</Typography>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                更新日時
-              </Typography>
-              <Typography variant="body1">{formatDate(application.updatedAt)}</Typography>
-            </Grid>
-
-            {/* ワークフロー進捗表示 */}
-            {(application.status === 'pending' || application.status === 'approved' || application.status === 'rejected') && (
-              <Grid item xs={12}>
-                <WorkflowProgress application={application} approvals={approvals} />
-              </Grid>
-            )}
-
-            {/* レシート画像（経費精算） */}
-            {application.type === 'expense' && application.receiptImageUrls && application.receiptImageUrls.length > 0 && (
-              <>
-                <Grid item xs={12}>
-                  <Divider sx={{ mt: 2, mb: 2 }} />
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography variant="h6" gutterBottom>
-                    レシート画像（{application.receiptImageUrls.length}枚）
-                  </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                    {application.receiptImageUrls.map((url, index) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        key={index}
-                        src={url}
-                        alt={`レシート${index + 1}`}
-                        style={{ width: 200, height: 300, objectFit: 'cover', borderRadius: 4 }}
-                      />
-                    ))}
+                    <Chip
+                      label={getStatusLabel(application.status)}
+                      color={getStatusColor(application.status) as any}
+                      size="medium"
+                    />
                   </Box>
                 </Grid>
-              </>
-            )}
 
-            {/* 承認履歴 */}
-            {approvals.length > 0 && (
-              <>
                 <Grid item xs={12}>
-                  <Divider sx={{ mt: 2, mb: 2 }} />
+                  <Divider />
                 </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    申請タイプ
+                  </Typography>
+                  <Typography variant="body1">{getTypeLabel(application.type)}</Typography>
+                </Grid>
+
+                {application.type === 'expense' && application.amount !== undefined && (
+                  <Grid item xs={12} md={6}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      金額
+                    </Typography>
+                    <Typography variant="body1" fontWeight="bold" color="primary">
+                      ¥{application.amount.toLocaleString()}
+                    </Typography>
+                  </Grid>
+                )}
+
+                {application.type === 'business-trip' && application.startDate && application.endDate && (
+                  <>
+                    <Grid item xs={12} md={4}>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        開始日
+                      </Typography>
+                      <Typography variant="body1">
+                        {new Date(application.startDate).toLocaleDateString('ja-JP')}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        終了日
+                      </Typography>
+                      <Typography variant="body1">
+                        {new Date(application.endDate).toLocaleDateString('ja-JP')}
+                      </Typography>
+                    </Grid>
+                    {application.days !== undefined && (
+                      <Grid item xs={12} md={4}>
+                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                          日数
+                        </Typography>
+                        <Typography variant="body1" fontWeight="bold" color="primary">
+                          {application.days}日
+                        </Typography>
+                      </Grid>
+                    )}
+                  </>
+                )}
+
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    申請ID
+                  </Typography>
+                  <Typography variant="body1">{application.id}</Typography>
+                </Grid>
+
+                {/* 申請者情報 */}
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    申請者
+                  </Typography>
+                  <Box>
+                    <Typography variant="body1" fontWeight="bold">
+                      {application.applicantName || `ID: ${application.applicantId}`}
+                    </Typography>
+                    {application.applicantDepartment && (
+                      <Typography variant="body2" color="text.secondary">
+                        {application.applicantDepartment}
+                      </Typography>
+                    )}
+                  </Box>
+                </Grid>
+
                 <Grid item xs={12}>
-                  <Typography variant="h6" gutterBottom>
-                    承認履歴
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    説明
+                  </Typography>
+                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {application.description}
                   </Typography>
                 </Grid>
-                {approvals.map((approval, index) => (
-                  <Grid item xs={12} key={approval.id}>
-                    <Paper variant="outlined" sx={{ p: 2 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">
-                            ステップ {approval.step || index + 1}
-                          </Typography>
-                          <Typography variant="body1" fontWeight="bold">
-                            {approval.approverName || `承認者ID: ${approval.approverId}`}
-                          </Typography>
-                          {approval.approverDepartment && (
-                            <Typography variant="body2" color="text.secondary">
-                              {approval.approverDepartment}
+
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    作成日時
+                  </Typography>
+                  <Typography variant="body1">{formatDate(application.createdAt)}</Typography>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    更新日時
+                  </Typography>
+                  <Typography variant="body1">{formatDate(application.updatedAt)}</Typography>
+                </Grid>
+
+                {/* ワークフロー進捗表示 */}
+                {(application.status === 'pending' || application.status === 'approved' || application.status === 'rejected') && (
+                  <Grid item xs={12}>
+                    <WorkflowProgress application={application} approvals={approvals} />
+                  </Grid>
+                )}
+
+                {/* 承認履歴 */}
+                {approvals.length > 0 && (
+                  <>
+                    <Grid item xs={12}>
+                      <Divider sx={{ mt: 2, mb: 2 }} />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Typography variant="h6" gutterBottom>
+                        承認履歴
+                      </Typography>
+                    </Grid>
+                    {approvals.map((approval, index) => (
+                      <Grid item xs={12} key={approval.id}>
+                        <Paper variant="outlined" sx={{ p: 2 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">
+                                ステップ {approval.step || index + 1}
+                              </Typography>
+                              <Typography variant="body1" fontWeight="bold">
+                                {approval.approverName || `承認者ID: ${approval.approverId}`}
+                              </Typography>
+                              {approval.approverDepartment && (
+                                <Typography variant="body2" color="text.secondary">
+                                  {approval.approverDepartment}
+                                </Typography>
+                              )}
+                            </Box>
+                            <Chip
+                              label={getStatusLabel(approval.status)}
+                              color={getStatusColor(approval.status) as any}
+                              size="small"
+                            />
+                          </Box>
+                          {approval.comment && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                              コメント: {approval.comment}
                             </Typography>
                           )}
-                        </Box>
-                        <Chip
-                          label={getStatusLabel(approval.status)}
-                          color={getStatusColor(approval.status) as any}
-                          size="small"
-                        />
-                      </Box>
-                      {approval.comment && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                          コメント: {approval.comment}
-                        </Typography>
-                      )}
-                      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                        {formatDate(approval.createdAt)}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                ))}
-              </>
-            )}
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                            {formatDate(approval.createdAt)}
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                    ))}
+                  </>
+                )}
+              </Grid>
+            </Paper>
           </Grid>
-        </Paper>
+
+          {hasReceipts && (
+            <Grid item xs={12} md={4}>
+              <Paper sx={{ p: 2, position: 'sticky', top: 16 }}>
+                <Typography variant="h6" gutterBottom>
+                  レシート画像（{application.receiptImageUrls!.length}枚）
+                </Typography>
+                <ReceiptCarousel images={application.receiptImageUrls!} />
+              </Paper>
+            </Grid>
+          )}
+        </Grid>
       ) : (
         <Paper sx={{ p: 3 }}>
           <Typography variant="body1" color="text.secondary" align="center">
