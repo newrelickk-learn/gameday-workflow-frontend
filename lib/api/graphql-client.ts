@@ -13,6 +13,8 @@ import type {
   Approval,
   UpdateApprovalRequest,
   Notification,
+  City,
+  EstimateTravelCostResponse,
 } from './types';
 import { handleGraphQLStub } from './graphql-stub-handler';
 
@@ -396,6 +398,43 @@ export const graphqlClient = {
         },
       });
       return result.updateApproval;
+    },
+  },
+
+  // 出張申請の概算費用（travelサービス）
+  travel: {
+    async getCities(): Promise<City[]> {
+      const query = `
+        query Cities {
+          cities {
+            id
+            nameJa
+            isUnstable
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ cities: City[] }>(query);
+      return data.cities;
+    },
+
+    async estimateCost(input: {
+      departureCityId: string;
+      arrivalCityId: string;
+      description: string;
+      companyId?: number;
+    }): Promise<EstimateTravelCostResponse> {
+      const query = `
+        query EstimateTravelCost($input: EstimateTravelCostInput!) {
+          estimateTravelCost(input: $input) {
+            amount
+            currency
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ estimateTravelCost: EstimateTravelCostResponse }>(query, {
+        input,
+      });
+      return data.estimateTravelCost;
     },
   },
 

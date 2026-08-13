@@ -7,6 +7,7 @@ import { stubUserService } from './stubs/user-service';
 import { stubApplicationService } from './stubs/application-service';
 import { stubWorkflowService } from './stubs/workflow-service';
 import { stubAiService } from './stubs/ai-service';
+import { stubTravelService } from './stubs/travel-service';
 import type {
   LoginRequest,
   LoginResponse,
@@ -19,6 +20,7 @@ import type {
   ValidateApprovalRequest,
   ApproveWorkflowRequest,
   SendNotificationRequest,
+  EstimateTravelCostRequest,
 } from './types';
 
 /**
@@ -161,6 +163,30 @@ export async function handleGraphQLStub(
     const input = variables?.input as SendNotificationRequest;
     const result = await stubWorkflowService.sendNotification(input);
     return { sendNotification: result };
+  }
+
+  // Cities query（出張申請の都市一覧）
+  if (normalizedQuery.includes('query Cities') || normalizedQuery.includes('cities {')) {
+    const result = await stubTravelService.getCities();
+    return { cities: result };
+  }
+
+  // EstimateTravelCost query（出張申請の概算費用）
+  if (normalizedQuery.includes('query EstimateTravelCost') || normalizedQuery.includes('estimateTravelCost(input:')) {
+    const input = variables?.input as {
+      departureCityId: string;
+      arrivalCityId: string;
+      description: string;
+      companyId?: number | null;
+    };
+    const request: EstimateTravelCostRequest = {
+      departureCityId: Number(input.departureCityId),
+      arrivalCityId: Number(input.arrivalCityId),
+      description: input.description,
+      companyId: input.companyId ?? undefined,
+    };
+    const result = await stubTravelService.estimateTravelCost(request);
+    return { estimateTravelCost: result };
   }
 
   // マッチしない場合はエラー

@@ -40,6 +40,8 @@ spec:
               value: "http://gameday-workflow-application-approval.gameday-workflow.svc.cluster.local:8002"
             - name: WORKFLOW_SERVICE_URL
               value: "http://gameday-workflow-workflow-notification.gameday-workflow.svc.cluster.local:8003"
+            - name: TRAVEL_SERVICE_URL
+              value: "http://gameday-workflow-travel.gameday-workflow.svc.cluster.local:8004"
             - name: WORKFLOW_APPROVALS_PATH
               value: "/api/v1/notifications/history"
             - name: WORKFLOW_APPROVALS_BY_APP_PATH

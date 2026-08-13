@@ -20,6 +20,8 @@ import type {
   Notification,
   SendNotificationRequest,
   SendNotificationResponse,
+  City,
+  EstimateTravelCostResponse,
 } from '../api/types';
 
 export interface GraphQLContext {
@@ -82,6 +84,18 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<Notification[]>;
+    cities: (
+      parent: unknown,
+      args: {},
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<City[]>;
+    estimateTravelCost: (
+      parent: unknown,
+      args: { input: EstimateTravelCostInput },
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<EstimateTravelCostResponse>;
   };
   Mutation: {
     login: (
@@ -194,5 +208,12 @@ export interface SendNotificationInput {
   recipientId: string;
   subject: string;
   body: string;
+}
+
+export interface EstimateTravelCostInput {
+  departureCityId: string;
+  arrivalCityId: string;
+  description: string;
+  companyId?: number | null;
 }
 

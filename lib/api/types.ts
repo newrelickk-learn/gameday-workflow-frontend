@@ -117,6 +117,25 @@ export interface ApproveWorkflowResponse {
   message?: string | null;
 }
 
+// 出張申請の概算費用（travelサービス）関連の型
+export interface City {
+  id: number;
+  nameJa: string;
+  isUnstable: boolean;
+}
+
+export interface EstimateTravelCostRequest {
+  departureCityId: number;
+  arrivalCityId: number;
+  description: string; // 解消コード検出用に説明欄の内容を渡す
+  companyId?: number;
+}
+
+export interface EstimateTravelCostResponse {
+  amount: number;
+  currency: string;
+}
+
 // 通知関連の型
 export interface Notification {
   id: string;

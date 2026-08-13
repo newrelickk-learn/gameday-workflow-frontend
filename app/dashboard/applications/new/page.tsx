@@ -22,8 +22,10 @@ import {
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
-import { getCurrentUserId, isManager } from '@/lib/utils/auth';
+import { getCurrentUserId, getCurrentUser, isManager } from '@/lib/utils/auth';
 import { getVirtualToday } from '@/lib/utils/virtual-date';
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
+import type { City } from '@/lib/api/types';
 
 const getTypeLabel = (type: string) => {
   switch (type) {
@@ -55,6 +57,13 @@ export default function NewApplicationPage() {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [virtualToday, setVirtualToday] = useState<Date | null>(null);
 
+  // 出張申請: 出発地・到着地の都市選択と概算費用の自動取得（travelサービス）
+  const [cities, setCities] = useState<City[]>([]);
+  const [departureCityId, setDepartureCityId] = useState<string>('');
+  const [arrivalCityId, setArrivalCityId] = useState<string>('');
+  const [travelCostLoading, setTravelCostLoading] = useState(false);
+  const [travelCostError, setTravelCostError] = useState('');
+
   // フォーム内の注意表示も、サーバー側の判定基準（仮想今日 = 実際の今日 + virtualDateOffsetDays）
   // に合わせる必要があるため、素の new Date() ではなく getVirtualToday() を使う
   useEffect(() => {
@@ -65,6 +74,50 @@ export default function NewApplicationPage() {
   const isBusinessTripType = type === 'business-trip';
   const isVacationType = type === 'vacation';
   const isDateRequiredType = isBusinessTripType || isVacationType;
+
+  // 出張申請選択時に都市一覧を取得
+  useEffect(() => {
+    if (!isBusinessTripType) return;
+    apiClient.travel.getCities().then(setCities).catch(() => setCities([]));
+  }, [isBusinessTripType]);
+
+  // 都市選択・説明欄の変更をデバウンスし、変更の度に概算費用を再取得する
+  const debouncedDepartureCityId = useDebouncedValue(departureCityId, 800);
+  const debouncedArrivalCityId = useDebouncedValue(arrivalCityId, 800);
+  const debouncedDescriptionForTravel = useDebouncedValue(description, 800);
+
+  useEffect(() => {
+    if (!isBusinessTripType || !debouncedDepartureCityId || !debouncedArrivalCityId) {
+      return;
+    }
+    let cancelled = false;
+    setTravelCostLoading(true);
+    setTravelCostError('');
+    const currentUser = getCurrentUser();
+
+    apiClient.travel
+      .estimateCost({
+        departureCityId: debouncedDepartureCityId,
+        arrivalCityId: debouncedArrivalCityId,
+        description: debouncedDescriptionForTravel,
+        companyId: currentUser?.companyId,
+      })
+      .then((result) => {
+        if (cancelled) return;
+        setAmount(String(result.amount));
+        setTravelCostLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setAmount('');
+        setTravelCostError('概算費用の取得に失敗しました。しばらくしてから再度お試しください。');
+        setTravelCostLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isBusinessTripType, debouncedDepartureCityId, debouncedArrivalCityId, debouncedDescriptionForTravel]);
 
   // 出張申請の「2週間前ルール」の事前チェック用の定数
   const TWO_WEEK_RULE_DAYS = 14;
@@ -117,12 +170,19 @@ export default function NewApplicationPage() {
     }
   };
 
-  const isFormValid = 
-    type && 
-    title && 
-    description && 
+  const isFormValid =
+    type &&
+    title &&
+    description &&
     (!isExpenseType || (amount && parseFloat(amount) > 0)) &&
-    (!isDateRequiredType || (startDate && endDate && days && parseInt(days) > 0));
+    (!isDateRequiredType || (startDate && endDate && days && parseInt(days) > 0)) &&
+    (!isBusinessTripType ||
+      (departureCityId &&
+        arrivalCityId &&
+        amount &&
+        parseFloat(amount) > 0 &&
+        !travelCostLoading &&
+        !travelCostError));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,8 +246,8 @@ export default function NewApplicationPage() {
         applicantId,
       };
 
-      // 経費精算の場合のみ金額を追加
-      if (isExpenseType && amount) {
+      // 経費精算の場合、または出張申請（travelサービスの概算費用が自動セットされている）の場合に金額を追加
+      if ((isExpenseType || isBusinessTripType) && amount) {
         requestData.amount = parseFloat(amount);
       }
 
@@ -280,6 +340,70 @@ export default function NewApplicationPage() {
                 ),
               }}
             />
+          )}
+          {isBusinessTripType && (
+            <>
+              <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+                <TextField
+                  select
+                  fullWidth
+                  label="出発地"
+                  value={departureCityId}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDepartureCityId(e.target.value)}
+                  required
+                  disabled={loading}
+                >
+                  <MenuItem value="">選択してください</MenuItem>
+                  {cities.map((city) => (
+                    <MenuItem key={city.id} value={String(city.id)}>
+                      {city.nameJa}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  select
+                  fullWidth
+                  label="到着地"
+                  value={arrivalCityId}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setArrivalCityId(e.target.value)}
+                  required
+                  disabled={loading}
+                >
+                  <MenuItem value="">選択してください</MenuItem>
+                  {cities.map((city) => (
+                    <MenuItem key={city.id} value={String(city.id)}>
+                      {city.nameJa}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  概算出張費
+                </Typography>
+                {travelCostLoading && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CircularProgress size={18} />
+                    <Typography variant="body2" color="text.secondary">
+                      算出中...
+                    </Typography>
+                  </Box>
+                )}
+                {!travelCostLoading && travelCostError && (
+                  <Alert severity="error">{travelCostError}</Alert>
+                )}
+                {!travelCostLoading && !travelCostError && amount && (
+                  <Typography variant="body1" fontWeight="bold">
+                    ¥{parseFloat(amount).toLocaleString()}
+                  </Typography>
+                )}
+                {!travelCostLoading && !travelCostError && !amount && (
+                  <Typography variant="body2" color="text.secondary">
+                    出発地・到着地を選択すると自動的に算出されます
+                  </Typography>
+                )}
+              </Box>
+            </>
           )}
           {isDateRequiredType && (
             <>
@@ -393,6 +517,16 @@ export default function NewApplicationPage() {
               <Grid item xs={12} sm={4}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   金額
+                </Typography>
+                <Typography variant="body1" fontWeight="bold">
+                  ¥{parseFloat(amount).toLocaleString()}
+                </Typography>
+              </Grid>
+            )}
+            {isBusinessTripType && amount && (
+              <Grid item xs={12} sm={4}>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  概算出張費
                 </Typography>
                 <Typography variant="body1" fontWeight="bold">
                   ¥{parseFloat(amount).toLocaleString()}

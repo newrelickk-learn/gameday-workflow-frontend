@@ -17,7 +17,7 @@ export const manualArticles: ManualArticle[] = [
   {
     slug: 'business-trip-domestic',
     title: '国内出張申請の書き方',
-    description: '国内出張にかかる旅費・宿泊費等の申請手続きを説明します。',
+    description: '国内出張にかかる旅費・宿泊費等の申請手続きと、概算出張費の自動算出について説明します。',
   },
   {
     slug: 'business-trip-overseas',

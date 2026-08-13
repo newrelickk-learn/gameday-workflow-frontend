@@ -172,6 +172,25 @@ export const typeDefs = `#graphql
     message: String
   }
 
+  # 出張申請の概算費用（travelサービス）
+  type City {
+    id: ID!
+    nameJa: String!
+    isUnstable: Boolean!
+  }
+
+  input EstimateTravelCostInput {
+    departureCityId: ID!
+    arrivalCityId: ID!
+    description: String!
+    companyId: Int
+  }
+
+  type EstimateTravelCostResponse {
+    amount: Float!
+    currency: String!
+  }
+
   # 通知関連
   type Notification {
     id: ID!
@@ -231,6 +250,10 @@ export const typeDefs = `#graphql
     
     # AI分析
     analyzeApplication(applicationId: ID!): AnalysisResult!
+
+    # 出張申請の概算費用（travelサービス）
+    cities: [City!]!
+    estimateTravelCost(input: EstimateTravelCostInput!): EstimateTravelCostResponse!
   }
 
   # Mutation

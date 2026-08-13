@@ -243,6 +243,38 @@ export const resolvers: Resolvers & {
         });
       }
     },
+
+    cities: async (_, __, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.getCities(token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to fetch cities: ${errorMessage}`, {
+          extensions: { code: 'CITIES_FETCH_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
+    estimateTravelCost: async (_, { input }, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.estimateTravelCost(
+          {
+            departureCityId: Number(input.departureCityId),
+            arrivalCityId: Number(input.arrivalCityId),
+            description: input.description,
+            companyId: input.companyId ?? undefined,
+          },
+          token
+        );
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to estimate travel cost: ${errorMessage}`, {
+          extensions: { code: 'ESTIMATE_TRAVEL_COST_ERROR', originalError: errorMessage },
+        });
+      }
+    },
   },
 
   Mutation: {

@@ -15,11 +15,21 @@ import type {
   Notification,
   SendNotificationRequest,
   SendNotificationResponse,
+  City,
+  EstimateTravelCostRequest,
+  EstimateTravelCostResponse,
 } from '../api/types';
 import { stubUserService } from '../api/stubs/user-service';
 import { stubApplicationService } from '../api/stubs/application-service';
 import { stubWorkflowService } from '../api/stubs/workflow-service';
 import { stubAiService } from '../api/stubs/ai-service';
+import { stubTravelService } from '../api/stubs/travel-service';
+import { buildApplicationCode } from '../travel/application-code';
+import { addCustomAttribute } from '../newrelic-helper';
+
+// travelサービス呼び出しのHTTPタイムアウト。Istio側のfault injection（delay 5秒）が
+// これを超えるため、不安定な都市が絡む場合は60%の確率でここでタイムアウト失敗する。
+const TRAVEL_REQUEST_TIMEOUT_MS = 3000;
 
 /**
  * ダウンストリームサービスへの接続クライアント
@@ -30,16 +40,18 @@ export class DownstreamClient {
   private applicationServiceUrl: string;
   private workflowServiceUrl: string;
   private aiServiceUrl: string;
+  private travelServiceUrl: string;
   private useStubs: boolean;
 
   constructor() {
     // 環境変数からスタブモードを判定（デフォルトはtrue）
     this.useStubs = process.env.USE_DOWNSTREAM_STUBS !== 'false';
-    
+
     this.userServiceUrl = process.env.USER_SERVICE_URL || 'http://localhost:8001';
     this.applicationServiceUrl = process.env.APPLICATION_SERVICE_URL || 'http://localhost:8002';
     this.workflowServiceUrl = process.env.WORKFLOW_SERVICE_URL || 'http://localhost:8003';
     this.aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8004';
+    this.travelServiceUrl = process.env.TRAVEL_SERVICE_URL || 'http://localhost:8005';
   }
 
   private async request<T>(
@@ -721,6 +733,83 @@ export class DownstreamClient {
       token
     );
     return response.answer;
+  }
+
+  // travelサービス（出張申請の概算費用）
+  async getCities(token?: string): Promise<City[]> {
+    if (this.useStubs) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Downstream Client] Using stub for getCities');
+      }
+      return stubTravelService.getCities();
+    }
+    return this.request<City[]>(
+      `${this.travelServiceUrl}/cities`,
+      { method: 'GET' },
+      token
+    );
+  }
+
+  async estimateTravelCost(
+    data: EstimateTravelCostRequest,
+    token?: string
+  ): Promise<EstimateTravelCostResponse> {
+    if (this.useStubs) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Downstream Client] Using stub for estimateTravelCost');
+      }
+      return stubTravelService.estimateTravelCost(data);
+    }
+
+    const cities = await this.getCities(token);
+    const departureCity = cities.find((c) => c.id === data.departureCityId);
+    const arrivalCity = cities.find((c) => c.id === data.arrivalCityId);
+    const isUnstableRoute = Boolean(departureCity?.isUnstable || arrivalCity?.isUnstable);
+
+    const { header: applicationCode, isRisky, resolutionCode } = buildApplicationCode({
+      isUnstableRoute,
+      description: data.description,
+      companyId: data.companyId ?? 'unknown',
+    });
+
+    // 不安定な都市が絡み、かつ解消コード未検出のリスキーな呼び出しの時だけ、
+    // その日・その企業の正解コードをNew Relicのカスタムアトリビュートとして記録する。
+    // 安定した呼び出しには付与しない（失敗トレースを開いたときだけ答えが見える）。
+    if (isRisky) {
+      await addCustomAttribute('travel.resolutionCode', resolutionCode);
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TRAVEL_REQUEST_TIMEOUT_MS);
+    try {
+      const response = await fetch(`${this.travelServiceUrl}/estimate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Application-Code': applicationCode,
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          departureCityId: data.departureCityId,
+          arrivalCityId: data.arrivalCityId,
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Travel service error: ${response.status} - ${errorText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Travel service request timed out');
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 }
 
