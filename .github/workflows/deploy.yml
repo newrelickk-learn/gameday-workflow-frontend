@@ -41,6 +41,7 @@ jobs:
           NEXT_PUBLIC_NEW_RELIC_BROWSER_LICENSE_KEY: ${{ secrets.NEXT_PUBLIC_NEW_RELIC_BROWSER_LICENSE_KEY }}
           NEXT_PUBLIC_NEW_RELIC_BROWSER_APP_ID: ${{ secrets.NEXT_PUBLIC_NEW_RELIC_BROWSER_APP_ID }}
           NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID: ${{ vars.NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID }}
+          NEXT_PUBLIC_NEW_RELIC_TRUST_KEY: ${{ vars.NEXT_PUBLIC_NEW_RELIC_TRUST_KEY }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
