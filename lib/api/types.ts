@@ -38,6 +38,7 @@ export interface Application {
   nextApproverId?: string; // 次の承認者ID
   nextApproverName?: string; // 次の承認者名（表示用）
   nextApproverDepartment?: string; // 次の承認者所属（表示用）
+  latestComment?: string | null; // 最新のコメント本文（表示用）
   createdAt: string;
   updatedAt: string;
 }

@@ -83,3 +83,19 @@ export function isHr(): boolean {
   return getUserRoleFromId(userId) === 'hr';
 }
 
+/**
+ * 現在のユーザーが本部長かどうかを判定
+ */
+export function isDirector(): boolean {
+  const userId = getCurrentUserId();
+  return getUserRoleFromId(userId) === 'director';
+}
+
+/**
+ * 現在のユーザーが経理かどうかを判定
+ */
+export function isAccounting(): boolean {
+  const userId = getCurrentUserId();
+  return getUserRoleFromId(userId) === 'accounting';
+}
+

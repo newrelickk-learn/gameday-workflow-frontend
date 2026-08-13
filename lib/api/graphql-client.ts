@@ -232,6 +232,7 @@ export const graphqlClient = {
             nextApproverId
             nextApproverName
             nextApproverDepartment
+            latestComment
             createdAt
             updatedAt
           }

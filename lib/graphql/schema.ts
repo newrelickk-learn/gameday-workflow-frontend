@@ -55,6 +55,7 @@ export const typeDefs = `#graphql
     nextApproverId: String
     nextApproverName: String
     nextApproverDepartment: String
+    latestComment: String
     createdAt: DateTime!
     updatedAt: DateTime!
   }
