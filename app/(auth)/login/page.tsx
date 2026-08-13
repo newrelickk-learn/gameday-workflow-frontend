@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Container,
   Box,
@@ -14,8 +14,8 @@ import {
 } from '@mui/material';
 import { apiClient } from '@/lib/api/client';
 
-export default function LoginPage() {
-  const router = useRouter();
+function LoginForm() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -28,17 +28,20 @@ export default function LoginPage() {
 
     try {
       const response = await apiClient.auth.login({ email, password });
-      
+
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
       }
-      
-      router.push('/dashboard');
+
+      // 元々アクセスしようとしていたページがあればそこへ、なければダッシュボードへ。
+      // SPAのルート変更ではなくフルページロードにする（New RelicのCore Web Vitals計測が
+      // ページ遷移直後から正しく発火するようにするため）。
+      const redirect = searchParams.get('redirect');
+      window.location.href = redirect && redirect.startsWith('/') ? redirect : '/dashboard';
     } catch (err) {
       setError('ログインに失敗しました');
       console.error(err);
-    } finally {
       setLoading(false);
     }
   };
@@ -117,5 +120,13 @@ export default function LoginPage() {
         </Paper>
       </Box>
     </Container>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }
