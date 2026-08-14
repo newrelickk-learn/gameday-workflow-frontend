@@ -1,6 +1,7 @@
 import { GraphQLError, GraphQLScalarType } from 'graphql';
 import { downstreamClient } from './downstream-client';
 import type { Resolvers } from './generated-types';
+import { addCustomAttribute, addCustomAttributes } from '../newrelic-helper';
 
 /**
  * リクエストから認証トークンを取得
@@ -142,6 +143,9 @@ export const resolvers: Resolvers & {
 
     applications: async (_, { applicantId }, context) => {
       try {
+        if (applicantId) {
+          await addCustomAttribute('application.applicantId', applicantId);
+        }
         const token = getTokenFromRequest(context.request);
         return await downstreamClient.getApplications(token, applicantId);
       } catch (error) {
@@ -158,6 +162,7 @@ export const resolvers: Resolvers & {
 
     application: async (_, { id }, context) => {
       try {
+        await addCustomAttribute('application.id', id);
         const token = getTokenFromRequest(context.request);
         return await downstreamClient.getApplication(id, token);
       } catch (error) {
@@ -171,6 +176,9 @@ export const resolvers: Resolvers & {
       try {
         const token = getTokenFromRequest(context.request);
         const recipientId = getUserIdFromToken(token);
+        if (recipientId) {
+          await addCustomAttribute('user.id', recipientId);
+        }
         if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
           console.log('[GraphQL Resolver] Fetching approvals...');
           console.log('[GraphQL Resolver] USE_DOWNSTREAM_STUBS:', process.env.USE_DOWNSTREAM_STUBS);
@@ -202,6 +210,7 @@ export const resolvers: Resolvers & {
 
     approval: async (_, { id }, context) => {
       try {
+        await addCustomAttribute('approval.id', id);
         const token = getTokenFromRequest(context.request);
         return await downstreamClient.getApproval(id, token);
       } catch (error) {
@@ -213,6 +222,7 @@ export const resolvers: Resolvers & {
 
     approvalsByApplication: async (_, { applicationId }, context) => {
       try {
+        await addCustomAttribute('application.id', applicationId);
         const token = getTokenFromRequest(context.request);
         return await downstreamClient.getApprovalsByApplication(applicationId, token);
       } catch (error) {
@@ -292,6 +302,7 @@ export const resolvers: Resolvers & {
 
     login: async (_, { input }) => {
       try {
+        await addCustomAttribute('user.email', input.email);
         return await downstreamClient.login({
           email: input.email,
           password: input.password,
@@ -301,6 +312,7 @@ export const resolvers: Resolvers & {
         // downstreamClient.login()は失敗時、error.codeに"INVALID_CREDENTIALS"/"POD_SATURATED"等の
         // 具体的な種別を付与している（GameDay第0章: 通常のパスワード誤りとPod飽和を区別するため）。
         const code = (error as { code?: string })?.code ?? 'LOGIN_ERROR';
+        await addCustomAttribute('login.errorCode', code);
         const message = error instanceof Error ? error.message : 'Login failed';
         throw new GraphQLError(message, {
           extensions: { code },
@@ -327,6 +339,12 @@ export const resolvers: Resolvers & {
           console.log('[GraphQL Resolver] userIdFromToken:', userIdFromToken);
           console.log('[GraphQL Resolver] applicantId (used):', applicantId);
         }
+        await addCustomAttributes({
+          'application.applicantId': applicantId,
+          'application.type': input.type,
+          ...(input.amount != null ? { 'application.amount': input.amount } : {}),
+          ...(input.days != null ? { 'application.days': input.days } : {}),
+        });
         const result = await downstreamClient.createApplication(
           {
             type: input.type,
@@ -375,7 +393,14 @@ export const resolvers: Resolvers & {
             applicationId,
           });
         }
-        
+
+        await addCustomAttributes({
+          'approval.id': id,
+          ...(applicationId != null ? { 'approval.applicationId': applicationId } : {}),
+          'approval.approverId': input.approverId,
+          'approval.status': input.status,
+        });
+
         const result = await downstreamClient.updateApproval(
           id,
           {
