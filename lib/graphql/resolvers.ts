@@ -295,10 +295,15 @@ export const resolvers: Resolvers & {
         return await downstreamClient.login({
           email: input.email,
           password: input.password,
+          impactedPodName: input.impactedPodName ?? undefined,
         });
       } catch (error) {
-        throw new GraphQLError('Login failed', {
-          extensions: { code: 'LOGIN_ERROR' },
+        // downstreamClient.login()は失敗時、error.codeに"INVALID_CREDENTIALS"/"POD_SATURATED"等の
+        // 具体的な種別を付与している（GameDay第0章: 通常のパスワード誤りとPod飽和を区別するため）。
+        const code = (error as { code?: string })?.code ?? 'LOGIN_ERROR';
+        const message = error instanceof Error ? error.message : 'Login failed';
+        throw new GraphQLError(message, {
+          extensions: { code },
         });
       }
     },

@@ -2,6 +2,8 @@
 export interface LoginRequest {
   email: string;
   password: string;
+  // GameDay第0章: リソースが飽和しているPodを突き止めた際に入力するPod名。通常は不要。
+  impactedPodName?: string;
 }
 
 export interface LoginResponse {

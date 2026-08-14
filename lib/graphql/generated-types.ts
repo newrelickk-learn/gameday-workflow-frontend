@@ -100,7 +100,7 @@ export interface Resolvers {
   Mutation: {
     login: (
       parent: unknown,
-      args: { input: { email: string; password: string } },
+      args: { input: { email: string; password: string; impactedPodName?: string | null } },
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<LoginResponse>;

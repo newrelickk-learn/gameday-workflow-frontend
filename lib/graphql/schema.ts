@@ -34,6 +34,8 @@ export const typeDefs = `#graphql
   input LoginInput {
     email: String!
     password: String!
+    # GameDay第0章: リソースが飽和しているPodを突き止めた際に、そのPod名を入力する欄。通常は不要。
+    impactedPodName: String
   }
 
   # 申請関連

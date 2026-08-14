@@ -18,7 +18,10 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [impactedPodName, setImpactedPodName] = useState('');
   const [error, setError] = useState('');
+  // GameDay第0章: サーバーがリソース飽和のため、New Relicで特定したPod名の入力が必要な状態
+  const [podInputRequired, setPodInputRequired] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,7 +30,11 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const response = await apiClient.auth.login({ email, password });
+      const response = await apiClient.auth.login({
+        email,
+        password,
+        impactedPodName: impactedPodName.trim() || undefined,
+      });
 
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', response.token);
@@ -40,7 +47,17 @@ function LoginForm() {
       const redirect = searchParams.get('redirect');
       window.location.href = redirect && redirect.startsWith('/') ? redirect : '/dashboard';
     } catch (err) {
-      setError('ログインに失敗しました');
+      const code = (err as { code?: string })?.code;
+
+      if (code === 'POD_SATURATED') {
+        setPodInputRequired(true);
+        setError(
+          '現在サーバーが高負荷のためログインできません。New Relicで問題のPodを確認し、Pod名を入力してください'
+        );
+      } else {
+        setError('ログインに失敗しました');
+      }
+
       console.error(err);
       setLoading(false);
     }
@@ -104,6 +121,20 @@ function LoginForm() {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
               disabled={loading}
             />
+            {podInputRequired && (
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="impactedPodName"
+                label="問題のあるPod名"
+                id="impactedPodName"
+                helperText="New RelicのKubernetes Cluster ExplorerでCPU使用率がサチっているPodの名前を確認してください"
+                value={impactedPodName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setImpactedPodName(e.target.value)}
+                disabled={loading}
+              />
+            )}
             <Button
               type="submit"
               fullWidth

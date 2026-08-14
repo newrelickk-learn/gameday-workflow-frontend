@@ -94,7 +94,12 @@ async function graphqlRequest<T>(query: string, variables?: Record<string, any>)
 
   if (result.errors) {
     console.error('[GraphQL Client] GraphQL errors:', result.errors);
-    throw new Error(result.errors[0]?.message || 'GraphQL error');
+    const graphqlError = result.errors[0];
+    const error = new Error(graphqlError?.message || 'GraphQL error') as Error & { code?: string };
+    // GameDay第0章: ログイン失敗時、通常のパスワード誤り(INVALID_CREDENTIALS)とPod飽和
+    // (POD_SATURATED)をUI側で区別するために、extensions.codeを保持しておく
+    error.code = graphqlError?.extensions?.code;
+    throw error;
   }
 
   if (process.env.NODE_ENV === 'development') {

@@ -130,13 +130,36 @@ export class DownstreamClient {
       }
       return stubUserService.login(credentials);
     }
-    return this.request<LoginResponse>(
-      `${this.userServiceUrl}/auth/login`,
-      {
-        method: 'POST',
-        body: JSON.stringify(credentials),
+
+    const url = `${this.userServiceUrl}/auth/login`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+
+    if (!response.ok) {
+      // user-serviceは失敗時に { error: "INVALID_CREDENTIALS" | "POD_SATURATED" | ..., message: "..." }
+      // を返す。GraphQL側（resolvers.ts）でこのcodeを見て、UIに正しいエラー種別を伝える
+      // （GameDay第0章: 通常のパスワード誤りと、Pod飽和による失敗を区別するため）。
+      let code = 'LOGIN_ERROR';
+      let message = 'Login failed';
+      try {
+        const body = await response.json();
+        if (body?.error) code = body.error;
+        if (body?.message) message = body.message;
+      } catch {
+        // レスポンスがJSONでない場合はデフォルトのまま
       }
-    );
+
+      console.error('[Downstream Client] Login failed:', { url, status: response.status, code });
+
+      const error = new Error(message) as Error & { code?: string };
+      error.code = code;
+      throw error;
+    }
+
+    return response.json();
   }
 
   async getUser(id: string, token?: string): Promise<User> {
