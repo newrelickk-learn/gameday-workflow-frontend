@@ -17,7 +17,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { apiClient } from '@/lib/api/client';
 import type { Application, Approval } from '@/lib/api/types';
-import { getCurrentUserId, getUserRoleFromId } from '@/lib/utils/auth';
+import { isManager, isDirector } from '@/lib/utils/auth';
 import WorkflowProgress from '@/components/ui/WorkflowProgress';
 import ReceiptCarousel from '@/components/ReceiptCarousel';
 
@@ -88,12 +88,11 @@ export default function ApplicationDetailPage({ params }: PageProps) {
           apiClient.approvals.getApprovalsByApplication(id).catch(() => []),
         ]);
         
-        // プロモーション申請は上長だけに表示
+        // プロモーション申請は、ワークフローの承認者ロール（上長=申請者・本部長=最終承認者）
+        // のみ閲覧可能（対象の本人や無関係な部署には見せない）
         if (applicationData.type === 'promotion') {
-          const userId = getCurrentUserId();
-          const userRole = getUserRoleFromId(userId);
-          if (userRole !== 'manager') {
-            setError('プロモーション申請は上長のみ閲覧可能です');
+          if (!isManager() && !isDirector()) {
+            setError('プロモーション申請は上長・本部長のみ閲覧可能です');
             setLoading(false);
             return;
           }
