@@ -28,7 +28,6 @@ import {
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -379,12 +378,22 @@ export default function ApprovalsPage() {
                   
                   return (
                     <>
-                      <TableRow key={approval.id} hover>
+                      <TableRow
+                        key={approval.id}
+                        hover
+                        onClick={() =>
+                          window.open(`/dashboard/applications/${approval.applicationId}?from=approvals`, '_blank')
+                        }
+                        sx={{ cursor: 'pointer' }}
+                      >
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <IconButton
                               size="small"
-                              onClick={() => handleToggleExpand(approval.applicationId)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleExpand(approval.applicationId);
+                              }}
                               sx={{ p: 0.5 }}
                             >
                               {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -424,22 +433,16 @@ export default function ApprovalsPage() {
                         <TableCell>{formatDate(approval.createdAt)}</TableCell>
                         <TableCell align="right">
                           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                            <IconButton
-                              size="small"
-                              onClick={() =>
-                                router.push(`/dashboard/applications/${approval.applicationId}?from=approvals`)
-                              }
-                              aria-label="詳細を見る"
-                            >
-                              <VisibilityIcon />
-                            </IconButton>
                             {/* 自分が承認担当かつ申請が承認待ちのときだけ承認・却下アイコンを表示（最終承認済みのときは非表示） */}
                             {currentUserId && String(approval.approverId) === String(currentUserId) && application?.status === 'pending' && (
                               <>
                                 <IconButton
                                   size="small"
                                   color="success"
-                                  onClick={() => handleOpenDialog(approval.id, 'approve')}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenDialog(approval.id, 'approve');
+                                  }}
                                   aria-label="承認"
                                 >
                                   <CheckIcon />
@@ -447,7 +450,10 @@ export default function ApprovalsPage() {
                                 <IconButton
                                   size="small"
                                   color="error"
-                                  onClick={() => handleOpenDialog(approval.id, 'reject')}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenDialog(approval.id, 'reject');
+                                  }}
                                   aria-label="却下"
                                 >
                                   <CloseIcon />

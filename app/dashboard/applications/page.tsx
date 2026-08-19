@@ -16,11 +16,9 @@ import {
   Chip,
   CircularProgress,
   Alert,
-  IconButton,
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import AddIcon from '@mui/icons-material/Add';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { apiClient } from '@/lib/api/client';
 import type { Application } from '@/lib/api/types';
@@ -165,12 +163,18 @@ export default function ApplicationsPage() {
                   <TableCell>次の承認者</TableCell>
                   <TableCell>作成日時</TableCell>
                   <TableCell>更新日時</TableCell>
-                  <TableCell align="right">操作</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {applications.map((application) => (
-                  <TableRow key={application.id} hover>
+                  <TableRow
+                    key={application.id}
+                    hover
+                    onClick={() =>
+                      window.open(`/dashboard/applications/${application.id}?from=applications`, '_blank')
+                    }
+                    sx={{ cursor: 'pointer' }}
+                  >
                     <TableCell>{application.title}</TableCell>
                     <TableCell>{getTypeLabel(application.type)}</TableCell>
                     <TableCell>
@@ -239,15 +243,6 @@ export default function ApplicationsPage() {
                     </TableCell>
                     <TableCell>{formatDate(application.createdAt)}</TableCell>
                     <TableCell>{formatDate(application.updatedAt)}</TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        size="small"
-                        onClick={() => router.push(`/dashboard/applications/${application.id}?from=applications`)}
-                        aria-label="詳細を見る"
-                      >
-                        <VisibilityIcon />
-                      </IconButton>
-                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
