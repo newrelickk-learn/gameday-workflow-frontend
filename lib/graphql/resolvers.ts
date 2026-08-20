@@ -297,6 +297,18 @@ export const resolvers: Resolvers & {
         });
       }
     },
+
+    clearedChapters: async (_, __, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.getClearedChapters(token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to fetch cleared chapters: ${errorMessage}`, {
+          extensions: { code: 'CLEARED_CHAPTERS_FETCH_ERROR', originalError: errorMessage },
+        });
+      }
+    },
   },
 
   Mutation: {

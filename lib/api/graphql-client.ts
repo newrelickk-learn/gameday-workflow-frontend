@@ -543,6 +543,16 @@ export const graphqlClient = {
       });
       return data.checkChapterAnswer;
     },
+
+    async getClearedChapters(): Promise<number[]> {
+      const query = `
+        query ClearedChapters {
+          clearedChapters
+        }
+      `;
+      const data = await graphqlRequest<{ clearedChapters: number[] }>(query);
+      return data.clearedChapters;
+    },
   },
 };
 

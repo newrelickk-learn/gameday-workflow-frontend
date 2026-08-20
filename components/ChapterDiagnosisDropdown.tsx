@@ -25,10 +25,22 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
 
   useEffect(() => {
     let cancelled = false;
-    const fetchOptions = async () => {
+    const init = async () => {
       try {
         setOptionsLoading(true);
         setError('');
+
+        // 今日すでにクリア済みなら（DBに記録済み、日付が変わるとリセットされる）、
+        // 選択肢は取得せずそのまま正解状態を表示する。
+        const clearedChapters: number[] = await apiClient.chapters.getClearedChapters().catch(() => [] as number[]);
+        if (cancelled) {
+          return;
+        }
+        if (clearedChapters.includes(chapter)) {
+          setResult('correct');
+          return;
+        }
+
         const data = await apiClient.chapters.getDiagnosisOptions(chapter);
         if (!cancelled) {
           setOptions(data);
@@ -43,7 +55,7 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
         }
       }
     };
-    fetchOptions();
+    init();
     return () => {
       cancelled = true;
     };

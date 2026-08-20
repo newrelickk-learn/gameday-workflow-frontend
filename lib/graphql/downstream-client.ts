@@ -312,6 +312,19 @@ export class DownstreamClient {
     return data.correct;
   }
 
+  // GameDay演習: 今日クリア済みの章番号一覧を取得する（日付が変わるとリセットされる）。
+  async getClearedChapters(token?: string): Promise<number[]> {
+    if (this.useStubs) {
+      return [];
+    }
+    const data = await this.request<{ clearedChapters: number[] }>(
+      `${this.applicationServiceUrl}/api/v1/chapters/progress`,
+      { method: 'GET' },
+      token
+    );
+    return data.clearedChapters;
+  }
+
   async createApplication(
     data: CreateApplicationRequest,
     token?: string

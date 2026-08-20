@@ -261,6 +261,9 @@ export const typeDefs = `#graphql
 
     # GameDay演習: 章ごとの原因診断ドロップダウンの選択肢（New Relicで調査した内容から選ぶ）
     chapterDiagnosisOptions(chapter: Int!): [String!]!
+
+    # GameDay演習: 今日クリア済みの章番号一覧（日付が変わるとリセットされる）
+    clearedChapters: [Int!]!
   }
 
   # Mutation

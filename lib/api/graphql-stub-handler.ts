@@ -199,6 +199,11 @@ export async function handleGraphQLStub(
     return { checkChapterAnswer: false };
   }
 
+  // ClearedChapters query（GameDay演習: 今日クリア済みの章番号一覧）
+  if (normalizedQuery.includes('query ClearedChapters') || normalizedQuery.includes('clearedChapters')) {
+    return { clearedChapters: [] };
+  }
+
   // マッチしない場合はエラー
   throw new Error(`Unknown GraphQL query/mutation: ${normalizedQuery.substring(0, 100)}`);
 }

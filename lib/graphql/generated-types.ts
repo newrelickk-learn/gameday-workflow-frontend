@@ -102,6 +102,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<string[]>;
+    clearedChapters: (
+      parent: unknown,
+      args: {},
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<number[]>;
   };
   Mutation: {
     login: (
