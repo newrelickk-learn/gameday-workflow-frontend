@@ -2,16 +2,10 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { AppBar, Toolbar, Typography, Box, CircularProgress, Chip, Stack } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { AppBar, Toolbar, Typography, Box, CircularProgress, Stack, Zoom } from '@mui/material';
 import { getVirtualToday } from '@/lib/utils/virtual-date';
 import { getCurrentUserId } from '@/lib/utils/auth';
 import { apiClient } from '@/lib/api/client';
-
-// New Relic調査ドロップダウンによる章クリア判定が実装済みの章のみを表示する
-// （第0章・第1章・第3章・第5章は別の仕組み（Pod飽和突破・上長設定・出張申請成功・
-// 昇進申請成功）で完結するため、chapter_progressテーブルでの追跡対象外）。
-const TRACKED_CHAPTERS = [2, 4];
 
 function formatMonthDay(date: Date): string {
   return `${date.getMonth() + 1}/${date.getDate()}`;
@@ -92,21 +86,22 @@ export default function DashboardLayout({
             ワークフローGameday
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Stack direction="row" spacing={1}>
-              {TRACKED_CHAPTERS.map((chapter) => {
-                const cleared = clearedChapters.includes(chapter);
-                return (
-                  <Chip
-                    key={chapter}
-                    size="small"
-                    label={`第${chapter}章`}
-                    color={cleared ? 'success' : 'default'}
-                    variant={cleared ? 'filled' : 'outlined'}
-                    icon={cleared ? <CheckCircleIcon /> : undefined}
-                  />
-                );
-              })}
-            </Stack>
+            {clearedChapters.length > 0 && (
+              <Stack direction="row" spacing={0.75}>
+                {clearedChapters.map((chapter) => (
+                  <Zoom key={chapter} in appear timeout={{ enter: 400 }} style={{ transitionDelay: '0ms' }}>
+                    <Box
+                      sx={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: '50%',
+                        bgcolor: 'success.main',
+                      }}
+                    />
+                  </Zoom>
+                ))}
+              </Stack>
+            )}
             {virtualDateLabel && (
               <Typography variant="body1" color="text.secondary">
                 今の日付：{virtualDateLabel}
