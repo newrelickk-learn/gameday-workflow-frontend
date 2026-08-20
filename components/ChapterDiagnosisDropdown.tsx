@@ -70,6 +70,11 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
       setError('');
       const correct = await apiClient.chapters.checkAnswer(chapter, selectedText.trim());
       setResult(correct ? 'correct' : 'incorrect');
+      if (correct) {
+        // ヘッダーの進捗表示（chapter_progressに基づく）に即時反映させるため、
+        // レイアウト側にイベントで通知する（layoutは/dashboard配下で再マウントされないため）。
+        window.dispatchEvent(new CustomEvent('gameday:chapterCleared', { detail: { chapter } }));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '判定に失敗しました');
     } finally {
