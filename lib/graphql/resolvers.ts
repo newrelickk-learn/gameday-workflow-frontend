@@ -285,6 +285,18 @@ export const resolvers: Resolvers & {
         });
       }
     },
+
+    chapterDiagnosisOptions: async (_, { chapter }, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.getChapterDiagnosisOptions(chapter, token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to fetch chapter diagnosis options: ${errorMessage}`, {
+          extensions: { code: 'CHAPTER_DIAGNOSIS_OPTIONS_FETCH_ERROR', originalError: errorMessage },
+        });
+      }
+    },
   },
 
   Mutation: {
@@ -463,6 +475,18 @@ export const resolvers: Resolvers & {
       } catch (error) {
         throw new GraphQLError('Failed to get chat response', {
           extensions: { code: 'CHAT_ERROR' },
+        });
+      }
+    },
+
+    checkChapterAnswer: async (_, { chapter, selectedText }, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.checkChapterAnswer(chapter, selectedText, token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to check chapter answer: ${errorMessage}`, {
+          extensions: { code: 'CHECK_CHAPTER_ANSWER_ERROR', originalError: errorMessage },
         });
       }
     },

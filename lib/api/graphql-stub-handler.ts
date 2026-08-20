@@ -189,6 +189,16 @@ export async function handleGraphQLStub(
     return { estimateTravelCost: result };
   }
 
+  // ChapterDiagnosisOptions query（GameDay演習: 章ごとの原因診断ドロップダウンの選択肢）
+  if (normalizedQuery.includes('query ChapterDiagnosisOptions') || normalizedQuery.includes('chapterDiagnosisOptions(chapter:')) {
+    return { chapterDiagnosisOptions: ['(スタブ) ダミーの選択肢A', '(スタブ) ダミーの選択肢B'] };
+  }
+
+  // CheckChapterAnswer mutation（GameDay演習: 章ごとの原因診断の正解判定）
+  if (normalizedQuery.includes('mutation CheckChapterAnswer') || normalizedQuery.includes('checkChapterAnswer(chapter:')) {
+    return { checkChapterAnswer: false };
+  }
+
   // マッチしない場合はエラー
   throw new Error(`Unknown GraphQL query/mutation: ${normalizedQuery.substring(0, 100)}`);
 }

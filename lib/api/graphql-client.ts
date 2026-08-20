@@ -516,5 +516,33 @@ export const graphqlClient = {
       return data.askChat;
     },
   },
+
+  // GameDay演習: 章ごとの原因診断ドロップダウン
+  chapters: {
+    async getDiagnosisOptions(chapter: number): Promise<string[]> {
+      const query = `
+        query ChapterDiagnosisOptions($chapter: Int!) {
+          chapterDiagnosisOptions(chapter: $chapter)
+        }
+      `;
+      const data = await graphqlRequest<{ chapterDiagnosisOptions: string[] }>(query, {
+        chapter,
+      });
+      return data.chapterDiagnosisOptions;
+    },
+
+    async checkAnswer(chapter: number, selectedText: string): Promise<boolean> {
+      const query = `
+        mutation CheckChapterAnswer($chapter: Int!, $selectedText: String!) {
+          checkChapterAnswer(chapter: $chapter, selectedText: $selectedText)
+        }
+      `;
+      const data = await graphqlRequest<{ checkChapterAnswer: boolean }>(query, {
+        chapter,
+        selectedText,
+      });
+      return data.checkChapterAnswer;
+    },
+  },
 };
 

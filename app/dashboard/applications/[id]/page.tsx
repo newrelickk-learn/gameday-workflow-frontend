@@ -20,6 +20,7 @@ import type { Application, Approval } from '@/lib/api/types';
 import { isManager, isDirector } from '@/lib/utils/auth';
 import WorkflowProgress from '@/components/ui/WorkflowProgress';
 import ReceiptCarousel from '@/components/ReceiptCarousel';
+import ChapterDiagnosisDropdown from '@/components/ChapterDiagnosisDropdown';
 
 const getStatusColor = (status: 'pending' | 'approved' | 'rejected') => {
   switch (status) {
@@ -335,6 +336,9 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                 </Typography>
                 <ReceiptCarousel images={application.receiptImageUrls!} />
               </Paper>
+              <Box sx={{ mt: 3 }}>
+                <ChapterDiagnosisDropdown chapter={4} title="この画面の表示が遅い原因を診断する" />
+              </Box>
             </Grid>
           )}
         </Grid>

@@ -281,6 +281,37 @@ export class DownstreamClient {
     );
   }
 
+  // GameDay演習: 章ごとの原因診断ドロップダウンの選択肢を取得する。
+  // 正解・選択肢はサーバー側で暗号化された状態のみ保持しており、レスポンスには
+  // 正解フラグを含めない（New Relicでの調査結果を元に選ばせる仕組みのため）。
+  async getChapterDiagnosisOptions(chapter: number, token?: string): Promise<string[]> {
+    if (this.useStubs) {
+      return [];
+    }
+    const data = await this.request<{ options: string[] }>(
+      `${this.applicationServiceUrl}/api/v1/chapters/${chapter}/diagnosis-options`,
+      { method: 'GET' },
+      token
+    );
+    return data.options;
+  }
+
+  // GameDay演習: 章ごとの原因診断ドロップダウンで選ばれた選択肢が正解かどうかを判定する。
+  async checkChapterAnswer(chapter: number, selectedText: string, token?: string): Promise<boolean> {
+    if (this.useStubs) {
+      return false;
+    }
+    const data = await this.request<{ correct: boolean }>(
+      `${this.applicationServiceUrl}/api/v1/chapters/${chapter}/check-answer`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ selectedText }),
+      },
+      token
+    );
+    return data.correct;
+  }
+
   async createApplication(
     data: CreateApplicationRequest,
     token?: string

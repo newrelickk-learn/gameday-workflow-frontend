@@ -258,6 +258,9 @@ export const typeDefs = `#graphql
     # 出張申請の概算費用（travelサービス）
     cities: [City!]!
     estimateTravelCost(input: EstimateTravelCostInput!): EstimateTravelCostResponse!
+
+    # GameDay演習: 章ごとの原因診断ドロップダウンの選択肢（New Relicで調査した内容から選ぶ）
+    chapterDiagnosisOptions(chapter: Int!): [String!]!
   }
 
   # Mutation
@@ -285,6 +288,9 @@ export const typeDefs = `#graphql
     # AI
     generateApplicationSuggestion(prompt: String!): String!
     askChat(question: String!): String!
+
+    # GameDay演習: 章ごとの原因診断の正解判定
+    checkChapterAnswer(chapter: Int!, selectedText: String!): Boolean!
   }
 `;
 

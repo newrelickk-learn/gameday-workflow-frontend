@@ -96,6 +96,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<EstimateTravelCostResponse>;
+    chapterDiagnosisOptions: (
+      parent: unknown,
+      args: { chapter: number },
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<string[]>;
   };
   Mutation: {
     login: (
@@ -158,6 +164,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<SendNotificationResponse>;
+    checkChapterAnswer: (
+      parent: unknown,
+      args: { chapter: number; selectedText: string },
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<boolean>;
   };
 }
 

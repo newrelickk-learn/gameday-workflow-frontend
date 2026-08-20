@@ -22,6 +22,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { apiClient } from '@/lib/api/client';
 import type { Application } from '@/lib/api/types';
 import { isManager, isDirector, isAccounting } from '@/lib/utils/auth';
+import ChapterDiagnosisDropdown from '@/components/ChapterDiagnosisDropdown';
 
 const getStatusColor = (status: Application['status']) => {
   switch (status) {
@@ -110,6 +111,8 @@ export default function CompanyApplicationsPage() {
           {error}
         </Alert>
       )}
+
+      <ChapterDiagnosisDropdown chapter={2} title="この画面が遅い原因を診断する" />
 
       <Paper sx={{ p: 3 }}>
         {loading ? (
