@@ -54,6 +54,10 @@ export class DownstreamClient {
     this.travelServiceUrl = process.env.TRAVEL_SERVICE_URL || 'http://localhost:8005';
   }
 
+  // downstreamサービスへの接続がハングした場合、ページ全体のローディングが永久に
+  // 終わらなくなる不具合を防ぐためのデフォルトタイムアウト（ミリ秒）。
+  private static readonly DEFAULT_TIMEOUT_MS = 10000;
+
   private async request<T>(
     url: string,
     options: RequestInit = {},
@@ -73,10 +77,14 @@ export class DownstreamClient {
       });
     }
 
+    const timeoutController = new AbortController();
+    const timeoutId = setTimeout(() => timeoutController.abort(), DownstreamClient.DEFAULT_TIMEOUT_MS);
+
     try {
       const response = await fetch(url, {
         ...options,
         headers,
+        signal: options.signal ?? timeoutController.signal,
       });
 
       if (!response.ok) {
@@ -91,7 +99,24 @@ export class DownstreamClient {
           error: errorText,
           errorLength: errorText.length,
         });
-        throw new Error(errorMessage);
+        const error = new Error(errorMessage) as Error & {
+          code?: string;
+          detailMessage?: string;
+          field?: string;
+        };
+        // downstream(FastAPI)のHTTPExceptionは { detail: { error, message, field } } 形式。
+        // code/detailMessage/fieldをError側に持たせ、呼び出し元(resolvers.ts)がGraphQLの
+        // extensionsに転記できるようにする（例: 第5章のASSERTION_RULE_VIOLATION）。
+        try {
+          const body = JSON.parse(errorText);
+          const detail = body?.detail ?? body;
+          error.code = detail?.error;
+          error.detailMessage = detail?.message;
+          error.field = detail?.field;
+        } catch {
+          // errorTextがJSONでない場合は無視
+        }
+        throw error;
       }
 
       const data = await response.json();
@@ -112,6 +137,12 @@ export class DownstreamClient {
       if (error instanceof Error && error.message.includes('Downstream service error')) {
         throw error;
       }
+      if (error instanceof Error && error.name === 'AbortError' && !options.signal) {
+        // downstream接続がハングして応答が返らないケース（呼び出し元でPromise.allを使っていると、
+        // これがページ全体のローディングを永久に終わらせなくなる原因になる）。
+        console.error('[Downstream Client] Request timed out:', { url, timeoutMs: DownstreamClient.DEFAULT_TIMEOUT_MS });
+        throw new Error(`Downstream service timed out after ${DownstreamClient.DEFAULT_TIMEOUT_MS}ms: ${url}`);
+      }
       // ネットワークエラーなどの場合
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('[Downstream Client] Network error:', {
@@ -119,6 +150,8 @@ export class DownstreamClient {
         error: errorMessage,
       });
       throw new Error(`Failed to connect to downstream service: ${errorMessage}`);
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 

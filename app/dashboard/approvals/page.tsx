@@ -96,7 +96,6 @@ export default function ApprovalsPage() {
   const [comment, setComment] = useState('');
   const [processing, setProcessing] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [approvalsByApplication, setApprovalsByApplication] = useState<Record<string, Approval[]>>({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -124,20 +123,6 @@ export default function ApprovalsPage() {
           });
         });
         const applicationsData = await Promise.all(applicationPromises);
-        
-        // 各申請の承認履歴を取得
-        const approvalsByAppMap: Record<string, Approval[]> = {};
-        const uniqueApplicationIds = [...new Set(approvalsData.map(a => a.applicationId))];
-        for (const appId of uniqueApplicationIds) {
-          try {
-            const appApprovals = await apiClient.approvals.getApprovalsByApplication(appId).catch(() => []);
-            approvalsByAppMap[appId] = appApprovals;
-          } catch (err) {
-            console.error('[ApprovalsPage] Failed to fetch approvals for application:', appId, err);
-            approvalsByAppMap[appId] = [];
-          }
-        }
-        setApprovalsByApplication(approvalsByAppMap);
         console.log('[ApprovalsPage] Fetched applications:', applicationsData);
         
         const applicationsMap: Record<string, Application> = {};
@@ -374,7 +359,9 @@ export default function ApprovalsPage() {
                 {pendingApprovals.map((approval) => {
                   const application = applications[approval.applicationId];
                   const isExpanded = expandedRows.has(approval.applicationId);
-                  const applicationApprovals = approvalsByApplication[approval.applicationId] || [];
+                  // 承認履歴(承認フロー各ステップの詳細)を返すバックエンドAPIが未実装のため、
+                  // 常に空配列を渡す。WorkflowProgressは空配列でも問題なく表示できる。
+                  const applicationApprovals: Approval[] = [];
                   
                   return (
                     <>
