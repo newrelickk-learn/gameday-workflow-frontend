@@ -129,7 +129,7 @@ function LoginForm() {
                 name="impactedPodName"
                 label="問題のあるPod名"
                 id="impactedPodName"
-                helperText="ヒント：ログインはgameday-workflow-userサービスで行っている。APMで問題となっているpodを見つける。Infraアカウントに、'Kubernetes Dashboard'があるので、コンテナのCPU Usage を確認する"
+                helperText="ヒント：ログインはgameday-workflow-userサービスで行っている。APMで問題となっているpodを見つける。Infraアカウントに、'Kubernetes Dashboard'があるので、コンテナのCPU Usage を確認する。"
                 value={impactedPodName}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setImpactedPodName(e.target.value)}
                 disabled={loading}

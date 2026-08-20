@@ -365,14 +365,22 @@ export const resolvers: Resolvers & {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         const errorStack = error instanceof Error ? error.stack : undefined;
+        // downstreamClient.createApplication()は失敗時、error.codeにbackendのerror_code
+        // (例: "APPROVER_NOT_FOUND"、"ASSERTION_RULE_VIOLATION")、error.detailMessageに
+        // backendのメッセージを保持している。UI側（第1章は隠す、第5章は表示する等）の
+        // 判定に使えるよう、GraphQLErrorのextensions.codeとmessageに転記する。
+        const code = (error as { code?: string })?.code;
+        const detailMessage = (error as { detailMessage?: string })?.detailMessage;
+        const field = (error as { field?: string })?.field;
         console.error('[GraphQL Resolver] Failed to create application:', {
           error: errorMessage,
           stack: errorStack,
           input: JSON.stringify(input, null, 2),
         });
-        throw new GraphQLError(`Failed to create application: ${errorMessage}`, {
-          extensions: { 
-            code: 'CREATE_APPLICATION_ERROR',
+        throw new GraphQLError(detailMessage || `Failed to create application: ${errorMessage}`, {
+          extensions: {
+            code: code ?? 'CREATE_APPLICATION_ERROR',
+            field,
             originalError: errorMessage,
             stack: errorStack,
           },
