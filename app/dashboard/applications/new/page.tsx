@@ -267,11 +267,13 @@ export default function NewApplicationPage() {
       }, 1500);
     } catch (err) {
       const code = (err as { code?: string })?.code;
-      // ASSERTION_RULE_VIOLATION（例: 第5章のdescription形式チェック）は、参加者が
-      // メッセージを読めばその場で直せる入力フォーマットの指摘なので、そのまま表示する。
+      // ASSERTION_RULE_VIOLATION（例: 第5章のdescription形式チェック）や
+      // PREREQUISITE_CHAPTERS_NOT_CLEARED（章の順序ゲート）は、参加者が
+      // メッセージを読めばその場で理解・対応できる具体的な指摘なので、そのまま表示する。
       // それ以外（例: 第1章のAPPROVER_NOT_FOUND）は詳細を出さず、New Relicで原因を
       // 確認する運用のまま変更しない。
-      if (code === 'ASSERTION_RULE_VIOLATION' && err instanceof Error && err.message) {
+      const SHOWABLE_ERROR_CODES = ['ASSERTION_RULE_VIOLATION', 'PREREQUISITE_CHAPTERS_NOT_CLEARED'];
+      if (code && SHOWABLE_ERROR_CODES.includes(code) && err instanceof Error && err.message) {
         setError(err.message);
       } else {
         setError('申請できませんでした');
