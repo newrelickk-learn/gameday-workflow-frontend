@@ -153,6 +153,7 @@ export default function ApplicationsPage() {
             <Table>
               <TableHead>
                 <TableRow>
+                  <TableCell>申請書番号</TableCell>
                   <TableCell>タイトル</TableCell>
                   <TableCell>タイプ</TableCell>
                   <TableCell>申請者</TableCell>
@@ -175,6 +176,7 @@ export default function ApplicationsPage() {
                     }
                     sx={{ cursor: 'pointer' }}
                   >
+                    <TableCell>{application.applicationNumber ?? '-'}</TableCell>
                     <TableCell>{application.title}</TableCell>
                     <TableCell>{getTypeLabel(application.type)}</TableCell>
                     <TableCell>
@@ -190,7 +192,7 @@ export default function ApplicationsPage() {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      {application.type === 'expense' && application.amount !== undefined
+                      {application.type === 'expense' && application.amount != null
                         ? `¥${application.amount.toLocaleString()}`
                         : '-'}
                     </TableCell>

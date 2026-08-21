@@ -221,6 +221,7 @@ export const graphqlClient = {
         query GetApplications($applicantId: ID) {
           applications(applicantId: $applicantId) {
             id
+            applicationNumber
             type
             title
             description
@@ -263,6 +264,7 @@ export const graphqlClient = {
         query GetApplication($id: ID!) {
           application(id: $id) {
             id
+            applicationNumber
             type
             title
             description
@@ -295,6 +297,7 @@ export const graphqlClient = {
         mutation CreateApplication($input: CreateApplicationInput!) {
           createApplication(input: $input) {
             id
+            applicationNumber
             type
             title
             description

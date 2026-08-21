@@ -24,6 +24,7 @@ export interface User {
 // 申請関連の型
 export interface Application {
   id: string;
+  applicationNumber?: string | null; // 申請書番号（例: BT-000001）
   type: string;
   title: string;
   description: string;

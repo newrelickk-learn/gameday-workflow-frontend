@@ -41,6 +41,7 @@ export const typeDefs = `#graphql
   # 申請関連
   type Application {
     id: ID!
+    applicationNumber: String
     type: String!
     title: String!
     description: String!

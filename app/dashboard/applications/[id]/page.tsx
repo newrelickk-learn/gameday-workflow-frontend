@@ -159,9 +159,16 @@ export default function ApplicationDetailPage({ params }: PageProps) {
               <Grid container spacing={3}>
                 <Grid item xs={12}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h5" component="h2" fontWeight="bold">
-                      {application.title}
-                    </Typography>
+                    <Box>
+                      <Typography variant="h5" component="h2" fontWeight="bold">
+                        {application.title}
+                      </Typography>
+                      {application.applicationNumber && (
+                        <Typography variant="body2" color="text.secondary">
+                          申請書番号: {application.applicationNumber}
+                        </Typography>
+                      )}
+                    </Box>
                     <Chip
                       label={getStatusLabel(application.status)}
                       color={getStatusColor(application.status) as any}
@@ -181,7 +188,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                   <Typography variant="body1">{getTypeLabel(application.type)}</Typography>
                 </Grid>
 
-                {application.type === 'expense' && application.amount !== undefined && (
+                {application.type === 'expense' && application.amount != null && (
                   <Grid item xs={12} md={6}>
                     <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                       金額
