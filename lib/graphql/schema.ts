@@ -244,6 +244,8 @@ export const typeDefs = `#graphql
     # 申請
     applications(applicantId: ID): [Application!]!
     application(id: ID!): Application
+    # 件数のみ取得（申請者名・コメント等は取得しないためN+1が発生しない）
+    applicationsCount(status: ApplicationStatus): Int!
     
     # 承認
     approvals: [Approval!]!

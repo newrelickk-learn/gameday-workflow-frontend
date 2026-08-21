@@ -248,6 +248,16 @@ export const graphqlClient = {
       return data.applications;
     },
 
+    async getApplicationsCount(status?: 'pending' | 'approved' | 'rejected'): Promise<number> {
+      const query = `
+        query GetApplicationsCount($status: ApplicationStatus) {
+          applicationsCount(status: $status)
+        }
+      `;
+      const data = await graphqlRequest<{ applicationsCount: number }>(query, { status });
+      return data.applicationsCount;
+    },
+
     async getApplication(id: string): Promise<Application> {
       const query = `
         query GetApplication($id: ID!) {

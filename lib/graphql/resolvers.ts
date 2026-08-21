@@ -160,6 +160,22 @@ export const resolvers: Resolvers & {
       }
     },
 
+    applicationsCount: async (_, { status }, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.getApplicationsCount(token, status ?? undefined);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('[GraphQL Resolver] Failed to fetch applications count:', error);
+        throw new GraphQLError(`Failed to fetch applications count: ${errorMessage}`, {
+          extensions: {
+            code: 'APPLICATIONS_COUNT_FETCH_ERROR',
+            originalError: errorMessage,
+          },
+        });
+      }
+    },
+
     application: async (_, { id }, context) => {
       try {
         await addCustomAttribute('application.id', id);

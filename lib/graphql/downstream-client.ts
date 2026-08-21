@@ -267,6 +267,26 @@ export class DownstreamClient {
     );
   }
 
+  async getApplicationsCount(token?: string, status?: string): Promise<number> {
+    if (this.useStubs) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Downstream Client] Using stub for getApplicationsCount');
+      }
+      const allApplications = await stubApplicationService.getApplications();
+      return status ? allApplications.filter((app) => app.status === status).length : allApplications.length;
+    }
+    const url = new URL(`${this.applicationServiceUrl}/api/v1/applications/count`);
+    if (status) {
+      url.searchParams.append('status', status);
+    }
+    const data = await this.request<{ count: number }>(
+      url.toString(),
+      { method: 'GET' },
+      token
+    );
+    return data.count;
+  }
+
   async getApplication(id: string, token?: string): Promise<Application> {
     if (this.useStubs) {
       if (process.env.NODE_ENV === 'development') {

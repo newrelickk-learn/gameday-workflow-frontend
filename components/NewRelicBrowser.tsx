@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
+import { getCurrentUser } from '@/lib/utils/auth';
+import { setNewRelicUserId } from '@/lib/newrelic-browser';
 
 /**
  * New Relic Browser agent（RUM、Core Web Vitals計測）の初期化。
@@ -60,6 +62,13 @@ export default function NewRelicBrowser() {
         },
       };
       new BrowserAgent(options);
+
+      // ログイン済みユーザーのemailをenduser.idとして紐づける（ログインはフルページ
+      // ロードなので、遷移後のこの初期化タイミングでlocalStorageから読めば十分）
+      const currentUser = getCurrentUser();
+      if (currentUser?.email) {
+        setNewRelicUserId(currentUser.email);
+      }
     });
   }, []);
 

@@ -17,12 +17,13 @@ import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
 import type { Application, Approval } from '@/lib/api/types';
 import { getCurrentUserId, getUserRoleFromId, isHr, isManager, isDirector, isAccounting } from '@/lib/utils/auth';
+import { setNewRelicUserId } from '@/lib/newrelic-browser';
 
 export default function DashboardPage() {
   const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [approvals, setApprovals] = useState<Approval[]>([]);
-  const [companyApplications, setCompanyApplications] = useState<Application[]>([]);
+  const [companyApprovedCount, setCompanyApprovedCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -33,10 +34,14 @@ export default function DashboardPage() {
         setError('');
         const userId = getCurrentUserId();
         const isApprover = isManager() || isDirector() || isAccounting();
-        const [applicationsData, approvalsData, companyApplicationsData] = await Promise.all([
+        // 承認済み件数はapplicationsCount（SQLのCOUNTのみ、申請者名等を取得しないため
+        // N+1が発生しない）で取得する。以前はgetApplications()（自社の全申請を申請者名
+        // 付きで取得、N+1が発生する）で件数分の行を取得してからフィルタしていたため、
+        // ダッシュボード自体が第2章と同じN+1で遅くなっていた。
+        const [applicationsData, approvalsData, approvedCount] = await Promise.all([
           apiClient.applications.getApplications(userId ?? undefined),
           apiClient.approvals.getApprovals(),
-          isApprover ? apiClient.applications.getApplications() : Promise.resolve([] as Application[]),
+          isApprover ? apiClient.applications.getApplicationsCount('approved') : Promise.resolve(0),
         ]);
 
         // プロモーション申請は上長だけに表示（申請は既に userId で絞り込み済み）
@@ -50,7 +55,7 @@ export default function DashboardPage() {
 
         setApplications(filteredApplications);
         setApprovals(approvalsData);
-        setCompanyApplications(companyApplicationsData);
+        setCompanyApprovedCount(approvedCount);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'データの取得に失敗しました');
         console.error('ダッシュボードデータ取得エラー:', err);
@@ -63,9 +68,12 @@ export default function DashboardPage() {
   }, []);
 
   const pendingApprovals = approvals.filter((app) => app.status === 'pending');
-  const companyApprovedApplications = companyApplications.filter((app) => app.status === 'approved');
 
   const handleLogout = () => {
+    // ログアウトはフルページロードを伴わないため、New Relic Browserエージェントの
+    // enduser.idを明示的にクリアする（resetSession=trueで次のユーザーのセッションと
+    // 混ざらないようにする）
+    setNewRelicUserId(null, true);
     // localStorageからトークンとユーザー情報を削除
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
@@ -162,7 +170,7 @@ export default function DashboardPage() {
                   承認済み一覧
                 </Typography>
                 <Typography variant="h4" component="p" fontWeight="bold" color="success.main">
-                  {companyApprovedApplications.length}
+                  {companyApprovedCount}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                   自社の承認済みの申請

@@ -54,6 +54,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<Application>;
+    applicationsCount: (
+      parent: unknown,
+      args: { status?: 'pending' | 'approved' | 'rejected' | null },
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<number>;
     approvals: (
       parent: unknown,
       args: {},
