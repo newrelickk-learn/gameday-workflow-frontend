@@ -393,6 +393,9 @@ export default function NewApplicationPage() {
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 New Relicの分散トレース（Entity map）で確認できる、実際の呼び出し順を1〜3番目まで選択してください。正しく回答するまで申請できません。
               </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                実際に申請して確認してみましょう。ヒント：CreateApplication / Transaction 360
+              </Typography>
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 {[0, 1, 2].map((index) => (
                   <TextField
