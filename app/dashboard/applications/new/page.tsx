@@ -27,6 +27,23 @@ import { getVirtualToday } from '@/lib/utils/virtual-date';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import type { City } from '@/lib/api/types';
 
+// 経費申請作成時にフロントエンドが呼び出すサービスの依存関係チェーン（正解）。
+// GameDay: New Relicの分散トレース（Entity map）で実際に確認できる呼び出し順を
+// 3つのドロップダウンで答えさせ、正しく回答するまで経費申請を提出できないようにする。
+const DEPENDENCY_CHAIN_ANSWER = [
+  'gameday-workflow-frontend',
+  'gameday-workflow-application-approval',
+  'gameday-workflow-user',
+];
+
+const SERVICE_OPTIONS = [
+  'gameday-workflow-frontend',
+  'gameday-workflow-application-approval',
+  'gameday-workflow-user',
+  'gameday-workflow-workflow-notification',
+  'gameday-workflow-travel',
+];
+
 const getTypeLabel = (type: string) => {
   switch (type) {
     case 'business-trip':
@@ -56,6 +73,22 @@ export default function NewApplicationPage() {
   const [success, setSuccess] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [virtualToday, setVirtualToday] = useState<Date | null>(null);
+
+  // 経費申請: 依存関係チェーン（呼び出されるサービスの順番）を答えさせる3つのドロップダウン
+  const [dependencyChain, setDependencyChain] = useState<string[]>(['', '', '']);
+
+  const handleDependencyChainChange = (index: number, value: string) => {
+    setDependencyChain((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  };
+
+  const isDependencyChainAnswered = dependencyChain.every((step) => step !== '');
+  const isDependencyChainCorrect =
+    isDependencyChainAnswered &&
+    dependencyChain.every((step, index) => step === DEPENDENCY_CHAIN_ANSWER[index]);
 
   // 出張申請: 出発地・到着地の都市選択と概算費用の自動取得（travelサービス）
   const [cities, setCities] = useState<City[]>([]);
@@ -175,6 +208,7 @@ export default function NewApplicationPage() {
     title &&
     description &&
     (!isExpenseType || (amount && parseFloat(amount) > 0)) &&
+    (!isExpenseType || isDependencyChainCorrect) &&
     (!isDateRequiredType || (startDate && endDate && days && parseInt(days) > 0)) &&
     (!isBusinessTripType ||
       (departureCityId &&
@@ -350,6 +384,45 @@ export default function NewApplicationPage() {
                 ),
               }}
             />
+          )}
+          {isExpenseType && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                この経費申請を作成すると、どのサービスがどの順番で呼び出されますか？
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                New Relicの分散トレース（Entity map）で確認できる、実際の呼び出し順を1〜3番目まで選択してください。正しく回答するまで申請できません。
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                {[0, 1, 2].map((index) => (
+                  <TextField
+                    key={index}
+                    select
+                    fullWidth
+                    label={`${index + 1}番目に呼び出されるサービス`}
+                    value={dependencyChain[index]}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      handleDependencyChainChange(index, e.target.value)
+                    }
+                    disabled={loading}
+                  >
+                    <MenuItem value="">選択してください</MenuItem>
+                    {SERVICE_OPTIONS.map((service) => (
+                      <MenuItem key={service} value={service}>
+                        {service}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                ))}
+              </Box>
+              {isDependencyChainAnswered && (
+                <Alert severity={isDependencyChainCorrect ? 'success' : 'error'} sx={{ mt: 2 }}>
+                  {isDependencyChainCorrect
+                    ? '正解です。経費申請を続けられます。'
+                    : '不正解です。New Relicの分散トレースで呼び出し順を確認してください。'}
+                </Alert>
+              )}
+            </Box>
           )}
           {isBusinessTripType && (
             <>
