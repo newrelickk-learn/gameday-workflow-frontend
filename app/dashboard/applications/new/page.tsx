@@ -391,7 +391,7 @@ export default function NewApplicationPage() {
                 この経費申請を作成すると、どのサービスがどの順番で呼び出されますか？
               </Typography>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                New Relicの分散トレース（Entity map）で確認できる、実際の呼び出し順を1〜3番目まで選択してください。正しく回答するまで申請できません。
+                実際の呼び出し順を1〜3番目まで選択してください。正しく回答するまで申請できません。
               </Typography>
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 実際に申請して確認してみましょう。ヒント：CreateApplication / Transaction 360
