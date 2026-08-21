@@ -56,7 +56,7 @@ export class DownstreamClient {
 
   // downstreamサービスへの接続がハングした場合、ページ全体のローディングが永久に
   // 終わらなくなる不具合を防ぐためのデフォルトタイムアウト（ミリ秒）。
-  private static readonly DEFAULT_TIMEOUT_MS = 10000;
+  private static readonly DEFAULT_TIMEOUT_MS = 30000;
 
   private async request<T>(
     url: string,
