@@ -78,6 +78,7 @@ export const typeDefs = `#graphql
     endDate: String
     days: Int
     applicantId: String!
+    dependencyChain: [String!]
   }
 
   # 承認関連

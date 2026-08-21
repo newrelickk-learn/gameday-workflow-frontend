@@ -274,6 +274,7 @@ export default function NewApplicationPage() {
         endDate?: string;
         days?: number;
         applicantId: string;
+        dependencyChain?: string[];
       } = {
         type,
         title,
@@ -291,6 +292,12 @@ export default function NewApplicationPage() {
         requestData.startDate = startDate;
         requestData.endDate = endDate;
         requestData.days = parseInt(days);
+      }
+
+      // 経費申請の場合、依存関係チェーンの回答をサーバーに送る（第1章クリア判定に使用。
+      // 未回答の場合も含めてそのまま送り、正誤判定はバックエンド側で行う）
+      if (isExpenseType) {
+        requestData.dependencyChain = dependencyChain;
       }
 
       await apiClient.applications.createApplication(requestData);
@@ -385,48 +392,6 @@ export default function NewApplicationPage() {
                 ),
               }}
             />
-          )}
-          {isExpenseType && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                この経費申請を作成すると、どのサービスがどの順番で呼び出されますか？
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                実際の呼び出し順を1〜3番目まで選択してください（任意）。回答しなくても申請できますが、組み合わせが正しくないと最終的にクリアにはなりません。
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                実際に申請して確認してみましょう。ヒント：CreateApplication / Transaction 360
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                {[0, 1, 2].map((index) => (
-                  <TextField
-                    key={index}
-                    select
-                    fullWidth
-                    label={`${index + 1}番目に呼び出されるサービス`}
-                    value={dependencyChain[index]}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleDependencyChainChange(index, e.target.value)
-                    }
-                    disabled={loading}
-                  >
-                    <MenuItem value="">選択してください</MenuItem>
-                    {SERVICE_OPTIONS.map((service) => (
-                      <MenuItem key={service} value={service}>
-                        {service}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                ))}
-              </Box>
-              {isDependencyChainAnswered && (
-                <Alert severity={isDependencyChainCorrect ? 'success' : 'error'} sx={{ mt: 2 }}>
-                  {isDependencyChainCorrect
-                    ? '正解です。経費申請を続けられます。'
-                    : '不正解です。New Relicの分散トレースで呼び出し順を確認してください。'}
-                </Alert>
-              )}
-            </Box>
           )}
           {isBusinessTripType && (
             <>
@@ -566,6 +531,48 @@ export default function NewApplicationPage() {
             sx={{ mb: 3 }}
             placeholder="申請の詳細を入力してください"
           />
+          {isExpenseType && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                この経費申請を作成すると、どのサービスがどの順番で呼び出されますか？
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                正しい呼び出し順を1〜3番目まで選択して申請することがクリア条件です。
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                実際に申請して確認してみましょう。ヒント：CreateApplication / Transaction 360
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                {[0, 1, 2].map((index) => (
+                  <TextField
+                    key={index}
+                    select
+                    fullWidth
+                    label={`${index + 1}番目に呼び出されるサービス`}
+                    value={dependencyChain[index]}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      handleDependencyChainChange(index, e.target.value)
+                    }
+                    disabled={loading}
+                  >
+                    <MenuItem value="">選択してください</MenuItem>
+                    {SERVICE_OPTIONS.map((service) => (
+                      <MenuItem key={service} value={service}>
+                        {service}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                ))}
+              </Box>
+              {isDependencyChainAnswered && (
+                <Alert severity={isDependencyChainCorrect ? 'success' : 'error'} sx={{ mt: 2 }}>
+                  {isDependencyChainCorrect
+                    ? '正解です。経費申請を続けられます。'
+                    : '不正解です。New Relicの分散トレースで呼び出し順を確認してください。'}
+                </Alert>
+              )}
+            </Box>
+          )}
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
             <Button
               variant="outlined"

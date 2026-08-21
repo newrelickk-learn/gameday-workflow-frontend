@@ -379,6 +379,7 @@ export const resolvers: Resolvers & {
             endDate: input.endDate ?? undefined,
             days: input.days ?? undefined,
             applicantId,
+            dependencyChain: input.dependencyChain ?? undefined,
           },
           token
         );

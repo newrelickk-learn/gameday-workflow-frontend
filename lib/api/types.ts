@@ -55,6 +55,7 @@ export interface CreateApplicationRequest {
   endDate?: string; // 有給休暇の場合の終了日
   days?: number; // 有給休暇の場合の日数
   applicantId: string; // 申請者ID
+  dependencyChain?: string[]; // 経費申請: サービス依存関係チェーンの回答（第1章クリア判定に使用）
 }
 
 // 承認関連の型

@@ -192,6 +192,7 @@ export interface CreateApplicationInput {
   endDate?: string | null;
   days?: number | null;
   applicantId: string;
+  dependencyChain?: string[] | null;
 }
 
 export interface UpdateApprovalInput {
