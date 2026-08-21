@@ -29,7 +29,9 @@ import type { City } from '@/lib/api/types';
 
 // 経費申請作成時にフロントエンドが呼び出すサービスの依存関係チェーン（正解）。
 // GameDay: New Relicの分散トレース（Entity map）で実際に確認できる呼び出し順を
-// 3つのドロップダウンで答えさせ、正しく回答するまで経費申請を提出できないようにする。
+// 3つのドロップダウンで答えさせる。回答は任意で、申請の提出自体はブロックしない
+// （実際に申請してTransaction 360等で確認してほしいため）。組み合わせが正しいかは
+// 画面上のフィードバックのみで示す。
 const DEPENDENCY_CHAIN_ANSWER = [
   'gameday-workflow-frontend',
   'gameday-workflow-application-approval',
@@ -208,7 +210,6 @@ export default function NewApplicationPage() {
     title &&
     description &&
     (!isExpenseType || (amount && parseFloat(amount) > 0)) &&
-    (!isExpenseType || isDependencyChainCorrect) &&
     (!isDateRequiredType || (startDate && endDate && days && parseInt(days) > 0)) &&
     (!isBusinessTripType ||
       (departureCityId &&
@@ -391,7 +392,7 @@ export default function NewApplicationPage() {
                 この経費申請を作成すると、どのサービスがどの順番で呼び出されますか？
               </Typography>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                実際の呼び出し順を1〜3番目まで選択してください。正しく回答するまで申請できません。
+                実際の呼び出し順を1〜3番目まで選択してください（任意）。回答しなくても申請できますが、組み合わせが正しくないと最終的にクリアにはなりません。
               </Typography>
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 実際に申請して確認してみましょう。ヒント：CreateApplication / Transaction 360
