@@ -4,8 +4,9 @@ import { Suspense, useEffect, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { AppBar, Toolbar, Typography, Box, CircularProgress, Stack, Zoom } from '@mui/material';
 import { getVirtualToday } from '@/lib/utils/virtual-date';
-import { getCurrentUserId } from '@/lib/utils/auth';
+import { getCurrentUserId, getCurrentUser } from '@/lib/utils/auth';
 import { apiClient } from '@/lib/api/client';
+import type { User } from '@/lib/api/types';
 
 function formatMonthDay(date: Date): string {
   return `${date.getMonth() + 1}/${date.getDate()}`;
@@ -47,6 +48,11 @@ export default function DashboardLayout({
 }) {
   const [virtualDateLabel, setVirtualDateLabel] = useState<string | null>(null);
   const [clearedChapters, setClearedChapters] = useState<number[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    setCurrentUser(getCurrentUser());
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -84,6 +90,17 @@ export default function DashboardLayout({
         <Toolbar sx={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
           <Typography variant="h6" component="div" fontWeight="bold">
             ワークフローGameday
+            {currentUser && (
+              <Typography
+                component="span"
+                variant="body2"
+                color="text.secondary"
+                fontWeight="normal"
+                sx={{ ml: 1.5 }}
+              >
+                (ID: {currentUser.id}) {currentUser.name}
+              </Typography>
+            )}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             {clearedChapters.length > 0 && (
