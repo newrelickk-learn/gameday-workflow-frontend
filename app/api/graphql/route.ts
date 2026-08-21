@@ -1,6 +1,7 @@
 import { createYoga, createSchema } from 'graphql-yoga';
 import { typeDefs } from '@/lib/graphql/schema';
 import { resolvers } from '@/lib/graphql/resolvers';
+import { newRelicErrorReportingPlugin } from '@/lib/graphql/newrelic-error-plugin';
 import { NextRequest } from 'next/server';
 
 // GraphQLスキーマを明示的に構築
@@ -17,6 +18,7 @@ const { handleRequest } = createYoga({
     Request: Request,
     Response: Response,
   },
+  plugins: [newRelicErrorReportingPlugin],
   context: (req: { request: Request }) => ({
     request: req.request,
   }),

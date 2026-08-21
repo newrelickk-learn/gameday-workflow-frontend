@@ -6,6 +6,7 @@
  */
 interface NewRelicApi {
   addCustomAttribute(name: string, value: string | number | boolean): void;
+  noticeError(error: Error, customAttributes?: Record<string, string | number | boolean>): void;
 }
 
 export async function addCustomAttribute(name: string, value: string | number | boolean): Promise<void> {
@@ -14,6 +15,22 @@ export async function addCustomAttribute(name: string, value: string | number | 
     (newrelic as unknown as NewRelicApi).addCustomAttribute(name, value);
   } catch (error) {
     console.error('[NewRelic] Failed to add custom attribute:', name, error);
+  }
+}
+
+/**
+ * GraphQLのエラーはHTTP 200で返されるため、New Relicは自動的にはエラーとして
+ * 検知しない。noticeErrorで明示的に通知する。
+ */
+export async function noticeError(
+  error: Error,
+  customAttributes?: Record<string, string | number | boolean>
+): Promise<void> {
+  try {
+    const { default: newrelic } = await import('newrelic');
+    (newrelic as unknown as NewRelicApi).noticeError(error, customAttributes);
+  } catch (err) {
+    console.error('[NewRelic] Failed to notice error:', error.message, err);
   }
 }
 
