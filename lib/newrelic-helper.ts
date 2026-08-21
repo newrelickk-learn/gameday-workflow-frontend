@@ -7,6 +7,7 @@
 interface NewRelicApi {
   addCustomAttribute(name: string, value: string | number | boolean): void;
   noticeError(error: Error, customAttributes?: Record<string, string | number | boolean>): void;
+  setTransactionName(name: string): void;
 }
 
 export async function addCustomAttribute(name: string, value: string | number | boolean): Promise<void> {
@@ -31,6 +32,21 @@ export async function noticeError(
     (newrelic as unknown as NewRelicApi).noticeError(error, customAttributes);
   } catch (err) {
     console.error('[NewRelic] Failed to notice error:', error.message, err);
+  }
+}
+
+/**
+ * 現在のトランザクション名を設定する。/api/graphql に来るリクエストはすべて
+ * 同じルートのため、設定しないとNew Relic上で全operationが1つのトランザクション
+ * （例: "WebTransaction/NextJS/api/graphql"）にまとまってしまい、どのoperationが
+ * 遅い・エラーになっているかが分からない。GraphQL operation名を使って区別する。
+ */
+export async function setTransactionName(name: string): Promise<void> {
+  try {
+    const { default: newrelic } = await import('newrelic');
+    (newrelic as unknown as NewRelicApi).setTransactionName(name);
+  } catch (error) {
+    console.error('[NewRelic] Failed to set transaction name:', name, error);
   }
 }
 
