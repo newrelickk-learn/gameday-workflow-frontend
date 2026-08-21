@@ -22,6 +22,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [approvals, setApprovals] = useState<Approval[]>([]);
+  const [companyApplications, setCompanyApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -31,11 +32,13 @@ export default function DashboardPage() {
         setLoading(true);
         setError('');
         const userId = getCurrentUserId();
-        const [applicationsData, approvalsData] = await Promise.all([
+        const isApprover = isManager() || isDirector() || isAccounting();
+        const [applicationsData, approvalsData, companyApplicationsData] = await Promise.all([
           apiClient.applications.getApplications(userId ?? undefined),
           apiClient.approvals.getApprovals(),
+          isApprover ? apiClient.applications.getApplications() : Promise.resolve([] as Application[]),
         ]);
-        
+
         // プロモーション申請は上長だけに表示（申請は既に userId で絞り込み済み）
         const userRole = getUserRoleFromId(userId);
         const filteredApplications = applicationsData.filter((application) => {
@@ -44,9 +47,10 @@ export default function DashboardPage() {
           }
           return true;
         });
-        
+
         setApplications(filteredApplications);
         setApprovals(approvalsData);
+        setCompanyApplications(companyApplicationsData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'データの取得に失敗しました');
         console.error('ダッシュボードデータ取得エラー:', err);
@@ -58,10 +62,8 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
-  const pendingApplications = applications.filter((app) => app.status === 'pending');
-  const approvedApplications = applications.filter((app) => app.status === 'approved');
-  const rejectedApplications = applications.filter((app) => app.status === 'rejected');
   const pendingApprovals = approvals.filter((app) => app.status === 'pending');
+  const companyApprovedApplications = companyApplications.filter((app) => app.status === 'approved');
 
   const handleLogout = () => {
     // localStorageからトークンとユーザー情報を削除
@@ -152,41 +154,31 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" component="h2" gutterBottom>
-                統計
-              </Typography>
-              <Box sx={{ mt: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    承認済み:
-                  </Typography>
-                  <Typography variant="body2" fontWeight="bold" color="success.main">
-                    {approvedApplications.length}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    却下:
-                  </Typography>
-                  <Typography variant="body2" fontWeight="bold" color="error.main">
-                    {rejectedApplications.length}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">
-                    承認待ち:
-                  </Typography>
-                  <Typography variant="body2" fontWeight="bold" color="warning.main">
-                    {pendingApplications.length}
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+        {(isManager() || isDirector() || isAccounting()) && (
+          <Grid item xs={12} md={3}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" component="h2" gutterBottom>
+                  承認済み一覧
+                </Typography>
+                <Typography variant="h4" component="p" fontWeight="bold" color="success.main">
+                  {companyApprovedApplications.length}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  自社の承認済みの申請
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{ mt: 2 }}
+                  onClick={() => router.push('/dashboard/company-applications/approved')}
+                >
+                  詳細を見る
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
         <Grid item xs={12} md={3}>
           <Card>
             <CardContent>
@@ -201,26 +193,6 @@ export default function DashboardPage() {
                 size="small"
                 sx={{ mt: 2 }}
                 onClick={() => router.push('/dashboard/manual')}
-              >
-                詳細を見る
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" component="h2" gutterBottom>
-                通知一覧
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                承認依頼や承認完了などのお知らせ
-              </Typography>
-              <Button
-                variant="outlined"
-                size="small"
-                sx={{ mt: 2 }}
-                onClick={() => router.push('/dashboard/notifications')}
               >
                 詳細を見る
               </Button>
@@ -242,50 +214,6 @@ export default function DashboardPage() {
                   size="small"
                   sx={{ mt: 2 }}
                   onClick={() => router.push('/dashboard/hr')}
-                >
-                  詳細を見る
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-        {(isManager() || isDirector() || isAccounting()) && (
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" component="h2" gutterBottom>
-                  申請書一覧
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  自社の全申請を一覧で確認
-                </Typography>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{ mt: 2 }}
-                  onClick={() => router.push('/dashboard/company-applications')}
-                >
-                  詳細を見る
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-        {(isManager() || isDirector() || isAccounting()) && (
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" component="h2" gutterBottom>
-                  承認済み一覧
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  自社の承認済みの申請だけを一覧で確認
-                </Typography>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{ mt: 2 }}
-                  onClick={() => router.push('/dashboard/company-applications/approved')}
                 >
                   詳細を見る
                 </Button>
