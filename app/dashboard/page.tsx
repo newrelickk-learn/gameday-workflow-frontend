@@ -271,6 +271,28 @@ export default function DashboardPage() {
             </Card>
           </Grid>
         )}
+        {(isManager() || isDirector() || isAccounting()) && (
+          <Grid item xs={12} md={3}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" component="h2" gutterBottom>
+                  承認済み一覧
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  自社の承認済みの申請だけを一覧で確認
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  sx={{ mt: 2 }}
+                  onClick={() => router.push('/dashboard/company-applications/approved')}
+                >
+                  詳細を見る
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
       </Grid>
     </Container>
   );
