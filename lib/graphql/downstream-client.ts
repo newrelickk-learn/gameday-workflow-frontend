@@ -243,22 +243,28 @@ export class DownstreamClient {
   }
 
   // 申請サービス
-  async getApplications(token?: string, applicantId?: string): Promise<Application[]> {
+  async getApplications(token?: string, applicantId?: string, nextApproverId?: string): Promise<Application[]> {
     if (this.useStubs) {
       if (process.env.NODE_ENV === 'development') {
         console.log('[Downstream Client] Using stub for getApplications');
       }
       const allApplications = await stubApplicationService.getApplications();
-      // スタブモードでもapplicantIdでフィルタリング
+      // スタブモードでもapplicantId・nextApproverIdでフィルタリング
       if (applicantId) {
         return allApplications.filter(app => app.applicantId === applicantId);
       }
+      if (nextApproverId) {
+        return allApplications.filter(app => app.nextApproverId === nextApproverId);
+      }
       return allApplications;
     }
-    // applicantIdが指定されている場合、クエリパラメータに追加
+    // applicantId・nextApproverIdが指定されている場合、クエリパラメータに追加
     const url = new URL(`${this.applicationServiceUrl}/api/v1/applications`);
     if (applicantId) {
       url.searchParams.append('applicantId', applicantId);
+    }
+    if (nextApproverId) {
+      url.searchParams.append('nextApproverId', nextApproverId);
     }
     return this.request<Application[]>(
       url.toString(),
@@ -423,9 +429,11 @@ export class DownstreamClient {
     }
     
     // 申請一覧を取得して、通知に含まれる情報と照合して正しい申請IDを特定
+    // 承認依頼の通知は自分が次の承認者になっている申請にのみ対応するため、
+    // 全社の申請ではなく自分に関係する申請だけを取得する
     let applications: Application[] = [];
     try {
-      applications = await this.getApplications(token);
+      applications = await this.getApplications(token, undefined, recipientId);
       if (process.env.NODE_ENV === 'development') {
         console.log('[Downstream Client] Fetched applications for mapping:', applications.length);
       }
