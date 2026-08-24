@@ -22,7 +22,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { apiClient } from '@/lib/api/client';
 import type { Application } from '@/lib/api/types';
 import { isManager, isDirector, isAccounting } from '@/lib/utils/auth';
-import ChapterDiagnosisDropdown from '@/components/ChapterDiagnosisDropdown';
+import NPlusOneDiagnosisQuiz from '@/components/NPlusOneDiagnosisQuiz';
 
 const getStatusColor = (status: Application['status']) => {
   switch (status) {
@@ -112,7 +112,7 @@ export default function CompanyApplicationsPage() {
         </Alert>
       )}
 
-      <ChapterDiagnosisDropdown chapter={2} title="この画面が遅い原因を診断する" />
+      <NPlusOneDiagnosisQuiz />
 
       <Paper sx={{ p: 3 }}>
         {loading ? (

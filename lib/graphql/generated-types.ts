@@ -22,6 +22,9 @@ import type {
   SendNotificationResponse,
   City,
   EstimateTravelCostResponse,
+  NPlusOneQuizOptions,
+  NPlusOneQuizAnswersInput,
+  NPlusOneQuizResult,
 } from '../api/types';
 
 export interface GraphQLContext {
@@ -114,6 +117,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<number[]>;
+    nPlusOneQuizOptions: (
+      parent: unknown,
+      args: {},
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<NPlusOneQuizOptions>;
   };
   Mutation: {
     login: (
@@ -182,6 +191,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<boolean>;
+    checkNPlusOneQuizAnswers: (
+      parent: unknown,
+      args: { input: NPlusOneQuizAnswersInput },
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<NPlusOneQuizResult>;
   };
 }
 

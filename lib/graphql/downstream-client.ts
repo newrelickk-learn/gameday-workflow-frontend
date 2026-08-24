@@ -18,6 +18,9 @@ import type {
   City,
   EstimateTravelCostRequest,
   EstimateTravelCostResponse,
+  NPlusOneQuizOptions,
+  NPlusOneQuizAnswersInput,
+  NPlusOneQuizResult,
 } from '../api/types';
 import { stubUserService } from '../api/stubs/user-service';
 import { stubApplicationService } from '../api/stubs/application-service';
@@ -336,6 +339,36 @@ export class DownstreamClient {
       token
     );
     return data.correct;
+  }
+
+  // 第2章: N+1診断クイズ（3問構成）の選択肢一覧を取得する。
+  async getNPlusOneQuizOptions(token?: string): Promise<NPlusOneQuizOptions> {
+    if (this.useStubs) {
+      return { q1: [], q2: [], q3: [] };
+    }
+    return this.request<NPlusOneQuizOptions>(
+      `${this.applicationServiceUrl}/api/v1/chapters/2/nplus1-quiz/options`,
+      { method: 'GET' },
+      token
+    );
+  }
+
+  // 第2章: N+1診断クイズ（3問構成）の回答をまとめて判定する。
+  async checkNPlusOneQuizAnswers(
+    answers: NPlusOneQuizAnswersInput,
+    token?: string
+  ): Promise<NPlusOneQuizResult> {
+    if (this.useStubs) {
+      return { q1: false, q2: false, q3: false, allCorrect: false };
+    }
+    return this.request<NPlusOneQuizResult>(
+      `${this.applicationServiceUrl}/api/v1/chapters/2/nplus1-quiz/check-answers`,
+      {
+        method: 'POST',
+        body: JSON.stringify(answers),
+      },
+      token
+    );
   }
 
   // GameDay演習: 今日クリア済みの章番号一覧を取得する（日付が変わるとリセットされる）。

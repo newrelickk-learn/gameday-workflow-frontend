@@ -167,3 +167,23 @@ export interface SendNotificationResponse {
   message: string;
 }
 
+// 第2章: N+1診断クイズ（3問構成）の型
+export interface NPlusOneQuizOptions {
+  q1: string[];
+  q2: string[];
+  q3: string[];
+}
+
+export interface NPlusOneQuizAnswersInput {
+  q1: string[];
+  q2: string[];
+  q3: string[];
+}
+
+export interface NPlusOneQuizResult {
+  q1: boolean;
+  q2: boolean;
+  q3: boolean;
+  allCorrect: boolean;
+}
+

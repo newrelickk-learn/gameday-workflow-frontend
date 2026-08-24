@@ -197,6 +197,26 @@ export const typeDefs = `#graphql
     currency: String!
   }
 
+  # 第2章: N+1診断クイズ（3問構成）
+  type NPlusOneQuizOptions {
+    q1: [String!]!
+    q2: [String!]!
+    q3: [String!]!
+  }
+
+  input NPlusOneQuizAnswersInput {
+    q1: [String!]!
+    q2: [String!]!
+    q3: [String!]!
+  }
+
+  type NPlusOneQuizResult {
+    q1: Boolean!
+    q2: Boolean!
+    q3: Boolean!
+    allCorrect: Boolean!
+  }
+
   # 通知関連
   type Notification {
     id: ID!
@@ -268,6 +288,9 @@ export const typeDefs = `#graphql
 
     # GameDay演習: 今日クリア済みの章番号一覧（日付が変わるとリセットされる）
     clearedChapters: [Int!]!
+
+    # 第2章: N+1診断クイズ（3問構成）の選択肢
+    nPlusOneQuizOptions: NPlusOneQuizOptions!
   }
 
   # Mutation
@@ -298,6 +321,9 @@ export const typeDefs = `#graphql
 
     # GameDay演習: 章ごとの原因診断の正解判定
     checkChapterAnswer(chapter: Int!, selectedText: String!): Boolean!
+
+    # 第2章: N+1診断クイズ（3問構成）の回答をまとめて判定
+    checkNPlusOneQuizAnswers(input: NPlusOneQuizAnswersInput!): NPlusOneQuizResult!
   }
 `;
 

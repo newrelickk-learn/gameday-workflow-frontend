@@ -325,6 +325,18 @@ export const resolvers: Resolvers & {
         });
       }
     },
+
+    nPlusOneQuizOptions: async (_, __, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.getNPlusOneQuizOptions(token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to fetch N+1 quiz options: ${errorMessage}`, {
+          extensions: { code: 'NPLUS_ONE_QUIZ_OPTIONS_FETCH_ERROR', originalError: errorMessage },
+        });
+      }
+    },
   },
 
   Mutation: {
@@ -516,6 +528,18 @@ export const resolvers: Resolvers & {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         throw new GraphQLError(`Failed to check chapter answer: ${errorMessage}`, {
           extensions: { code: 'CHECK_CHAPTER_ANSWER_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
+    checkNPlusOneQuizAnswers: async (_, { input }, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.checkNPlusOneQuizAnswers(input, token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to check N+1 quiz answers: ${errorMessage}`, {
+          extensions: { code: 'CHECK_NPLUS_ONE_QUIZ_ANSWERS_ERROR', originalError: errorMessage },
         });
       }
     },

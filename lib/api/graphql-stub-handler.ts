@@ -204,6 +204,16 @@ export async function handleGraphQLStub(
     return { clearedChapters: [] };
   }
 
+  // NPlusOneQuizOptions query（第2章: N+1診断クイズの選択肢）
+  if (normalizedQuery.includes('query NPlusOneQuizOptions') || normalizedQuery.includes('nPlusOneQuizOptions')) {
+    return { nPlusOneQuizOptions: { q1: [], q2: [], q3: [] } };
+  }
+
+  // CheckNPlusOneQuizAnswers mutation（第2章: N+1診断クイズの回答判定）
+  if (normalizedQuery.includes('mutation CheckNPlusOneQuizAnswers') || normalizedQuery.includes('checkNPlusOneQuizAnswers(')) {
+    return { checkNPlusOneQuizAnswers: { q1: false, q2: false, q3: false, allCorrect: false } };
+  }
+
   // マッチしない場合はエラー
   throw new Error(`Unknown GraphQL query/mutation: ${normalizedQuery.substring(0, 100)}`);
 }

@@ -566,6 +566,41 @@ export const graphqlClient = {
       const data = await graphqlRequest<{ clearedChapters: number[] }>(query);
       return data.clearedChapters;
     },
+
+    async getNPlusOneQuizOptions(): Promise<{ q1: string[]; q2: string[]; q3: string[] }> {
+      const query = `
+        query NPlusOneQuizOptions {
+          nPlusOneQuizOptions {
+            q1
+            q2
+            q3
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ nPlusOneQuizOptions: { q1: string[]; q2: string[]; q3: string[] } }>(query);
+      return data.nPlusOneQuizOptions;
+    },
+
+    async checkNPlusOneQuizAnswers(answers: {
+      q1: string[];
+      q2: string[];
+      q3: string[];
+    }): Promise<{ q1: boolean; q2: boolean; q3: boolean; allCorrect: boolean }> {
+      const query = `
+        mutation CheckNPlusOneQuizAnswers($input: NPlusOneQuizAnswersInput!) {
+          checkNPlusOneQuizAnswers(input: $input) {
+            q1
+            q2
+            q3
+            allCorrect
+          }
+        }
+      `;
+      const data = await graphqlRequest<{
+        checkNPlusOneQuizAnswers: { q1: boolean; q2: boolean; q3: boolean; allCorrect: boolean };
+      }>(query, { input: answers });
+      return data.checkNPlusOneQuizAnswers;
+    },
   },
 };
 
