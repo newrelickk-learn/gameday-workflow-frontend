@@ -4,12 +4,14 @@
  * New Relic Node.jsエージェント設定
  *
  * opentelemetry.enabled: true はNext.jsの内蔵（ネイティブ）OTel計装を
- * New Relicエージェントが横取りするHybrid Agentモード。この方式ではNext.js
- * 自身がfetch呼び出しをラップしてクライアントスパン・ヘッダー注入を行うため、
- * instrumentation.undiciを有効にすると同じ外部呼び出しに対してNext.js側と
- * undici側で二重にスパンが生成される（実測でも/estimate等の呼び出しで
- * External/...と External/...:<port>/... の重複スパンを確認した）。
- * 公式ドキュメントの推奨構成に合わせ、http/next/undiciはすべて無効化する。
+ * New Relicエージェントが横取りするHybrid Agentモード。公式ドキュメントは
+ * このモードでinstrumentation.undiciも無効化する構成を推奨しているが、
+ * 実測すると `/api/graphql`（POST、GraphQL経由でtravel/application-approval
+ * を呼ぶ入口）を通るリクエストで trace.id が null になり、分散トレーシング
+ * 自体が途切れる回帰が発生した（GETの/api/healthは問題なし）。undici計装は
+ * 有効化したままにする。この場合、外部呼び出し1回に対してNext.js側と
+ * undici側の重複スパン（External/...と External/...:<port>/...）が生成
+ * されるが、トレースが完全に切れるより実害が小さいためこちらを優先する。
  * https://docs.newrelic.com/docs/apm/agents/nodejs-agent/extend-your-instrumentation/nextjs-instrumentation/
  */
 exports.config = {
@@ -21,7 +23,7 @@ exports.config = {
   instrumentation: {
     http: { enabled: false },
     next: { enabled: false },
-    undici: { enabled: false },
+    undici: { enabled: true },
   },
   distributed_tracing: {
     // デフォルトのadaptiveサンプリングは1分あたり約10トレースしか完全記録しない
