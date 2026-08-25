@@ -39,6 +39,12 @@ exports.config = {
     // 統計的サンプリングされる。上限（10000）まで引き上げて取りこぼしを減らす。
     max_samples_stored: 10000,
   },
+  rules: {
+    // k8sのliveness/readinessProbeが/api/healthを5〜10秒間隔で叩き続け
+    // （合計1分あたり約18回）、調査対象にならないヘルスチェックだけで
+    // トランザクション・スパンの記録量を圧迫していた。計測対象から除外する。
+    ignore: ['^/api/health$'],
+  },
   logging: {
     level: 'info',
     // コンテナ内では/appが非rootユーザーの書き込み権限を持たないため、
