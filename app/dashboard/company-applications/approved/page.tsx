@@ -55,7 +55,6 @@ export default function ApprovedCompanyApplicationsPage() {
       try {
         setLoading(true);
         setError('');
-        // applicantIdを指定せず全件取得し、承認済み(approved)だけに絞り込んで表示する
         const data = await apiClient.applications.getApplications();
         setApplications(data.filter((application) => application.status === 'approved'));
       } catch (err) {

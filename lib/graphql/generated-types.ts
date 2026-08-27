@@ -1,7 +1,3 @@
-/**
- * GraphQLリゾルバーの型定義
- * このファイルは手動で管理します（codegenを使用する場合は自動生成に置き換え可能）
- */
 
 import type { GraphQLResolveInfo } from 'graphql';
 import type {
@@ -197,6 +193,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<NPlusOneQuizResult>;
+    checkDependencyChain: (
+      parent: unknown,
+      args: { dependencyChain: string[] },
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<boolean>;
   };
 }
 
@@ -217,10 +219,10 @@ export interface CreateApplicationInput {
 }
 
 export interface UpdateApprovalInput {
-  status: 'approved' | 'rejected'; // pendingは更新時に使用しない
+  status: 'approved' | 'rejected';
   comment?: string | null;
   approverId: string;
-  applicationId?: string | null; // 申請ID（オプション、ワークフローサービスで必要）
+  applicationId?: string | null;
 }
 
 export interface StartWorkflowInput {

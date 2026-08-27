@@ -14,7 +14,6 @@ import type {
 } from '../types';
 import { stubApplicationService } from './application-service';
 
-// 承認データ（application-service.tsからもアクセス可能にするためエクスポート）
 export const approvals: Record<string, Approval[]> = {
   '1': [
     {
@@ -68,7 +67,6 @@ export const approvals: Record<string, Approval[]> = {
   ],
 };
 
-// ワークフローインスタンスの状態管理
 interface WorkflowInstance {
   workflowInstanceId: string;
   applicationId: string;
@@ -80,27 +78,25 @@ interface WorkflowInstance {
 
 const workflowInstances: Record<string, WorkflowInstance> = {};
 
-// 通知データ
 const notifications: Notification[] = [];
 
-// 申請タイプ別のステップ数と承認者IDのマッピング（CompanyId=1の場合）
 function getWorkflowConfig(applicationType: StartWorkflowRequest['applicationType'], companyId: number = 1) {
   const configs: Record<string, { totalSteps: number; approvers: string[] }> = {
     BusinessTrip: {
       totalSteps: 3,
-      approvers: ['20001', '21051', '1051'], // エンジニア、上長、本部長
+      approvers: ['20001', '21051', '1051'],
     },
     Expense: {
       totalSteps: 3,
-      approvers: ['20001', '21051', '16051'], // エンジニア、上長、経理
+      approvers: ['20001', '21051', '16051'],
     },
     Vacation: {
       totalSteps: 2,
-      approvers: ['20001', '21051'], // エンジニア、上長
+      approvers: ['20001', '21051'],
     },
     Promotion: {
       totalSteps: 2,
-      approvers: ['21051', '1051'], // 上長、本部長
+      approvers: ['21051', '1051'],
     },
   };
   return configs[applicationType] || { totalSteps: 1, approvers: ['20001'] };
@@ -129,7 +125,6 @@ export const stubWorkflowService = {
       updatedAt: now,
     };
     
-    // 承認レコードを保存
     if (!approvals[data.applicationId]) {
       approvals[data.applicationId] = [];
     }
@@ -139,7 +134,6 @@ export const stubWorkflowService = {
   },
 
   async getApprovals(recipientId?: string): Promise<Approval[]> {
-    // 承認待ちの承認のみを返す
     let result = Object.values(approvals)
       .flat()
       .filter((approval) => approval.status === 'pending');
@@ -159,7 +153,6 @@ export const stubWorkflowService = {
       });
     }
     
-    // recipientIdが指定されている場合、そのユーザーが承認者である承認のみを返す
     if (recipientId) {
       const beforeFilter = result.length;
       result = result.filter((approval) => approval.approverId === recipientId);
@@ -189,13 +182,11 @@ export const stubWorkflowService = {
   },
 
   async getApproval(id: string): Promise<Approval> {
-    // 全ての承認から該当するIDを探す
     const allApprovals = Object.values(approvals).flat();
     const approval = allApprovals.find(a => a.id === id);
     if (approval) {
       return approval;
     }
-    // 見つからない場合はデフォルト値を返す
     return {
       id,
       applicationId: '1',
@@ -207,12 +198,10 @@ export const stubWorkflowService = {
   },
 
   async updateApproval(id: string, data: UpdateApprovalRequest): Promise<Approval> {
-    // 全ての承認から該当するIDを探して更新
     const allApprovals = Object.values(approvals).flat();
     const approval = allApprovals.find(a => a.id === id);
     
     if (!approval) {
-      // 見つからない場合は新しい承認を作成
       return {
         id,
         applicationId: data.applicationId || '1',
@@ -224,31 +213,24 @@ export const stubWorkflowService = {
       };
     }
 
-    // 承認を更新
     approval.status = data.status;
     approval.comment = data.comment;
     approval.updatedAt = new Date().toISOString();
 
-    // 申請のステータスを更新
     const applicationId = approval.applicationId;
     try {
       const application = await stubApplicationService.getApplication(applicationId);
       const applicationApprovals = approvals[applicationId] || [];
       
-      // 承認が却下された場合、申請も却下
       if (data.status === 'rejected') {
         await stubApplicationService.updateApplicationStatus(applicationId, 'rejected');
       } else if (data.status === 'approved') {
-        // 承認が承認された場合、現在のステップを更新
         const currentStep = approval.step || 1;
         const nextStep = currentStep + 1;
         const totalSteps = application.totalSteps || 1;
         
-        // 次のステップの承認レコードを取得
         const nextApproval = applicationApprovals.find(a => a.step === nextStep);
         
-        // 申請のcurrentStepとnextApproverIdを更新
-        // 最終ステップの承認が完了した場合、currentStepをtotalStepsに設定
         const finalStep = nextStep > totalSteps ? totalSteps : nextStep;
         const updates: Partial<Application> = {
           currentStep: finalStep,
@@ -259,7 +241,6 @@ export const stubWorkflowService = {
           updates.nextApproverName = nextApproval.approverName;
           updates.nextApproverDepartment = nextApproval.approverDepartment;
         } else {
-          // 次のステップがない場合、nextApproverIdをクリア
           updates.nextApproverId = undefined;
           updates.nextApproverName = undefined;
           updates.nextApproverDepartment = undefined;
@@ -267,18 +248,14 @@ export const stubWorkflowService = {
         
         await stubApplicationService.updateApplication(applicationId, updates);
         
-        // すべての承認が完了したか確認
         const allApproved = applicationApprovals.every(a => a.status === 'approved');
         const anyRejected = applicationApprovals.some(a => a.status === 'rejected');
         
         if (anyRejected) {
-          // いずれかの承認が却下されている場合、申請も却下
           await stubApplicationService.updateApplicationStatus(applicationId, 'rejected');
         } else if (allApproved) {
-          // すべての承認が完了した場合、申請も承認
           await stubApplicationService.updateApplicationStatus(applicationId, 'approved');
         }
-        // それ以外の場合はpendingのまま（更新不要）
       }
     } catch (error) {
       console.error('[Stub Workflow Service] Failed to update application status:', error);
@@ -287,12 +264,10 @@ export const stubWorkflowService = {
     return approval;
   },
 
-  // 新しいワークフローAPI
   async startWorkflow(data: StartWorkflowRequest): Promise<StartWorkflowResponse> {
     const workflowInstanceId = `wf-${data.applicationId}-${Date.now()}`;
     const config = getWorkflowConfig(data.applicationType, data.companyId || 1);
     
-    // ワークフローインスタンスを作成
     const instance: WorkflowInstance = {
       workflowInstanceId,
       applicationId: data.applicationId,
@@ -303,7 +278,6 @@ export const stubWorkflowService = {
     };
     workflowInstances[data.applicationId] = instance;
     
-    // ステップ1の承認レコードを作成（申請者自身が承認する場合）
     if (config.approvers.length > 0) {
       const firstApproverId = config.approvers[0];
       await this.createApproval({
@@ -314,7 +288,6 @@ export const stubWorkflowService = {
         step: 1,
       });
       
-      // ステップ2以降の承認者に通知を送信
       if (config.approvers.length > 1) {
         for (let i = 1; i < config.approvers.length; i++) {
           const approverId = config.approvers[i];
@@ -327,7 +300,6 @@ export const stubWorkflowService = {
             step,
           });
           
-          // 通知を送信
           notifications.push({
             id: `notif-${data.applicationId}-${step}-${Date.now()}`,
             notificationType: 'ApprovalRequest',
@@ -362,7 +334,6 @@ export const stubWorkflowService = {
       };
     }
     
-    // 承認レコードを取得
     const approval = approvals[data.applicationId]?.find(a => a.id === data.approvalId);
     if (!approval) {
       return {
@@ -373,7 +344,6 @@ export const stubWorkflowService = {
       };
     }
     
-    // 現在のステップと一致しているか確認
     const isValid = approval.step === instance.currentStep && approval.approverId === data.approverId;
     const isFinalStep = instance.currentStep >= instance.totalSteps;
     const nextStep = isFinalStep ? null : instance.currentStep + 1;
@@ -393,18 +363,15 @@ export const stubWorkflowService = {
       throw new Error('ワークフローインスタンスが見つかりません');
     }
     
-    // 承認レコードを取得して更新
     const approval = approvals[data.applicationId]?.find(a => a.id === data.approvalId);
     if (!approval) {
       throw new Error('承認レコードが見つかりません');
     }
     
-    // 承認を更新
     approval.status = data.status;
     approval.updatedAt = new Date().toISOString();
     
     if (data.status === 'rejected') {
-      // 拒否された場合
       instance.status = 'rejected';
       return {
         applicationId: data.applicationId,
@@ -414,11 +381,9 @@ export const stubWorkflowService = {
       };
     }
     
-    // 承認された場合、次のステップに進む
     const isFinalStep = instance.currentStep >= instance.totalSteps;
     if (isFinalStep) {
       instance.status = 'completed';
-      // ワークフローが完了した場合、applicationのステータスをapprovedに更新
       try {
         await stubApplicationService.updateApplicationStatus(data.applicationId, 'approved');
       } catch (error) {
@@ -432,11 +397,9 @@ export const stubWorkflowService = {
       };
     }
     
-    // 次のステップに進む
     instance.currentStep += 1;
     instance.status = 'in_progress';
     
-    // 次のステップの承認者に通知を送信
     const nextApproval = approvals[data.applicationId]?.find(a => a.step === instance.currentStep);
     if (nextApproval) {
       notifications.push({

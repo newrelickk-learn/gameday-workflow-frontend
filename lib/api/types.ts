@@ -1,8 +1,6 @@
-// 認証関連の型
 export interface LoginRequest {
   email: string;
   password: string;
-  // GameDay第0章: リソースが飽和しているPodを突き止めた際に入力するPod名。通常は不要。
   impactedPodName?: string;
 }
 
@@ -16,33 +14,32 @@ export interface User {
   name: string;
   email: string;
   role: 'engineer' | 'manager' | 'admin' | 'director' | 'accounting' | 'hr';
-  department?: string; // 所属
-  companyId?: number; // 会社ID
-  managerId?: number | null; // 直属の上長
+  department?: string;
+  companyId?: number;
+  managerId?: number | null;
 }
 
-// 申請関連の型
 export interface Application {
   id: string;
-  applicationNumber?: string | null; // 申請書番号（例: BT-000001）
+  applicationNumber?: string | null;
   type: string;
   title: string;
   description: string;
-  amount?: number; // 経費精算の場合の金額
-  startDate?: string; // 有給休暇の場合の開始日
-  endDate?: string; // 有給休暇の場合の終了日
-  days?: number; // 有給休暇の場合の日数
+  amount?: number;
+  startDate?: string;
+  endDate?: string;
+  days?: number;
   status: 'pending' | 'approved' | 'rejected';
   applicantId: string;
-  applicantName?: string; // 申請者名（表示用）
-  applicantDepartment?: string; // 申請者所属（表示用）
-  currentStep?: number; // 現在の承認ステップ
-  totalSteps?: number; // 総承認ステップ数
-  nextApproverId?: string; // 次の承認者ID
-  nextApproverName?: string; // 次の承認者名（表示用）
-  nextApproverDepartment?: string; // 次の承認者所属（表示用）
-  latestComment?: string | null; // 最新のコメント本文（表示用）
-  receiptImageUrls?: string[] | null; // 経費精算のレシート画像URL一覧（表示用）
+  applicantName?: string;
+  applicantDepartment?: string;
+  currentStep?: number;
+  totalSteps?: number;
+  nextApproverId?: string;
+  nextApproverName?: string;
+  nextApproverDepartment?: string;
+  latestComment?: string | null;
+  receiptImageUrls?: string[] | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -51,24 +48,23 @@ export interface CreateApplicationRequest {
   type: string;
   title: string;
   description: string;
-  amount?: number; // 経費精算の場合の金額
-  startDate?: string; // 有給休暇の場合の開始日
-  endDate?: string; // 有給休暇の場合の終了日
-  days?: number; // 有給休暇の場合の日数
-  applicantId: string; // 申請者ID
-  dependencyChain?: string[]; // 経費申請: サービス依存関係チェーンの回答（第1章クリア判定に使用）
+  amount?: number;
+  startDate?: string;
+  endDate?: string;
+  days?: number;
+  applicantId: string;
+  dependencyChain?: string[];
 }
 
-// 承認関連の型
 export interface Approval {
   id: string;
   applicationId: string;
   approverId: string;
-  approverName?: string; // 承認者名（表示用）
-  approverDepartment?: string; // 承認者所属（表示用）
+  approverName?: string;
+  approverDepartment?: string;
   status: 'pending' | 'approved' | 'rejected';
   comment?: string;
-  step?: number; // 承認ステップ
+  step?: number;
   createdAt: string;
   updatedAt?: string;
 }
@@ -76,11 +72,10 @@ export interface Approval {
 export interface UpdateApprovalRequest {
   status: 'approved' | 'rejected';
   comment?: string;
-  approverId: string; // 承認者ID
-  applicationId?: string; // 申請ID（オプション、ワークフローサービスで必要）
+  approverId: string;
+  applicationId?: string;
 }
 
-// ワークフロー関連の型
 export interface StartWorkflowRequest {
   applicationId: string;
   applicationType: 'BusinessTrip' | 'Expense' | 'Vacation' | 'Promotion';
@@ -123,7 +118,6 @@ export interface ApproveWorkflowResponse {
   message?: string | null;
 }
 
-// 出張申請の概算費用（travelサービス）関連の型
 export interface City {
   id: number;
   nameJa: string;
@@ -133,7 +127,7 @@ export interface City {
 export interface EstimateTravelCostRequest {
   departureCityId: number;
   arrivalCityId: number;
-  description: string; // 解消コード検出用に説明欄の内容を渡す
+  description: string;
   companyId?: number;
 }
 
@@ -142,7 +136,6 @@ export interface EstimateTravelCostResponse {
   currency: string;
 }
 
-// 通知関連の型
 export interface Notification {
   id: string;
   notificationType: 'ApprovalRequest' | 'ApprovalCompleted' | 'ApprovalRejected' | 'WorkflowCompleted';
@@ -167,7 +160,6 @@ export interface SendNotificationResponse {
   message: string;
 }
 
-// 第2章: N+1診断クイズ（3問構成）の型
 export interface NPlusOneQuizOptions {
   q1: string[];
   q2: string[];

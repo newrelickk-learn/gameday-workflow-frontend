@@ -1,13 +1,3 @@
-/**
- * ログイン〜プロモーション申請の統合テスト
- * 実際に返ってくるレスポンスの中身を検証します。
- *
- * 実行方法（フロント＋バックエンドが起動していること）:
- *   NEXT_PUBLIC_USE_STUBS=false npm test -- tests/integration/login-and-promotion-flow.test.ts
- *
- * Docker で全体を起動している場合:
- *   NEXT_PUBLIC_USE_STUBS=false NEXT_PUBLIC_GRAPHQL_URL=http://localhost:3000/api/graphql npm test -- tests/integration/login-and-promotion-flow.test.ts
- */
 
 const GRAPHQL_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:3000/api/graphql';
 
@@ -79,7 +69,6 @@ describe('ログイン〜プロモーション申請フロー（統合）', () =
     expect(data.login.user.id).toBeDefined();
     expect(data.login.user.role).toBeDefined();
 
-    // 戻り値をテストで明示的に確認（何が返っているかログで分かるように）
     const { token, user } = data.login;
     const userId = user.id === undefined ? '(なし)' : String(user.id);
     const userRole = user.role === undefined ? '(なし)' : String(user.role);

@@ -71,12 +71,6 @@ function ResultBadge({ result }: { result: boolean | undefined }) {
   );
 }
 
-/**
- * 第2章（申請書一覧のN+1クエリ問題）の診断クイズ。
- * 3問（問題の種類・発生テーブル・改善方法）をまとめて1回の送信で判定する。
- * 選択肢・正解はすべてサーバー側で暗号化されており、このコンポーネントは
- * 選択肢一覧の取得と、送信した内容が正解かどうかの判定結果しか受け取らない。
- */
 export default function NPlusOneDiagnosisQuiz() {
   const [options, setOptions] = useState<QuizOptions>(EMPTY_OPTIONS);
   const [optionsLoading, setOptionsLoading] = useState(true);

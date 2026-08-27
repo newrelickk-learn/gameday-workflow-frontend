@@ -10,11 +10,6 @@ interface ChapterDiagnosisDropdownProps {
   title?: string;
 }
 
-/**
- * GameDay演習: New Relicで調査した内容を元に、遅延・不具合の原因を選ばせる診断UI。
- * 選択肢・正解はすべてサーバー側で暗号化されており、このコンポーネントは
- * 選択肢一覧の取得と、選んだテキストが正解かどうかの判定結果しか受け取らない。
- */
 export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiagnosisDropdownProps) {
   const [options, setOptions] = useState<string[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(true);
@@ -30,8 +25,6 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
         setOptionsLoading(true);
         setError('');
 
-        // 今日すでにクリア済みなら（DBに記録済み、日付が変わるとリセットされる）、
-        // 選択肢は取得せずそのまま正解状態を表示する。
         const clearedChapters: number[] = await apiClient.chapters.getClearedChapters().catch(() => [] as number[]);
         if (cancelled) {
           return;
@@ -71,8 +64,6 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
       const correct = await apiClient.chapters.checkAnswer(chapter, selectedText.trim());
       setResult(correct ? 'correct' : 'incorrect');
       if (correct) {
-        // ヘッダーの進捗表示（chapter_progressに基づく）に即時反映させるため、
-        // レイアウト側にイベントで通知する（layoutは/dashboard配下で再マウントされないため）。
         window.dispatchEvent(new CustomEvent('gameday:chapterCleared', { detail: { chapter } }));
       }
     } catch (err) {

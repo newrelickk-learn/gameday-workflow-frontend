@@ -1,7 +1,3 @@
-/**
- * マニュアル記事の一覧メタデータ
- * 本文は content/manual/{slug}.md に配置されている
- */
 export interface ManualArticle {
   slug: string;
   title: string;

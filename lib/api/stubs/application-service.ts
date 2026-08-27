@@ -2,7 +2,6 @@ import type { Application, CreateApplicationRequest, Approval } from '../types';
 import { approvals } from './workflow-service';
 import { stubUserService } from './user-service';
 
-// 申請データ
 const applications: Record<string, Application> = {
   '1': {
     id: '1',
@@ -74,26 +73,23 @@ export const stubApplicationService = {
     const applicationId = String(Date.now());
     const now = new Date().toISOString();
     
-    // 申請者のCompanyIdを取得
     const applicant = await stubUserService.getUser(data.applicantId);
     const companyId = applicant.companyId || 1;
     
-    // CompanyIdに基づいて承認者IDを計算する関数
     const getApproverIdByRole = (role: 'manager' | 'director' | 'accounting', companyId: number): string => {
       const companyIdClamped = Math.max(1, Math.min(50, companyId));
       switch (role) {
         case 'manager':
-          return String(21051 + companyIdClamped - 1); // 上長: 21051-21100
+          return String(21051 + companyIdClamped - 1);
         case 'director':
-          return String(1051 + companyIdClamped - 1); // 本部長: 1051-1100
+          return String(1051 + companyIdClamped - 1);
         case 'accounting':
-          return String(16051 + companyIdClamped - 1); // 経理: 16051-16100
+          return String(16051 + companyIdClamped - 1);
         default:
-          return String(21051 + companyIdClamped - 1); // デフォルト: 上長
+          return String(21051 + companyIdClamped - 1);
       }
     };
     
-    // 申請タイプに応じて承認者を決定
     let nextApproverId: string | undefined;
     let nextApproverName: string | undefined;
     let nextApproverDepartment: string | undefined;
@@ -102,7 +98,6 @@ export const stubApplicationService = {
     
     switch (data.type) {
       case 'business-trip':
-        // 出張申請: エンジニア申請 → 上長承認 → 本部長最終承認（3ステップ）
         nextApproverId = getApproverIdByRole('manager', companyId);
         const manager1 = await stubUserService.getUser(nextApproverId);
         nextApproverName = manager1.name;
@@ -111,7 +106,6 @@ export const stubApplicationService = {
         totalSteps = 3;
         break;
       case 'expense':
-        // 経費申請: エンジニア申請 → 上長承認 → 経理承認（3ステップ）
         nextApproverId = getApproverIdByRole('manager', companyId);
         const manager2 = await stubUserService.getUser(nextApproverId);
         nextApproverName = manager2.name;
@@ -120,7 +114,6 @@ export const stubApplicationService = {
         totalSteps = 3;
         break;
       case 'vacation':
-        // 休暇申請: エンジニア申請 → 上長承認（2ステップ）
         nextApproverId = getApproverIdByRole('manager', companyId);
         const manager3 = await stubUserService.getUser(nextApproverId);
         nextApproverName = manager3.name;
@@ -129,7 +122,6 @@ export const stubApplicationService = {
         totalSteps = 2;
         break;
       case 'promotion':
-        // プロモーション申請: 上長申請 → 本部長承認（2ステップ）
         nextApproverId = getApproverIdByRole('director', companyId);
         const director = await stubUserService.getUser(nextApproverId);
         nextApproverName = director.name;
@@ -138,7 +130,6 @@ export const stubApplicationService = {
         totalSteps = 2;
         break;
       default:
-        // デフォルト: 上長が承認（2ステップ）
         nextApproverId = getApproverIdByRole('manager', companyId);
         const manager4 = await stubUserService.getUser(nextApproverId);
         nextApproverName = manager4.name;
@@ -162,7 +153,6 @@ export const stubApplicationService = {
       updatedAt: now,
     };
     
-    // 申請を保存
     applications[applicationId] = application;
     
     if (process.env.NODE_ENV === 'development') {
@@ -176,17 +166,12 @@ export const stubApplicationService = {
       });
     }
     
-    // 承認レコードを作成
-    // 注意: currentStep=1は申請作成時、次の承認はstep=2から開始
     if (nextApproverId) {
-      // 承認レコードを保存する配列を初期化
       if (!approvals[applicationId]) {
         approvals[applicationId] = [];
       }
       
-      // 出張申請の場合: ステップ2（上長）とステップ3（本部長）の承認レコードを作成
       if (data.type === 'business-trip' && totalSteps === 3) {
-        // ステップ2: 上長承認
         const managerId = getApproverIdByRole('manager', companyId);
         const manager = await stubUserService.getUser(managerId);
         const approval2Id = `${applicationId}-2`;
@@ -203,7 +188,6 @@ export const stubApplicationService = {
         };
         approvals[applicationId].push(approval2);
         
-        // ステップ3: 本部長最終承認
         const directorId = getApproverIdByRole('director', companyId);
         const director = await stubUserService.getUser(directorId);
         const approval3Id = `${applicationId}-3`;
@@ -228,9 +212,7 @@ export const stubApplicationService = {
           });
         }
       }
-      // 経費申請の場合: ステップ2（上長）とステップ3（経理）の承認レコードを作成
       else if (data.type === 'expense' && totalSteps === 3) {
-        // ステップ2: 上長承認
         const managerId = getApproverIdByRole('manager', companyId);
         const manager = await stubUserService.getUser(managerId);
         const approval2Id = `${applicationId}-2`;
@@ -247,7 +229,6 @@ export const stubApplicationService = {
         };
         approvals[applicationId].push(approval2);
         
-        // ステップ3: 経理承認
         const accountingId = getApproverIdByRole('accounting', companyId);
         const accounting = await stubUserService.getUser(accountingId);
         const approval3Id = `${applicationId}-3`;
@@ -272,7 +253,6 @@ export const stubApplicationService = {
           });
         }
       }
-      // 休暇申請の場合: ステップ2（上長）の承認レコードを作成
       else if (data.type === 'vacation' && totalSteps === 2) {
         const managerId = getApproverIdByRole('manager', companyId);
         const manager = await stubUserService.getUser(managerId);
@@ -297,7 +277,6 @@ export const stubApplicationService = {
           });
         }
       }
-      // プロモーション申請の場合: ステップ2（本部長）の承認レコードを作成
       else if (data.type === 'promotion' && totalSteps === 2) {
         const directorId = getApproverIdByRole('director', companyId);
         const director = await stubUserService.getUser(directorId);
@@ -322,7 +301,6 @@ export const stubApplicationService = {
           });
         }
       }
-      // デフォルト: ステップ2の承認レコードを作成
       else {
         const approval2Id = `${applicationId}-2`;
         const approval2: Approval = {

@@ -10,7 +10,6 @@ const config: Config = {
     extend: {},
   },
   plugins: [],
-  // 古いパスの参照を避けるため、除外パターンを追加
   safelist: [],
 }
 export default config

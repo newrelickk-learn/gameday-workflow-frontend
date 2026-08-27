@@ -4,11 +4,6 @@ import { useEffect } from 'react';
 import { getCurrentUser } from '@/lib/utils/auth';
 import { setNewRelicUserId } from '@/lib/newrelic-browser';
 
-/**
- * New Relic Browser agent（RUM、Core Web Vitals計測）の初期化。
- * ライセンスキー・Application IDはNew Relic UIでBrowser Applicationを
- * 作成した際に発行される値を環境変数として設定する。
- */
 export default function NewRelicBrowser() {
   useEffect(() => {
     const licenseKey = process.env.NEXT_PUBLIC_NEW_RELIC_BROWSER_LICENSE_KEY;
@@ -18,7 +13,6 @@ export default function NewRelicBrowser() {
     const agentID = process.env.NEXT_PUBLIC_NEW_RELIC_AGENT_ID || applicationID;
 
     if (!licenseKey || !applicationID) {
-      // Browser Applicationがまだ作成されていない場合は初期化しない
       return;
     }
 
@@ -63,8 +57,6 @@ export default function NewRelicBrowser() {
       };
       new BrowserAgent(options);
 
-      // ログイン済みユーザーのemailをenduser.idとして紐づける（ログインはフルページ
-      // ロードなので、遷移後のこの初期化タイミングでlocalStorageから読めば十分）
       const currentUser = getCurrentUser();
       if (currentUser?.email) {
         setNewRelicUserId(currentUser.email);

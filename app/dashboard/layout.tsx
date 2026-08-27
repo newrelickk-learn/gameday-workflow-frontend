@@ -22,8 +22,6 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!userId) {
       const query = searchParams.toString();
       const currentUrl = query ? `${pathname}?${query}` : pathname;
-      // ログイン後に元々アクセスしようとしていたページへ戻れるようにする。
-      // SPAのルート変更ではなくフルページロードで/loginへ遷移する。
       window.location.href = `/login?redirect=${encodeURIComponent(currentUrl)}`;
       return;
     }
@@ -75,8 +73,6 @@ export default function DashboardLayout({
     };
     refreshClearedChapters();
 
-    // ChapterDiagnosisDropdownで正解した直後に、ページ遷移なしでヘッダーの
-    // 表示を最新化するためのイベントリスナー。
     window.addEventListener('gameday:chapterCleared', refreshClearedChapters);
     return () => {
       mounted = false;

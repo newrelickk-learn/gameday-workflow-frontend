@@ -107,7 +107,6 @@ export default function ApprovalsPage() {
         console.log('[ApprovalsPage] Fetched approvals:', approvalsData);
         console.log('[ApprovalsPage] Approvals count:', approvalsData.length);
 
-        // 各承認に関連する申請を取得
         const applicationPromises = approvalsData.map((approval) => {
           console.log('[ApprovalsPage] Fetching application for approval:', {
             approvalId: approval.id,
@@ -127,14 +126,12 @@ export default function ApprovalsPage() {
         
         const applicationsMap: Record<string, Application> = {};
         
-        // プロモーション申請は承認者（本部長）に表示。申請者は上長なので、承認一覧に来るのは本部長のみ。
         const userId = getCurrentUserId();
         const userRole = getUserRoleFromId(userId);
         
         approvalsData.forEach((approval, index) => {
           if (applicationsData[index]) {
             const application = applicationsData[index]!;
-            // プロモーション申請の承認者は本部長。本部長でない場合はスキップ（他ロールは承認担当でない）
             if (application.type === 'promotion' && userRole !== 'director') {
               return;
             }
@@ -149,7 +146,6 @@ export default function ApprovalsPage() {
         console.log('[ApprovalsPage] Applications map:', applicationsMap);
         setApplications(applicationsMap);
         
-        // プロモーション申請を除外した承認のみを表示
         const filteredApprovals = approvalsData.filter((approval) => {
           const application = applicationsMap[approval.applicationId];
           const included = application !== undefined;
@@ -211,7 +207,6 @@ export default function ApprovalsPage() {
         return;
       }
 
-      // 承認データからapplicationIdを取得
       const approval = approvals.find(a => a.id === confirmDialog.approvalId);
       if (!approval) {
         setError('承認データが見つかりません。');
@@ -226,7 +221,6 @@ export default function ApprovalsPage() {
         applicationId: approval.applicationId,
       });
 
-      // 一覧を再取得
       const approvalsData = await apiClient.approvals.getApprovals();
       setApprovals(approvalsData);
 
@@ -253,10 +247,8 @@ export default function ApprovalsPage() {
     setExpandedRows(newExpanded);
   };
 
-  // ログインしているユーザーIDを取得
   const currentUserId = getCurrentUserId();
   
-  // 次の承認者を取得する関数
   const getNextApproverInfo = (
     approval: Approval,
     application: Application | null
@@ -268,25 +260,20 @@ export default function ApprovalsPage() {
       return { label: '-', color: 'default' };
     }
     
-    // 却下の場合
     if (application.status === 'rejected') {
       return { label: '却下', color: 'error' };
     }
     
-    // 最終承認完了の場合
     if (application.status === 'approved') {
-      // 次の承認者がいない場合は「最終承認済み」
       if (!application.nextApproverId && !application.nextApproverName) {
         return { label: '最終承認済み', color: 'success' };
       }
-      // 次の承認者がいる場合は次の承認者名を表示（通常は発生しないが念のため）
       return {
         label: application.nextApproverName || `ID: ${application.nextApproverId}` || '最終承認済み',
         color: 'success',
       };
     }
     
-    // 承認待ちの場合、次の承認者を表示
     if (application.status === 'pending') {
       if (application.nextApproverName) {
         return {
@@ -306,10 +293,8 @@ export default function ApprovalsPage() {
     return { label: '-', color: 'default' };
   };
   
-  // 承認待ちの承認のみを表示（ログインユーザーが承認すべきもの）
   const pendingApprovals = approvals.filter((a) => {
     if (a.status !== 'pending') return false;
-    // ログインユーザーが承認者である場合のみ表示
     return currentUserId && a.approverId === currentUserId;
   });
 
@@ -359,8 +344,6 @@ export default function ApprovalsPage() {
                 {pendingApprovals.map((approval) => {
                   const application = applications[approval.applicationId];
                   const isExpanded = expandedRows.has(approval.applicationId);
-                  // 承認履歴(承認フロー各ステップの詳細)を返すバックエンドAPIが未実装のため、
-                  // 常に空配列を渡す。WorkflowProgressは空配列でも問題なく表示できる。
                   const applicationApprovals: Approval[] = [];
                   
                   return (
@@ -420,7 +403,7 @@ export default function ApprovalsPage() {
                         <TableCell>{formatDate(approval.createdAt)}</TableCell>
                         <TableCell align="right">
                           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                            {/* 自分が承認担当かつ申請が承認待ちのときだけ承認・却下アイコンを表示（最終承認済みのときは非表示） */}
+                            {}
                             {currentUserId && String(approval.approverId) === String(currentUserId) && application?.status === 'pending' && (
                               <>
                                 <IconButton
@@ -470,7 +453,7 @@ export default function ApprovalsPage() {
         )}
       </Paper>
 
-      {/* コメント入力ダイアログ */}
+      {}
       <Dialog open={approvalDialog.open} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
           {approvalDialog.action === 'approve' ? '承認' : '却下'} - コメント入力
@@ -503,7 +486,7 @@ export default function ApprovalsPage() {
         </DialogActions>
       </Dialog>
 
-      {/* 確認ダイアログ */}
+      {}
       <Dialog open={confirmDialog.open} onClose={handleCloseConfirmDialog} maxWidth="md" fullWidth>
         <DialogTitle>
           {confirmDialog.action === 'approve' ? '承認' : '却下'} - 確認

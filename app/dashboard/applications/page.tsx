@@ -81,13 +81,10 @@ export default function ApplicationsPage() {
           return;
         }
         
-        // 自分の申請のみを取得（applicantIdでフィルタリング）
         const data = await apiClient.applications.getApplications(userId);
         
-        // プロモーション申請は上長だけに表示（追加フィルタリング）
         const userRole = getUserRoleFromId(userId);
         const filteredData = data.filter((application) => {
-          // プロモーション申請は上長だけに表示
           if (application.type === 'promotion') {
             return userRole === 'manager';
           }

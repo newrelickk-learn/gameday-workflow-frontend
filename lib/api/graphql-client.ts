@@ -1,8 +1,3 @@
-/**
- * GraphQLクライアント
- * すべてのAPI通信はNext.jsのGraphQLエンドポイント（/api/graphql）を通して行う
- * スタブモードの場合は、実際のHTTPリクエストを送らずにスタブデータを返す
- */
 
 import type {
   LoginRequest,
@@ -18,21 +13,14 @@ import type {
 } from './types';
 import { handleGraphQLStub } from './graphql-stub-handler';
 
-// テスト環境で実際のサーバーに接続する場合は、フルURLを指定
 const GRAPHQL_ENDPOINT = 
   process.env.NODE_ENV === 'test' && process.env.NEXT_PUBLIC_USE_STUBS !== 'true'
     ? (process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:3000/api/graphql')
     : '/api/graphql';
 
-/**
- * GraphQLリクエストを送信
- */
 async function graphqlRequest<T>(query: string, variables?: Record<string, any>): Promise<T> {
-  // スタブモードの判定: NEXT_PUBLIC_USE_STUBSがtrueの場合のみスタブを使用
-  // テスト環境でもNEXT_PUBLIC_USE_STUBS=falseの場合は実際のサーバーに接続
   const useStubs = process.env.NEXT_PUBLIC_USE_STUBS === 'true';
   
-  // サーバー側（SSR）: スタブモードのみサポート
   if (typeof window === 'undefined' && process.env.NODE_ENV !== 'test') {
     if (useStubs) {
       if (process.env.NODE_ENV === 'development') {
@@ -43,11 +31,9 @@ async function graphqlRequest<T>(query: string, variables?: Record<string, any>)
       const stubData = await handleGraphQLStub(query, variables);
       return stubData as T;
     }
-    // サーバー側でスタブモードでない場合はエラー（サーバー側ではGraphQLエンドポイントにリクエストできない）
     throw new Error('Server-side GraphQL requests are only supported in stub mode. Set NEXT_PUBLIC_USE_STUBS=true for server-side rendering.');
   }
   
-  // テスト環境: スタブモードまたは実際のサーバーに接続
   if (process.env.NODE_ENV === 'test') {
     if (useStubs) {
       if (process.env.NODE_ENV === 'test') {
@@ -58,11 +44,8 @@ async function graphqlRequest<T>(query: string, variables?: Record<string, any>)
       const stubData = await handleGraphQLStub(query, variables);
       return stubData as T;
     }
-    // テスト環境でスタブモードでない場合は、実際のサーバーに接続
-    // この場合は、クライアント側の処理に進む
   }
 
-  // クライアント側（ブラウザ環境またはテスト環境）: GraphQLリクエストを実行
   const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
   
   if (process.env.NODE_ENV === 'development') {
@@ -96,8 +79,6 @@ async function graphqlRequest<T>(query: string, variables?: Record<string, any>)
     console.error('[GraphQL Client] GraphQL errors:', result.errors);
     const graphqlError = result.errors[0];
     const error = new Error(graphqlError?.message || 'GraphQL error') as Error & { code?: string };
-    // GameDay第0章: ログイン失敗時、通常のパスワード誤り(INVALID_CREDENTIALS)とPod飽和
-    // (POD_SATURATED)をUI側で区別するために、extensions.codeを保持しておく
     error.code = graphqlError?.extensions?.code;
     throw error;
   }
@@ -109,11 +90,7 @@ async function graphqlRequest<T>(query: string, variables?: Record<string, any>)
   return result.data;
 }
 
-/**
- * GraphQLクライアント実装
- */
 export const graphqlClient = {
-  // 認証
   auth: {
     async login(credentials: LoginRequest): Promise<LoginResponse> {
       const query = `
@@ -154,7 +131,6 @@ export const graphqlClient = {
     },
   },
 
-  // 人事部専用: 自社ユーザー一覧・直属の上長編集
   users: {
     async getCompanyUsers(): Promise<User[]> {
       const query = `
@@ -214,7 +190,6 @@ export const graphqlClient = {
     },
   },
 
-  // 申請
   applications: {
     async getApplications(applicantId?: string): Promise<Application[]> {
       const query = `
@@ -326,7 +301,6 @@ export const graphqlClient = {
     },
   },
 
-  // 承認
   approvals: {
     async getApprovals(): Promise<Approval[]> {
       const query = `
@@ -423,7 +397,6 @@ export const graphqlClient = {
     },
   },
 
-  // 出張申請の概算費用（travelサービス）
   travel: {
     async getCities(): Promise<City[]> {
       const query = `
@@ -460,7 +433,6 @@ export const graphqlClient = {
     },
   },
 
-  // 通知
   notifications: {
     async getNotificationHistory(recipientId: string): Promise<Notification[]> {
       const query = `
@@ -485,7 +457,6 @@ export const graphqlClient = {
     },
   },
 
-  // AI
   ai: {
     async generateApplicationSuggestion(prompt: string): Promise<string> {
       const query = `
@@ -530,7 +501,6 @@ export const graphqlClient = {
     },
   },
 
-  // GameDay演習: 章ごとの原因診断ドロップダウン
   chapters: {
     async getDiagnosisOptions(chapter: number): Promise<string[]> {
       const query = `
@@ -555,6 +525,18 @@ export const graphqlClient = {
         selectedText,
       });
       return data.checkChapterAnswer;
+    },
+
+    async checkDependencyChain(dependencyChain: string[]): Promise<boolean> {
+      const query = `
+        mutation CheckDependencyChain($dependencyChain: [String!]!) {
+          checkDependencyChain(dependencyChain: $dependencyChain)
+        }
+      `;
+      const data = await graphqlRequest<{ checkDependencyChain: boolean }>(query, {
+        dependencyChain,
+      });
+      return data.checkDependencyChain;
     },
 
     async getClearedChapters(): Promise<number[]> {

@@ -37,7 +37,6 @@ export function ChatWidget() {
   useEffect(() => {
     if (isOpen) {
       scrollToBottom();
-      // チャットが開いたら入力欄にフォーカス
       setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
@@ -90,7 +89,7 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* チャットボタン */}
+      {}
       <Box
         sx={{
           position: 'fixed',
@@ -117,7 +116,7 @@ export function ChatWidget() {
         </IconButton>
       </Box>
 
-      {/* チャットウィンドウ */}
+      {}
       {isOpen && (
         <Paper
           sx={{
@@ -145,7 +144,7 @@ export function ChatWidget() {
             },
           }}
         >
-          {/* ヘッダー */}
+          {}
           <Box
             sx={{
               bgcolor: 'primary.main',
@@ -176,7 +175,7 @@ export function ChatWidget() {
             </IconButton>
           </Box>
 
-          {/* メッセージエリア */}
+          {}
           <Box
             sx={{
               flexGrow: 1,
@@ -249,7 +248,7 @@ export function ChatWidget() {
             <div ref={messagesEndRef} />
           </Box>
 
-          {/* 入力エリア */}
+          {}
           <Box
             sx={{
               p: 2,

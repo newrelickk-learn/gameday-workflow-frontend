@@ -76,7 +76,6 @@ export default function NotificationsPage() {
           return;
         }
         const data = await apiClient.notifications.getNotificationHistory(userId);
-        // 新しい通知が上に来るように並べる
         const sorted = [...data].sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );

@@ -3,9 +3,6 @@ import { downstreamClient } from './downstream-client';
 import type { Resolvers } from './generated-types';
 import { addCustomAttribute, addCustomAttributes } from '../newrelic-helper';
 
-/**
- * リクエストから認証トークンを取得
- */
 function getTokenFromRequest(request?: Request): string | undefined {
   if (!request) return undefined;
   
@@ -17,10 +14,6 @@ function getTokenFromRequest(request?: Request): string | undefined {
   return undefined;
 }
 
-/**
- * JWTトークンからユーザーIDを取得（簡易実装）
- * JWTトークンのペイロード部分をbase64デコードしてユーザーIDを取得
- */
 function getUserIdFromToken(token?: string): string | undefined {
   if (!token) {
     if (process.env.NODE_ENV === 'development') {
@@ -29,7 +22,6 @@ function getUserIdFromToken(token?: string): string | undefined {
     return undefined;
   }
   
-  // スタブトークン形式（mock-jwt-token-${userId}）を処理
   if (token.startsWith('mock-jwt-token-')) {
     const userId = token.replace('mock-jwt-token-', '');
     if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
@@ -39,7 +31,6 @@ function getUserIdFromToken(token?: string): string | undefined {
   }
   
   try {
-    // JWTトークンは3つの部分（ヘッダー.ペイロード.署名）に分かれている
     const parts = token.split('.');
     if (parts.length !== 3) {
       if (process.env.NODE_ENV === 'development') {
@@ -48,10 +39,7 @@ function getUserIdFromToken(token?: string): string | undefined {
       return undefined;
     }
     
-    // ペイロード部分をbase64デコード
     const payload = parts[1];
-    // base64デコード（URLセーフなbase64の場合、'-'と'_'を'+'と'/'に置換）
-    // パディングを追加（必要に応じて）
     let base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
     while (base64.length % 4) {
       base64 += '=';
@@ -63,8 +51,6 @@ function getUserIdFromToken(token?: string): string | undefined {
       console.log('[GraphQL Resolver] Decoded token payload:', JSON.stringify(payloadObj, null, 2));
     }
     
-    // ユーザーIDを取得（様々なクレーム名に対応）
-    // .NETのJWTでは http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier が使われる
     const userId = 
       payloadObj.sub || 
       payloadObj.user_id || 
@@ -86,7 +72,6 @@ function getUserIdFromToken(token?: string): string | undefined {
   }
 }
 
-// DateTimeスカラー型のリゾルバー
 const DateTimeScalar = new GraphQLScalarType({
   name: 'DateTime',
   description: 'DateTime custom scalar type',
@@ -361,8 +346,6 @@ export const resolvers: Resolvers & {
           impactedPodName: input.impactedPodName ?? undefined,
         });
       } catch (error) {
-        // downstreamClient.login()は失敗時、error.codeに"INVALID_CREDENTIALS"/"POD_SATURATED"等の
-        // 具体的な種別を付与している（GameDay第0章: 通常のパスワード誤りとPod飽和を区別するため）。
         const code = (error as { code?: string })?.code ?? 'LOGIN_ERROR';
         await addCustomAttribute('login.errorCode', code);
         const message = error instanceof Error ? error.message : 'Login failed';
@@ -376,7 +359,6 @@ export const resolvers: Resolvers & {
       try {
         const token = getTokenFromRequest(context.request);
         const userIdFromToken = getUserIdFromToken(token);
-        // クライアントで applicantId が明示されていればそれを使い、未指定時のみトークンのユーザーにフォールバック
         const applicantId = (input.applicantId && String(input.applicantId).trim() !== '')
           ? input.applicantId
           : userIdFromToken;
@@ -418,10 +400,6 @@ export const resolvers: Resolvers & {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         const errorStack = error instanceof Error ? error.stack : undefined;
-        // downstreamClient.createApplication()は失敗時、error.codeにbackendのerror_code
-        // (例: "APPROVER_NOT_FOUND"、"ASSERTION_RULE_VIOLATION")、error.detailMessageに
-        // backendのメッセージを保持している。UI側（第1章は隠す、第5章は表示する等）の
-        // 判定に使えるよう、GraphQLErrorのextensions.codeとmessageに転記する。
         const code = (error as { code?: string })?.code;
         const detailMessage = (error as { detailMessage?: string })?.detailMessage;
         const field = (error as { field?: string })?.field;
@@ -444,7 +422,6 @@ export const resolvers: Resolvers & {
     updateApproval: async (_, { id, input }, context) => {
       try {
         const token = getTokenFromRequest(context.request);
-        // inputからapplicationIdを取得（フロントエンドから渡される）
         const applicationId = input.applicationId ?? undefined;
         
         if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
@@ -544,10 +521,21 @@ export const resolvers: Resolvers & {
       }
     },
 
+    checkDependencyChain: async (_, { dependencyChain }, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.checkDependencyChain(dependencyChain, token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to check dependency chain: ${errorMessage}`, {
+          extensions: { code: 'CHECK_DEPENDENCY_CHAIN_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
     startWorkflow: async (_, { input }, context) => {
       try {
         const token = getTokenFromRequest(context.request);
-        // GraphQLの入力型をAPIのリクエスト型に変換（nullをundefinedに変換）
         return await downstreamClient.startWorkflow({
           applicationId: input.applicationId,
           applicationType: input.applicationType,

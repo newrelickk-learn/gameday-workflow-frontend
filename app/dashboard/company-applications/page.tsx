@@ -80,7 +80,6 @@ export default function CompanyApplicationsPage() {
       try {
         setLoading(true);
         setError('');
-        // applicantIdを指定せず全件取得する（自社の全申請を一覧表示するため）
         const data = await apiClient.applications.getApplications();
         setApplications(data);
       } catch (err) {

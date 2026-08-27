@@ -1,17 +1,4 @@
-/**
- * ワークフローシナリオテスト
- *
- * 4つの申請タイプの承認フローをテストします：
- * 1. 出張申請: エンジニア申請 → 上長承認 → 本部長最終承認（3ステップ）
- * 2. 経費申請: エンジニア申請 → 上長承認 → 経理承認（3ステップ）
- * 3. 休暇申請: エンジニア申請 → 上長承認（2ステップ）
- * 4. プロモーション申請: 上長申請 → 本部長承認（2ステップ）
- *
- * 部署（会社）ごとにワークフローが動くことを確認するため、
- * ランダムに選んだ3種類の部署（CompanyId: 1, 17, 33）で同じシナリオを実行します。
- */
 
-/// <reference types="jest" />
 
 import { graphqlClient } from '@/lib/api/graphql-client';
 import type {
@@ -23,7 +10,6 @@ import type {
 
 const PASSWORD = 'password';
 
-/** 1社分のテストユーザー（02-init-user.sql の ID/Email に対応） */
 type CompanyUsers = {
   engineer: { id: string; email: string; password: string };
   manager: { id: string; email: string; password: string };
@@ -31,7 +17,6 @@ type CompanyUsers = {
   accounting: { id: string; email: string; password: string };
 };
 
-/** ランダムに選んだ3種類の部署（会社）のユーザーセット（02-init-user.sql 準拠） */
 const COMPANY_USER_SETS: { companyId: number; users: CompanyUsers }[] = [
   {
     companyId: 1,
@@ -62,20 +47,15 @@ const COMPANY_USER_SETS: { companyId: number; users: CompanyUsers }[] = [
   },
 ];
 
-// テストヘルパー関数
 
 type UserCred = { id: string; email: string; password: string };
 
-/**
- * 指定ユーザーでログインしてトークンを取得
- */
 async function loginAs(user: UserCred): Promise<string> {
   const response = await graphqlClient.auth.login({
     email: user.email,
     password: user.password,
   });
 
-  // トークンをlocalStorageに保存（クライアント側の動作をシミュレート）
   if (typeof window !== 'undefined') {
     localStorage.setItem('token', response.token);
   }
@@ -83,9 +63,6 @@ async function loginAs(user: UserCred): Promise<string> {
   return response.token;
 }
 
-/**
- * 指定ユーザーとして申請を作成
- */
 async function createApplicationAs(
   user: UserCred,
   applicationData: CreateApplicationRequest
@@ -94,17 +71,11 @@ async function createApplicationAs(
   return await graphqlClient.applications.createApplication(applicationData);
 }
 
-/**
- * 指定ユーザーの承認待ち一覧を取得
- * 申請作成後、承認が作成されるまで待機する
- */
 async function getPendingApprovals(user: UserCred, applicationId?: string, maxRetries: number = 5): Promise<Approval[]> {
   await loginAs(user);
   
-  // 申請IDが指定されている場合、承認が作成されるまで待機
   if (applicationId) {
     for (let i = 0; i < maxRetries; i++) {
-      // 通常の承認取得を試みる
       try {
         const approvals = await graphqlClient.approvals.getApprovals();
         const matchingApprovals = approvals.filter(
@@ -114,25 +85,19 @@ async function getPendingApprovals(user: UserCred, applicationId?: string, maxRe
           return matchingApprovals;
         }
       } catch (error) {
-        // エラーが発生した場合は、次の試行に進む
         console.log('[Test] Failed to get approvals, retrying...', error);
       }
       
-      // 承認が見つからない場合、少し待機して再試行
       if (i < maxRetries - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // 1秒待機
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
   }
   
-  // 申請IDが指定されていない場合、通常の承認取得
   const approvals = await graphqlClient.approvals.getApprovals();
   return approvals.filter((a) => a.status === 'pending');
 }
 
-/**
- * 承認を実行
- */
 async function approveApplication(
   approvalId: string,
   user: UserCred,
@@ -140,7 +105,6 @@ async function approveApplication(
   comment?: string
 ): Promise<Approval> {
   await loginAs(user);
-  // 承認の取得を試みる（エラーが発生する場合は、承認IDから直接更新を試みる）
   let approval: Approval;
   let actualApplicationId = applicationId;
   
@@ -148,7 +112,6 @@ async function approveApplication(
     approval = await graphqlClient.approvals.getApproval(approvalId);
     actualApplicationId = approval.applicationId;
   } catch (error) {
-    // 承認の取得に失敗した場合、applicationIdが提供されていればそれを使用
     if (!actualApplicationId) {
       console.error('[Test] Failed to get approval and no applicationId provided:', approvalId);
       throw error;
@@ -172,9 +135,6 @@ async function approveApplication(
   return await graphqlClient.approvals.updateApproval(approvalId, updateData);
 }
 
-/**
- * 申請の状態を確認
- */
 async function verifyApplicationStatus(
   applicationId: string,
   expectedStatus: 'pending' | 'approved' | 'rejected',
@@ -184,7 +144,6 @@ async function verifyApplicationStatus(
   const application = await graphqlClient.applications.getApplication(applicationId);
   
   expect(application.status).toBe(expectedStatus);
-  // 実バックエンドが currentStep/totalSteps を返さない場合があるため、値があるときだけ検証
   if (expectedCurrentStep !== undefined && application.currentStep != null) {
     expect(application.currentStep).toBe(expectedCurrentStep);
   }
@@ -194,10 +153,8 @@ async function verifyApplicationStatus(
 }
 
 describe('ワークフローシナリオテスト', () => {
-  // 各テストのタイムアウトを30秒に設定（統合テストのため）
   jest.setTimeout(30000);
   
-  // 各テストの前にlocalStorageをクリア
   beforeEach(() => {
     if (typeof window !== 'undefined') {
       localStorage.clear();

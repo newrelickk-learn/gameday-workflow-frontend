@@ -30,14 +30,8 @@ import { stubTravelService } from '../api/stubs/travel-service';
 import { buildApplicationCode } from '../travel/application-code';
 import { addCustomAttribute } from '../newrelic-helper';
 
-// travelサービス呼び出しのHTTPタイムアウト。Istio側のfault injection（delay 5秒）が
-// これを超えるため、不安定な都市が絡む場合は60%の確率でここでタイムアウト失敗する。
 const TRAVEL_REQUEST_TIMEOUT_MS = 3000;
 
-/**
- * ダウンストリームサービスへの接続クライアント
- * 現在はスタブ実装を使用（ダウンストリームサービスは別サービス）
- */
 export class DownstreamClient {
   private userServiceUrl: string;
   private applicationServiceUrl: string;
@@ -47,7 +41,6 @@ export class DownstreamClient {
   private useStubs: boolean;
 
   constructor() {
-    // 環境変数からスタブモードを判定（デフォルトはtrue）
     this.useStubs = process.env.USE_DOWNSTREAM_STUBS !== 'false';
 
     this.userServiceUrl = process.env.USER_SERVICE_URL || 'http://localhost:8001';
@@ -57,8 +50,6 @@ export class DownstreamClient {
     this.travelServiceUrl = process.env.TRAVEL_SERVICE_URL || 'http://localhost:8005';
   }
 
-  // downstreamサービスへの接続がハングした場合、ページ全体のローディングが永久に
-  // 終わらなくなる不具合を防ぐためのデフォルトタイムアウト（ミリ秒）。
   private static readonly DEFAULT_TIMEOUT_MS = 30000;
 
   private async request<T>(
@@ -93,7 +84,6 @@ export class DownstreamClient {
       if (!response.ok) {
         const errorText = await response.text();
         const errorMessage = `Downstream service error: ${response.status} - ${errorText}`;
-        // エラーレスポンスの詳細をログ出力
         console.error('[Downstream Client] Request failed:', {
           url,
           status: response.status,
@@ -107,9 +97,6 @@ export class DownstreamClient {
           detailMessage?: string;
           field?: string;
         };
-        // downstream(FastAPI)のHTTPExceptionは { detail: { error, message, field } } 形式。
-        // code/detailMessage/fieldをError側に持たせ、呼び出し元(resolvers.ts)がGraphQLの
-        // extensionsに転記できるようにする（例: 第5章のASSERTION_RULE_VIOLATION）。
         try {
           const body = JSON.parse(errorText);
           const detail = body?.detail ?? body;
@@ -117,13 +104,11 @@ export class DownstreamClient {
           error.detailMessage = detail?.message;
           error.field = detail?.field;
         } catch {
-          // errorTextがJSONでない場合は無視
         }
         throw error;
       }
 
       const data = await response.json();
-      // エラーの場合のみレスポンス内容を詳細にログ出力
       if (!response.ok) {
         console.error('[Downstream Client] Response (Error):', {
           url,
@@ -141,12 +126,9 @@ export class DownstreamClient {
         throw error;
       }
       if (error instanceof Error && error.name === 'AbortError' && !options.signal) {
-        // downstream接続がハングして応答が返らないケース（呼び出し元でPromise.allを使っていると、
-        // これがページ全体のローディングを永久に終わらせなくなる原因になる）。
         console.error('[Downstream Client] Request timed out:', { url, timeoutMs: DownstreamClient.DEFAULT_TIMEOUT_MS });
         throw new Error(`Downstream service timed out after ${DownstreamClient.DEFAULT_TIMEOUT_MS}ms: ${url}`);
       }
-      // ネットワークエラーなどの場合
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('[Downstream Client] Network error:', {
         url,
@@ -158,7 +140,6 @@ export class DownstreamClient {
     }
   }
 
-  // ユーザーサービス
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     if (this.useStubs) {
       if (process.env.NODE_ENV === 'development') {
@@ -175,9 +156,6 @@ export class DownstreamClient {
     });
 
     if (!response.ok) {
-      // user-serviceは失敗時に { error: "INVALID_CREDENTIALS" | "POD_SATURATED" | ..., message: "..." }
-      // を返す。GraphQL側（resolvers.ts）でこのcodeを見て、UIに正しいエラー種別を伝える
-      // （GameDay第0章: 通常のパスワード誤りと、Pod飽和による失敗を区別するため）。
       let code = 'LOGIN_ERROR';
       let message = 'Login failed';
       try {
@@ -185,7 +163,6 @@ export class DownstreamClient {
         if (body?.error) code = body.error;
         if (body?.message) message = body.message;
       } catch {
-        // レスポンスがJSONでない場合はデフォルトのまま
       }
 
       console.error('[Downstream Client] Login failed:', { url, status: response.status, code });
@@ -212,7 +189,6 @@ export class DownstreamClient {
     );
   }
 
-  // 人事部専用: 自社ユーザー一覧
   async getUsersByCompany(token?: string): Promise<User[]> {
     if (this.useStubs) {
       if (process.env.NODE_ENV === 'development') {
@@ -227,7 +203,6 @@ export class DownstreamClient {
     );
   }
 
-  // 人事部専用: 自社ユーザーの直属の上長を更新
   async updateUserManager(id: string, managerId: number | null, token?: string): Promise<User> {
     if (this.useStubs) {
       if (process.env.NODE_ENV === 'development') {
@@ -245,14 +220,12 @@ export class DownstreamClient {
     );
   }
 
-  // 申請サービス
   async getApplications(token?: string, applicantId?: string, nextApproverId?: string): Promise<Application[]> {
     if (this.useStubs) {
       if (process.env.NODE_ENV === 'development') {
         console.log('[Downstream Client] Using stub for getApplications');
       }
       const allApplications = await stubApplicationService.getApplications();
-      // スタブモードでもapplicantId・nextApproverIdでフィルタリング
       if (applicantId) {
         return allApplications.filter(app => app.applicantId === applicantId);
       }
@@ -261,7 +234,6 @@ export class DownstreamClient {
       }
       return allApplications;
     }
-    // applicantId・nextApproverIdが指定されている場合、クエリパラメータに追加
     const url = new URL(`${this.applicationServiceUrl}/api/v1/applications`);
     if (applicantId) {
       url.searchParams.append('applicantId', applicantId);
@@ -310,9 +282,6 @@ export class DownstreamClient {
     );
   }
 
-  // GameDay演習: 章ごとの原因診断ドロップダウンの選択肢を取得する。
-  // 正解・選択肢はサーバー側で暗号化された状態のみ保持しており、レスポンスには
-  // 正解フラグを含めない（New Relicでの調査結果を元に選ばせる仕組みのため）。
   async getChapterDiagnosisOptions(chapter: number, token?: string): Promise<string[]> {
     if (this.useStubs) {
       return [];
@@ -325,7 +294,6 @@ export class DownstreamClient {
     return data.options;
   }
 
-  // GameDay演習: 章ごとの原因診断ドロップダウンで選ばれた選択肢が正解かどうかを判定する。
   async checkChapterAnswer(chapter: number, selectedText: string, token?: string): Promise<boolean> {
     if (this.useStubs) {
       return false;
@@ -341,7 +309,6 @@ export class DownstreamClient {
     return data.correct;
   }
 
-  // 第2章: N+1診断クイズ（3問構成）の選択肢一覧を取得する。
   async getNPlusOneQuizOptions(token?: string): Promise<NPlusOneQuizOptions> {
     if (this.useStubs) {
       return { q1: [], q2: [], q3: [] };
@@ -353,7 +320,6 @@ export class DownstreamClient {
     );
   }
 
-  // 第2章: N+1診断クイズ（3問構成）の回答をまとめて判定する。
   async checkNPlusOneQuizAnswers(
     answers: NPlusOneQuizAnswersInput,
     token?: string
@@ -371,7 +337,21 @@ export class DownstreamClient {
     );
   }
 
-  // GameDay演習: 今日クリア済みの章番号一覧を取得する（日付が変わるとリセットされる）。
+  async checkDependencyChain(dependencyChain: string[], token?: string): Promise<boolean> {
+    if (this.useStubs) {
+      return false;
+    }
+    const data = await this.request<{ correct: boolean }>(
+      `${this.applicationServiceUrl}/api/v1/chapters/1/check-dependency-chain`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ dependencyChain }),
+      },
+      token
+    );
+    return data.correct;
+  }
+
   async getClearedChapters(token?: string): Promise<number[]> {
     if (this.useStubs) {
       return [];
@@ -404,7 +384,6 @@ export class DownstreamClient {
     );
   }
 
-  // ワークフローサービス
   async getApprovals(token?: string, recipientId?: string): Promise<Approval[]> {
     if (this.useStubs) {
       if (process.env.NODE_ENV === 'development') {
@@ -423,9 +402,7 @@ export class DownstreamClient {
         throw new Error(`Stub service failed: ${errorMessage}`);
       }
     }
-    // エンドポイントパスを環境変数で設定可能にする（デフォルトは /api/v1/notifications/history）
     const approvalsPath = process.env.WORKFLOW_APPROVALS_PATH || '/api/v1/notifications/history';
-    // recipient_idクエリパラメータを追加
     const url = new URL(`${this.workflowServiceUrl}${approvalsPath}`);
     if (recipientId) {
       url.searchParams.append('recipient_id', recipientId);
@@ -435,7 +412,6 @@ export class DownstreamClient {
       console.log('[Downstream Client] recipient_id:', recipientId);
     }
     
-    // ワークフローサービスから通知データを取得
     interface NotificationResponse {
       id: string;
       notification_type: string;
@@ -446,9 +422,9 @@ export class DownstreamClient {
       body: string;
       sent_at: string;
       created_at: string;
-      approval_id?: string; // 承認ID（オプション、通知データに含まれている可能性）
-      workflow_id?: string; // ワークフローID（オプション）
-      [key: string]: any; // その他のフィールドに対応
+      approval_id?: string;
+      workflow_id?: string;
+      [key: string]: any;
     }
     
     const notifications = await this.request<NotificationResponse[]>(
@@ -461,9 +437,6 @@ export class DownstreamClient {
       console.log('[Downstream Client] Raw notifications:', JSON.stringify(notifications, null, 2));
     }
     
-    // 申請一覧を取得して、通知に含まれる情報と照合して正しい申請IDを特定
-    // 承認依頼の通知は自分が次の承認者になっている申請にのみ対応するため、
-    // 全社の申請ではなく自分に関係する申請だけを取得する
     let applications: Application[] = [];
     try {
       applications = await this.getApplications(token, undefined, recipientId);
@@ -476,12 +449,9 @@ export class DownstreamClient {
       }
     }
     
-    // 通知データをApproval型にマッピング
     const approvals: Approval[] = notifications
       .filter((notification) => notification.notification_type === 'ApprovalRequest')
       .map((notification) => {
-        // subjectから申請IDを抽出（例: "承認依頼: 申請ID 1" → "1"）
-        // UUID形式の申請IDも抽出できるように改善
         const applicationIdMatch = 
           notification.subject.match(/申請ID\s+([a-f0-9-]{36}|[0-9]+)/i) || 
           notification.body.match(/申請ID\s+([a-f0-9-]{36}|[0-9]+)/i) ||
@@ -490,21 +460,15 @@ export class DownstreamClient {
         
         let applicationId = applicationIdMatch ? applicationIdMatch[1] : '';
         
-        // もし申請IDが数値のみの場合、申請一覧から実際のUUIDを探す
-        // 通知のbodyに含まれる情報（申請タイトルなど）と照合
         if (applicationId && /^\d+$/.test(applicationId)) {
           if (process.env.NODE_ENV === 'development') {
             console.log('[Downstream Client] Extracted numeric application ID:', applicationId);
             console.log('[Downstream Client] Full notification data:', notification);
           }
           
-          // 申請一覧から、通知のbodyに含まれる情報と一致する申請を探す
-          // ただし、数値IDとUUIDの対応関係が不明なため、
-          // 通知のcreated_atと申請のcreatedAtを比較して、最も近い申請を探す
           const notificationDate = new Date(notification.created_at);
           let matchedApplication: Application | undefined;
           
-          // まず、通知の日時に最も近い申請を探す
           let closestApplication: Application | undefined;
           let closestTimeDiff = Infinity;
           
@@ -517,7 +481,6 @@ export class DownstreamClient {
             }
           });
           
-          // 通知の日時から24時間以内の申請を優先的に選択
           if (closestApplication && closestTimeDiff < 24 * 60 * 60 * 1000) {
             matchedApplication = closestApplication;
             if (process.env.NODE_ENV === 'development') {
@@ -533,7 +496,6 @@ export class DownstreamClient {
           if (matchedApplication) {
             applicationId = matchedApplication.id;
           } else {
-            // マッチする申請が見つからない場合、最初の申請を使用（暫定対応）
             if (applications.length > 0) {
               applicationId = applications[0].id;
               if (process.env.NODE_ENV === 'development') {
@@ -543,7 +505,6 @@ export class DownstreamClient {
           }
         }
         
-        // bodyからステップ番号を抽出（例: "ステップ 1" → 1）
         const stepMatch = notification.body.match(/ステップ\s+(\d+)/);
         const step = stepMatch ? parseInt(stepMatch[1], 10) : undefined;
         
@@ -556,12 +517,10 @@ export class DownstreamClient {
           });
         }
         
-        // 通知データに承認IDが含まれている場合はそれを使用
-        // 通知IDを承認IDとして保存（後で実際の承認IDを取得する際に使用）
         const approvalIdFromNotification = notification.approval_id || notification.workflow_id || notification.id;
         
         return {
-          id: notification.id, // 通知IDをそのまま使用（フロントエンドで使用）
+          id: notification.id,
           applicationId: applicationId,
           approverId: notification.recipient_id,
           approverName: undefined,
@@ -571,7 +530,6 @@ export class DownstreamClient {
           step: step,
           createdAt: notification.created_at,
           updatedAt: notification.sent_at || notification.created_at,
-          // 実際の承認IDを保存するためのメタデータ（型定義には含まれないが、後で使用）
           _actualApprovalId: approvalIdFromNotification,
         } as Approval & { _actualApprovalId?: string };
       });
@@ -608,7 +566,6 @@ export class DownstreamClient {
       }
       return stubWorkflowService.getApprovalsByApplication(applicationId);
     }
-    // エンドポイントパスを環境変数で設定可能にする（デフォルトは /api/v1/applications/{applicationId}/approvals）
     const approvalsByAppPath = process.env.WORKFLOW_APPROVALS_BY_APP_PATH || '/api/v1/applications/{applicationId}/approvals';
     const url = approvalsByAppPath.replace('{applicationId}', applicationId);
     const fullUrl = `${this.workflowServiceUrl}${url}`;
@@ -649,16 +606,13 @@ export class DownstreamClient {
         useStubs: this.useStubs,
       });
     }
-    // 申請IDを取得
     const actualApplicationId = data.applicationId || applicationId;
     if (!actualApplicationId) {
       throw new Error('applicationId is required for approval update');
     }
     
-    // 通知IDを承認IDとして使用（application-approval-serviceで処理される）
     const actualApprovalId = id;
     
-    // 申請承認サービスで承認を更新し、申請ステータスを更新
     const updateApprovalUrl = `${this.applicationServiceUrl}/api/v1/approvals/update`;
     
     interface UpdateApprovalResponse {
@@ -683,7 +637,6 @@ export class DownstreamClient {
         token
       );
       
-      // Approval型を構築して返す
       const approval: Approval = {
         id: actualApprovalId,
         applicationId: actualApplicationId,
@@ -699,7 +652,6 @@ export class DownstreamClient {
       
       return approval;
     } catch (error) {
-      // 申請承認サービスの更新が失敗した場合
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('[Downstream Client] Approval update failed:', {
         url: updateApprovalUrl,
@@ -712,7 +664,6 @@ export class DownstreamClient {
     }
   }
 
-  // ワークフローサービス（新しいAPI）
   async startWorkflow(
     data: StartWorkflowRequest,
     token?: string
@@ -786,8 +737,6 @@ export class DownstreamClient {
     const url = new URL(`${this.workflowServiceUrl}/api/v1/notifications/history`);
     url.searchParams.append('recipient_id', recipientId);
 
-    // ワークフローサービス（Rust）はスネークケースでレスポンスを返すため、
-    // GraphQLスキーマ（camelCase）に合わせて変換する
     interface NotificationHistoryResponse {
       id: string;
       notification_type: Notification['notificationType'];
@@ -839,7 +788,6 @@ export class DownstreamClient {
     );
   }
 
-  // AIサービス
   async generateApplicationSuggestion(
     prompt: string,
     token?: string
@@ -896,7 +844,6 @@ export class DownstreamClient {
     return response.answer;
   }
 
-  // travelサービス（出張申請の概算費用）
   async getCities(token?: string): Promise<City[]> {
     if (this.useStubs) {
       if (process.env.NODE_ENV === 'development') {
@@ -933,9 +880,6 @@ export class DownstreamClient {
       companyId: data.companyId ?? 'unknown',
     });
 
-    // 不安定な都市が絡み、かつ解消コード未検出のリスキーな呼び出しの時だけ、
-    // その日・その企業の正解コードをNew Relicのカスタムアトリビュートとして記録する。
-    // 安定した呼び出しには付与しない（失敗トレースを開いたときだけ答えが見える）。
     if (isRisky) {
       await addCustomAttribute('travel.resolutionCode', resolutionCode);
     }

@@ -1,7 +1,6 @@
 import { http, HttpResponse } from 'msw';
 
 export const handlers = [
-  // 認証エンドポイント
   http.post('/api/auth/login', async ({ request }) => {
     const body = await request.json() as { email: string; password: string };
     return HttpResponse.json({
@@ -24,7 +23,6 @@ export const handlers = [
     });
   }),
 
-  // 申請エンドポイント
   http.get('/api/applications', () => {
     return HttpResponse.json([
       {
@@ -65,7 +63,6 @@ export const handlers = [
     });
   }),
 
-  // 承認エンドポイント
   http.get('/api/approvals', () => {
     return HttpResponse.json([
       {
@@ -100,7 +97,6 @@ export const handlers = [
     });
   }),
 
-  // AIエンドポイント
   http.post('/api/ai/suggest', async ({ request }) => {
     const body = await request.json() as { prompt: string };
     return HttpResponse.json({

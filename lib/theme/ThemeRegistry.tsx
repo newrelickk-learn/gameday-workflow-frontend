@@ -7,7 +7,6 @@ import { CacheProvider } from '@emotion/react';
 import createCache from '@emotion/cache';
 import { theme } from './theme';
 
-// Emotionキャッシュを作成（SSR対応）
 const cache = createCache({
   key: 'css',
   prepend: true,

@@ -76,7 +76,6 @@ export default function ApplicationDetailPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // 元のページを取得（クエリパラメータから）
   const fromPage = searchParams.get('from') || 'applications';
 
   useEffect(() => {
@@ -89,8 +88,6 @@ export default function ApplicationDetailPage({ params }: PageProps) {
           apiClient.approvals.getApprovalsByApplication(id).catch(() => []),
         ]);
         
-        // プロモーション申請は、ワークフローの承認者ロール（上長=申請者・本部長=最終承認者）
-        // のみ閲覧可能（対象の本人や無関係な部署には見せない）
         if (applicationData.type === 'promotion') {
           if (!isManager() && !isDirector()) {
             setError('プロモーション申請は上長・本部長のみ閲覧可能です');
@@ -127,7 +124,6 @@ export default function ApplicationDetailPage({ params }: PageProps) {
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => {
-            // 元のページに応じて戻る先を決定
             if (fromPage === 'approvals') {
               router.push('/dashboard/approvals');
             } else {
@@ -237,7 +233,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                   <Typography variant="body1">{application.id}</Typography>
                 </Grid>
 
-                {/* 申請者情報 */}
+                {}
                 <Grid item xs={12} md={6}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                     申請者
@@ -277,14 +273,14 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                   <Typography variant="body1">{formatDate(application.updatedAt)}</Typography>
                 </Grid>
 
-                {/* ワークフロー進捗表示 */}
+                {}
                 {(application.status === 'pending' || application.status === 'approved' || application.status === 'rejected') && (
                   <Grid item xs={12}>
                     <WorkflowProgress application={application} approvals={approvals} />
                   </Grid>
                 )}
 
-                {/* 承認履歴 */}
+                {}
                 {approvals.length > 0 && (
                   <>
                     <Grid item xs={12}>

@@ -30,7 +30,6 @@ export default function ReceiptCarousel({ images }: ReceiptCarouselProps) {
           objectUrlsRef.current.push(objectUrl);
           setLoadedSrcs((prev) => ({ ...prev, [url]: objectUrl }));
         } catch {
-          // 読み込みに失敗した画像はスキップして続行
         }
       }
     };
@@ -81,7 +80,6 @@ export default function ReceiptCarousel({ images }: ReceiptCarouselProps) {
             return null;
           }
           return (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               key={url}
               src={src}

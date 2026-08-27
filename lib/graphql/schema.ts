@@ -1,8 +1,6 @@
 export const typeDefs = `#graphql
-  # スカラー型
   scalar DateTime
 
-  # ユーザー関連
   type User {
     id: ID!
     name: String!
@@ -34,11 +32,9 @@ export const typeDefs = `#graphql
   input LoginInput {
     email: String!
     password: String!
-    # GameDay第0章: リソースが飽和しているPodを突き止めた際に、そのPod名を入力する欄。通常は不要。
     impactedPodName: String
   }
 
-  # 申請関連
   type Application {
     id: ID!
     applicationNumber: String
@@ -82,7 +78,6 @@ export const typeDefs = `#graphql
     dependencyChain: [String!]
   }
 
-  # 承認関連
   type Approval {
     id: ID!
     applicationId: String!
@@ -135,7 +130,6 @@ export const typeDefs = `#graphql
     applicationId: String
   }
 
-  # ワークフロー関連
   input StartWorkflowInput {
     applicationId: String!
     applicationType: ApplicationType!
@@ -178,7 +172,6 @@ export const typeDefs = `#graphql
     message: String
   }
 
-  # 出張申請の概算費用（travelサービス）
   type City {
     id: ID!
     nameJa: String!
@@ -197,7 +190,6 @@ export const typeDefs = `#graphql
     currency: String!
   }
 
-  # 第2章: N+1診断クイズ（3問構成）
   type NPlusOneQuizOptions {
     q1: [String!]!
     q2: [String!]!
@@ -217,7 +209,6 @@ export const typeDefs = `#graphql
     allCorrect: Boolean!
   }
 
-  # 通知関連
   type Notification {
     id: ID!
     notificationType: NotificationType!
@@ -242,7 +233,6 @@ export const typeDefs = `#graphql
     message: String!
   }
 
-  # AI分析結果
   type AnalysisResult {
     risk: RiskLevel!
     summary: String!
@@ -254,79 +244,57 @@ export const typeDefs = `#graphql
     high
   }
 
-  # Query
   type Query {
-    # ユーザー
     user(id: ID!): User
 
-    # 人事部専用: 自社ユーザー一覧
     usersByCompany: [User!]!
 
-    # 申請
     applications(applicantId: ID): [Application!]!
     application(id: ID!): Application
-    # 件数のみ取得（申請者名・コメント等は取得しないためN+1が発生しない）
     applicationsCount(status: ApplicationStatus): Int!
     
-    # 承認
     approvals: [Approval!]!
     approval(id: ID!): Approval
     approvalsByApplication(applicationId: ID!): [Approval!]!
     
-    # 通知
     notificationHistory(recipientId: String!): [Notification!]!
     
-    # AI分析
     analyzeApplication(applicationId: ID!): AnalysisResult!
 
-    # 出張申請の概算費用（travelサービス）
     cities: [City!]!
     estimateTravelCost(input: EstimateTravelCostInput!): EstimateTravelCostResponse!
 
-    # GameDay演習: 章ごとの原因診断ドロップダウンの選択肢（New Relicで調査した内容から選ぶ）
     chapterDiagnosisOptions(chapter: Int!): [String!]!
 
-    # GameDay演習: 今日クリア済みの章番号一覧（日付が変わるとリセットされる）
     clearedChapters: [Int!]!
 
-    # 第2章: N+1診断クイズ（3問構成）の選択肢
     nPlusOneQuizOptions: NPlusOneQuizOptions!
   }
 
-  # Mutation
   type Mutation {
-    # 認証
     login(input: LoginInput!): LoginResponse!
 
-    # 人事部専用: 自社ユーザーの直属の上長を更新
     updateUserManager(id: ID!, input: UpdateUserManagerInput!): User!
 
-    # 申請
     createApplication(input: CreateApplicationInput!): Application!
     
-    # 承認
     updateApproval(id: ID!, input: UpdateApprovalInput!): Approval!
     
-    # ワークフロー
     startWorkflow(input: StartWorkflowInput!): StartWorkflowResponse!
     validateApproval(input: ValidateApprovalInput!): ValidateApprovalResponse!
     approveWorkflow(input: ApproveWorkflowInput!): ApproveWorkflowResponse!
     
-    # 通知
     sendNotification(input: SendNotificationInput!): SendNotificationResponse!
     
-    # AI
     generateApplicationSuggestion(prompt: String!): String!
     askChat(question: String!): String!
 
-    # GameDay演習: 章ごとの原因診断の正解判定
     checkChapterAnswer(chapter: Int!, selectedText: String!): Boolean!
 
-    # 第2章: N+1診断クイズ（3問構成）の回答をまとめて判定
     checkNPlusOneQuizAnswers(input: NPlusOneQuizAnswersInput!): NPlusOneQuizResult!
+
+    checkDependencyChain(dependencyChain: [String!]!): Boolean!
   }
 `;
 
-// スキーマは後でリゾルバーと結合されます
-// リゾルバーは別ファイルで定義し、API Routeで結合します
 

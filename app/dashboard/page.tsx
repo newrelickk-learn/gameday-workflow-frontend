@@ -34,17 +34,12 @@ export default function DashboardPage() {
         setError('');
         const userId = getCurrentUserId();
         const isApprover = isManager() || isDirector() || isAccounting();
-        // 承認済み件数はapplicationsCount（SQLのCOUNTのみ、申請者名等を取得しないため
-        // N+1が発生しない）で取得する。以前はgetApplications()（自社の全申請を申請者名
-        // 付きで取得、N+1が発生する）で件数分の行を取得してからフィルタしていたため、
-        // ダッシュボード自体が第2章と同じN+1で遅くなっていた。
         const [applicationsData, approvalsData, approvedCount] = await Promise.all([
           apiClient.applications.getApplications(userId ?? undefined),
           apiClient.approvals.getApprovals(),
           isApprover ? apiClient.applications.getApplicationsCount('approved') : Promise.resolve(0),
         ]);
 
-        // プロモーション申請は上長だけに表示（申請は既に userId で絞り込み済み）
         const userRole = getUserRoleFromId(userId);
         const filteredApplications = applicationsData.filter((application) => {
           if (application.type === 'promotion') {
@@ -70,16 +65,11 @@ export default function DashboardPage() {
   const pendingApprovals = approvals.filter((app) => app.status === 'pending');
 
   const handleLogout = () => {
-    // ログアウトはフルページロードを伴わないため、New Relic Browserエージェントの
-    // enduser.idを明示的にクリアする（resetSession=trueで次のユーザーのセッションと
-    // 混ざらないようにする）
     setNewRelicUserId(null, true);
-    // localStorageからトークンとユーザー情報を削除
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     }
-    // ログインページにリダイレクト
     router.push('/login');
   };
 

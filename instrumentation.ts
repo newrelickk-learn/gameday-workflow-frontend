@@ -1,8 +1,3 @@
-/**
- * Next.jsのinstrumentation hook。
- * アプリの他の部分より前に読み込まれ、New RelicのNode.jsエージェントを起動する。
- * https://docs.newrelic.com/docs/apm/agents/nodejs-agent/extend-your-instrumentation/nextjs-instrumentation/
- */
 
 async function loadNewRelicAgent() {
   const { default: newrelic } = await import('newrelic');
@@ -24,7 +19,6 @@ async function loadNewRelicAgent() {
 }
 
 export async function register() {
-  // エージェントはNode.jsランタイムのみ計装する（Edgeランタイムは対象外）
   if (process.env.NEXT_RUNTIME !== 'nodejs') {
     return;
   }

@@ -1,31 +1,23 @@
 import type { LoginRequest, LoginResponse, User } from '../types';
 
-/**
- * ユーザーIDから役割を判定
- */
 function getUserRoleFromId(userId: string): 'director' | 'accounting' | 'manager' | 'engineer' | 'hr' | 'unknown' {
   const id = parseInt(userId, 10);
   if (isNaN(id)) {
     return 'unknown';
   }
 
-  // ユーザーID: 1051-1261: 本部長
   if (id >= 1051 && id <= 1261) {
     return 'director';
   }
-  // ユーザーID: 16051-20261: 経理
   if (id >= 16051 && id <= 20261) {
     return 'accounting';
   }
-  // ユーザーID: 21051-25261: 上長
   if (id >= 21051 && id <= 25261) {
     return 'manager';
   }
-  // ユーザーID: 28151-28961: 開発エンジニア
   if (id >= 28151 && id <= 28961) {
     return 'engineer';
   }
-  // ユーザーID: 31051-31261: 人事部
   if (id >= 31051 && id <= 31261) {
     return 'hr';
   }
@@ -33,70 +25,52 @@ function getUserRoleFromId(userId: string): 'director' | 'accounting' | 'manager
   return 'unknown';
 }
 
-/**
- * ユーザーIDからCompanyIdを計算
- */
 function calculateCompanyId(userId: string): number {
   const id = parseInt(userId, 10);
   if (isNaN(id)) {
-    return 1; // デフォルト
+    return 1;
   }
   
-  // 本部長: ID 1051-1100 -> CompanyId 1-50
   if (id >= 1051 && id <= 1100) {
     return id - 1051 + 1;
   }
-  // 経理: ID 16051-16100 -> CompanyId 1-50
   if (id >= 16051 && id <= 16100) {
     return id - 16051 + 1;
   }
-  // 上長: ID 21051-21100 -> CompanyId 1-50
   if (id >= 21051 && id <= 21100) {
     return id - 21051 + 1;
   }
-  // 開発エンジニア: ID 28151-28200 -> CompanyId 1-50
   if (id >= 28151 && id <= 28200) {
     return id - 28151 + 1;
   }
-  // 人事部: ID 31051-31100 -> CompanyId 1-50
   if (id >= 31051 && id <= 31100) {
     return id - 31051 + 1;
   }
 
-  return 1; // デフォルト
+  return 1;
 }
 
-/**
- * 役割とCompanyIdからユーザーIDを取得
- */
 function getUserIdByRoleAndCompany(role: 'director' | 'accounting' | 'manager' | 'engineer', companyId: number): string {
-  // CompanyIdは1-50の範囲
   const companyIdClamped = Math.max(1, Math.min(50, companyId));
   
   switch (role) {
     case 'director':
-      return String(1051 + companyIdClamped - 1); // 本部長: 1051-1100
+      return String(1051 + companyIdClamped - 1);
     case 'accounting':
-      return String(16051 + companyIdClamped - 1); // 経理: 16051-16100
+      return String(16051 + companyIdClamped - 1);
     case 'manager':
-      return String(21051 + companyIdClamped - 1); // 上長: 21051-21100
+      return String(21051 + companyIdClamped - 1);
     case 'engineer':
-      return String(28151 + companyIdClamped - 1); // 開発エンジニア: 28151-28200
+      return String(28151 + companyIdClamped - 1);
     default:
-      return String(28151 + companyIdClamped - 1); // デフォルトは開発エンジニア
+      return String(28151 + companyIdClamped - 1);
   }
 }
 
-/**
- * 役割からユーザーIDの範囲を取得（代表的なIDを返す）
- */
 function getUserIdByRole(role: 'director' | 'accounting' | 'manager' | 'engineer'): string {
-  return getUserIdByRoleAndCompany(role, 1); // デフォルトはCompanyId=1
+  return getUserIdByRoleAndCompany(role, 1);
 }
 
-/**
- * メールアドレスから役割を推測
- */
 function getRoleFromEmail(email: string): 'director' | 'accounting' | 'manager' | 'engineer' {
   const emailLower = email.toLowerCase();
   if (emailLower.includes('director') || emailLower.includes('本部長')) {
@@ -108,13 +82,9 @@ function getRoleFromEmail(email: string): 'director' | 'accounting' | 'manager' 
   if (emailLower.includes('manager') || emailLower.includes('上長')) {
     return 'manager';
   }
-  // デフォルトは開発エンジニア
   return 'engineer';
 }
 
-/**
- * 役割からユーザー名を生成
- */
 function getUserNameByRole(role: 'director' | 'accounting' | 'manager' | 'engineer' | 'hr'): string {
   switch (role) {
     case 'director':
@@ -132,9 +102,6 @@ function getUserNameByRole(role: 'director' | 'accounting' | 'manager' | 'engine
   }
 }
 
-/**
- * 役割から部署名を取得
- */
 function getDepartmentByRole(role: 'director' | 'accounting' | 'manager' | 'engineer' | 'hr'): string {
   switch (role) {
     case 'director':
@@ -152,7 +119,6 @@ function getDepartmentByRole(role: 'director' | 'accounting' | 'manager' | 'engi
   }
 }
 
-// ユーザーデータ（既存のデータも保持）
 const users: Record<string, User> = {
   '28151': {
     id: '28151',
@@ -198,24 +164,20 @@ const users: Record<string, User> = {
 
 export const stubUserService = {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    // まず、既存のユーザーデータからメールアドレスで検索
     const existingUser = Object.values(users).find(u => u.email === credentials.email);
     
     if (existingUser) {
-      // 既存のユーザーが見つかった場合、そのユーザーを使用
       return {
         token: `mock-jwt-token-${existingUser.id}`,
         user: existingUser,
       };
     }
 
-    // 既存のユーザーが見つからない場合、メールアドレスから役割を推測
     const role = getRoleFromEmail(credentials.email);
     const userId = getUserIdByRole(role);
     const userName = getUserNameByRole(role);
     const department = getDepartmentByRole(role);
 
-    // 新規ユーザーを作成
     const companyId = calculateCompanyId(userId);
     const user: User = {
       id: userId,
@@ -234,15 +196,12 @@ export const stubUserService = {
   },
   
   async getUser(id: string): Promise<User> {
-    // 既存のユーザーデータがある場合はそれを使用
     if (users[id]) {
       return users[id];
     }
 
-    // ユーザーIDから役割を判定してユーザーを生成
     const role = getUserRoleFromId(id);
     if (role === 'unknown') {
-      // 不明なIDの場合はデフォルトの開発エンジニアを返す
       return users['1'] || {
         id: '28151',
         name: '開発エンジニア',
@@ -266,17 +225,14 @@ export const stubUserService = {
       companyId,
     };
 
-    // キャッシュに保存
     users[id] = user;
     return user;
   },
 
-  // 人事部専用: 自社(companyId=1固定、スタブの簡易実装)のユーザー一覧
   async getUsersByCompany(): Promise<User[]> {
     return Object.values(users).filter((u) => u.companyId === 1);
   },
 
-  // 人事部専用: 直属の上長を更新
   async updateUserManager(id: string, managerId: number | null): Promise<User> {
     const existing = users[id] ?? (await this.getUser(id));
     const updated: User = { ...existing, managerId };

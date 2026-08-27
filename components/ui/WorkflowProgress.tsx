@@ -26,19 +26,14 @@ interface StepInfo {
 }
 
 export default function WorkflowProgress({ application, approvals }: WorkflowProgressProps) {
-  // 申請が却下されている場合は、すべてのステップを却下状態にする
   const isRejected = application.status === 'rejected';
   
-  // 申請が承認されている場合は、すべてのステップを完了状態にする
   const isApproved = application.status === 'approved';
   
-  // 総ステップ数
   const totalSteps = application.totalSteps || 1;
   
-  // 現在のステップ（承認待ちのステップ）
   const currentStep = application.currentStep;
   
-  // 承認履歴から各ステップの情報を構築
   const stepMap = new Map<number, Approval>();
   approvals.forEach((approval) => {
     if (approval.step) {
@@ -46,14 +41,12 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
     }
   });
   
-  // 各ステップの情報を生成
   const steps: StepInfo[] = [];
   for (let i = 1; i <= totalSteps; i++) {
     const approval = stepMap.get(i);
     let status: StepStatus;
     
     if (isRejected) {
-      // 却下されている場合
       if (approval?.status === 'rejected') {
         status = 'rejected';
       } else if (approval?.status === 'approved') {
@@ -62,22 +55,16 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
         status = 'pending';
       }
     } else if (isApproved) {
-      // 承認されている場合、すべて完了
       status = 'completed';
     } else if (approval?.status === 'approved') {
-      // 承認済み
       status = 'completed';
     } else if (approval?.status === 'rejected') {
-      // 却下
       status = 'rejected';
     } else if (currentStep !== undefined && i === currentStep) {
-      // 現在のステップ（承認待ち）
       status = 'current';
     } else if (currentStep !== undefined && i < currentStep) {
-      // 過去のステップ（完了しているはず）
       status = 'completed';
     } else {
-      // 未開始
       status = 'pending';
     }
     
@@ -114,10 +101,8 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
       'engineer': 'エンジニア',
     };
     
-    // 承認者名からロールを推測（簡易実装）
     let roleLabel = step.approverName || '承認者';
     if (step.approverName) {
-      // 承認者名がロール名の場合
       Object.entries(roleMap).forEach(([key, value]) => {
         if (step.approverName === value) {
           roleLabel = value;
@@ -131,30 +116,26 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
   const getStepBgColor = (status: StepStatus) => {
     switch (status) {
       case 'completed':
-        return '#4caf50'; // 緑
+        return '#4caf50';
       case 'current':
-        return '#81c784'; // 薄い緑
+        return '#81c784';
       case 'rejected':
-        return '#f44336'; // 赤
+        return '#f44336';
       case 'pending':
-        return '#e0e0e0'; // グレー
+        return '#e0e0e0';
     }
   };
   
   const getConnectorColor = (fromStatus: StepStatus, toStatus: StepStatus) => {
-    // 完了から次のステップへの矢印は緑
     if (fromStatus === 'completed') {
       return '#4caf50';
     }
-    // 現在のステップから次のステップへの矢印は薄い緑
     if (fromStatus === 'current') {
       return '#81c784';
     }
-    // 却下の場合は赤
     if (fromStatus === 'rejected' || toStatus === 'rejected') {
       return '#f44336';
     }
-    // その他はグレー
     return '#e0e0e0';
   };
   
@@ -170,7 +151,7 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
           
           return (
             <Box key={step.stepNumber} sx={{ display: 'flex', alignItems: 'center' }}>
-              {/* ステップ */}
+              {}
               <Box
                 sx={{
                   display: 'flex',
@@ -180,7 +161,7 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
                   position: 'relative',
                 }}
               >
-                {/* アイコン */}
+                {}
                 <Box
                   sx={{
                     width: 56,
@@ -199,7 +180,7 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
                   {getStepIcon(step.status)}
                 </Box>
                 
-                {/* ステップ番号とラベル */}
+                {}
                 <Typography variant="caption" sx={{ fontWeight: 'bold', mb: 0.5 }}>
                   ステップ {step.stepNumber}
                 </Typography>
@@ -207,7 +188,7 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
                   {getStepLabel(step)}
                 </Typography>
                 
-                {/* 承認者名 */}
+                {}
                 {step.status === 'current' && application.nextApproverName && (
                   <Typography variant="caption" sx={{ color: '#4caf50', fontWeight: 'bold', textAlign: 'center' }}>
                     {application.nextApproverName}
@@ -219,7 +200,7 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
                   </Typography>
                 )}
                 
-                {/* ステータスチップ */}
+                {}
                 <Chip
                   label={
                     step.status === 'completed' ? '承認済み' :
@@ -239,7 +220,7 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
                 />
               </Box>
               
-              {/* 矢印（最後のステップ以外） */}
+              {}
               {!isLast && (
                 <Box
                   sx={{
@@ -263,7 +244,7 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
         })}
       </Box>
       
-      {/* ステータスメッセージ */}
+      {}
       {application.status === 'pending' && currentStep !== undefined && (
         <Box sx={{ mt: 3, p: 2, bgcolor: '#e8f5e9', borderRadius: 1, border: '1px solid #4caf50' }}>
           <Typography variant="body2" sx={{ color: '#2e7d32', fontWeight: 'bold' }}>

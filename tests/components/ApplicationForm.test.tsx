@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-// テスト用のモックコンポーネント
 function ApplicationForm() {
   return (
     <form>

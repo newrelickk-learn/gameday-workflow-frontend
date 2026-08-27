@@ -19,9 +19,6 @@ const MANUAL_CONTENT_DIR = path.join(process.cwd(), 'content', 'manual');
 function readManualMarkdown(slug: string): string | null {
   const filePath = path.join(MANUAL_CONTENT_DIR, `${slug}.md`);
 
-  // ディレクトリトラバーサル対策として、解決後のパスが content/manual 配下であることを確認する
-  // MANUAL_CONTENT_DIR + セパレータで判定し、"content/manual-foo" のような
-  // 兄弟ディレクトリを誤って許可しないようにする
   if (!filePath.startsWith(MANUAL_CONTENT_DIR + path.sep)) {
     return null;
   }

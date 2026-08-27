@@ -20,7 +20,6 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [impactedPodName, setImpactedPodName] = useState('');
   const [error, setError] = useState('');
-  // GameDay第0章: サーバーがリソース飽和のため、New Relicで特定したPod名の入力が必要な状態
   const [podInputRequired, setPodInputRequired] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -41,9 +40,6 @@ function LoginForm() {
         localStorage.setItem('user', JSON.stringify(response.user));
       }
 
-      // 元々アクセスしようとしていたページがあればそこへ、なければダッシュボードへ。
-      // SPAのルート変更ではなくフルページロードにする（New RelicのCore Web Vitals計測が
-      // ページ遷移直後から正しく発火するようにするため）。
       const redirect = searchParams.get('redirect');
       window.location.href = redirect && redirect.startsWith('/') ? redirect : '/dashboard';
     } catch (err) {

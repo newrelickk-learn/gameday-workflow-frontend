@@ -27,17 +27,6 @@ import { getVirtualToday } from '@/lib/utils/virtual-date';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import type { City } from '@/lib/api/types';
 
-// 経費申請作成時にフロントエンドが呼び出すサービスの依存関係チェーン（正解）。
-// GameDay: New Relicの分散トレース（Entity map）で実際に確認できる呼び出し順を
-// 3つのドロップダウンで答えさせる。回答は任意で、申請の提出自体はブロックしない
-// （実際に申請してTransaction 360等で確認してほしいため）。組み合わせが正しいかは
-// 画面上のフィードバックのみで示す。
-const DEPENDENCY_CHAIN_ANSWER = [
-  'gameday-workflow-frontend',
-  'gameday-workflow-application-approval',
-  'gameday-workflow-user',
-];
-
 const SERVICE_OPTIONS = [
   'gameday-workflow-frontend',
   'gameday-workflow-application-approval',
@@ -76,7 +65,6 @@ export default function NewApplicationPage() {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [virtualToday, setVirtualToday] = useState<Date | null>(null);
 
-  // 経費申請: 依存関係チェーン（呼び出されるサービスの順番）を答えさせる3つのドロップダウン
   const [dependencyChain, setDependencyChain] = useState<string[]>(['', '', '']);
 
   const handleDependencyChainChange = (index: number, value: string) => {
@@ -88,19 +76,34 @@ export default function NewApplicationPage() {
   };
 
   const isDependencyChainAnswered = dependencyChain.every((step) => step !== '');
-  const isDependencyChainCorrect =
-    isDependencyChainAnswered &&
-    dependencyChain.every((step, index) => step === DEPENDENCY_CHAIN_ANSWER[index]);
+  const [isDependencyChainCorrect, setIsDependencyChainCorrect] = useState(false);
 
-  // 出張申請: 出発地・到着地の都市選択と概算費用の自動取得（travelサービス）
+  useEffect(() => {
+    if (!isDependencyChainAnswered) {
+      setIsDependencyChainCorrect(false);
+      return;
+    }
+    let cancelled = false;
+    apiClient.chapters
+      .checkDependencyChain(dependencyChain)
+      .then((correct) => {
+        if (!cancelled) setIsDependencyChainCorrect(correct);
+      })
+      .catch(() => {
+        if (!cancelled) setIsDependencyChainCorrect(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDependencyChainAnswered, dependencyChain.join(',')]);
+
   const [cities, setCities] = useState<City[]>([]);
   const [departureCityId, setDepartureCityId] = useState<string>('');
   const [arrivalCityId, setArrivalCityId] = useState<string>('');
   const [travelCostLoading, setTravelCostLoading] = useState(false);
   const [travelCostError, setTravelCostError] = useState('');
 
-  // フォーム内の注意表示も、サーバー側の判定基準（仮想今日 = 実際の今日 + virtualDateOffsetDays）
-  // に合わせる必要があるため、素の new Date() ではなく getVirtualToday() を使う
   useEffect(() => {
     getVirtualToday().then(setVirtualToday);
   }, []);
@@ -110,13 +113,11 @@ export default function NewApplicationPage() {
   const isVacationType = type === 'vacation';
   const isDateRequiredType = isBusinessTripType || isVacationType;
 
-  // 出張申請選択時に都市一覧を取得
   useEffect(() => {
     if (!isBusinessTripType) return;
     apiClient.travel.getCities().then(setCities).catch(() => setCities([]));
   }, [isBusinessTripType]);
 
-  // 都市選択・説明欄の変更をデバウンスし、変更の度に概算費用を再取得する
   const debouncedDepartureCityId = useDebouncedValue(departureCityId, 800);
   const debouncedArrivalCityId = useDebouncedValue(arrivalCityId, 800);
   const debouncedDescriptionForTravel = useDebouncedValue(description, 800);
@@ -154,10 +155,8 @@ export default function NewApplicationPage() {
     };
   }, [isBusinessTripType, debouncedDepartureCityId, debouncedArrivalCityId, debouncedDescriptionForTravel]);
 
-  // 出張申請の「2週間前ルール」の事前チェック用の定数
   const TWO_WEEK_RULE_DAYS = 14;
 
-  // 出発日（開始日）までの残り日数と、2週間前ルールを満たしているかをチェックする
   const businessTripDepartureCheck = useMemo(() => {
     if (!isBusinessTripType || !startDate || !virtualToday) {
       return null;
@@ -178,17 +177,15 @@ export default function NewApplicationPage() {
     };
   }, [isBusinessTripType, startDate, virtualToday]);
 
-  // 開始日と終了日から日数を自動計算
   const calculateDays = (start: string, end: string): number => {
     if (!start || !end) return 0;
     const startDateObj = new Date(start);
     const endDateObj = new Date(end);
     const diffTime = Math.abs(endDateObj.getTime() - startDateObj.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // 開始日と終了日を含む
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
     return diffDays;
   };
 
-  // 開始日または終了日が変更されたときに日数を自動計算
   const handleStartDateChange = (value: string) => {
     setStartDate(value);
     if (value && endDate) {
@@ -223,7 +220,6 @@ export default function NewApplicationPage() {
     e.preventDefault();
     if (!isFormValid) return;
     
-    // 経費精算の場合、金額のバリデーション
     if (isExpenseType) {
       const amountNum = parseFloat(amount);
       if (!amount || isNaN(amountNum) || amountNum <= 0) {
@@ -232,7 +228,6 @@ export default function NewApplicationPage() {
       }
     }
     
-    // 出張申請・休暇申請の場合、日付と日数のバリデーション
     if (isDateRequiredType) {
       if (!startDate || !endDate) {
         setError('開始日と終了日を入力してください');
@@ -282,20 +277,16 @@ export default function NewApplicationPage() {
         applicantId,
       };
 
-      // 経費精算の場合、または出張申請（travelサービスの概算費用が自動セットされている）の場合に金額を追加
       if ((isExpenseType || isBusinessTripType) && amount) {
         requestData.amount = parseFloat(amount);
       }
 
-      // 出張申請・休暇申請の場合のみ開始日・終了日・日数を追加
       if (isDateRequiredType && startDate && endDate && days) {
         requestData.startDate = startDate;
         requestData.endDate = endDate;
         requestData.days = parseInt(days);
       }
 
-      // 経費申請の場合、依存関係チェーンの回答をサーバーに送る（第1章クリア判定に使用。
-      // 未回答の場合も含めてそのまま送り、正誤判定はバックエンド側で行う）
       if (isExpenseType) {
         requestData.dependencyChain = dependencyChain;
       }
@@ -303,17 +294,11 @@ export default function NewApplicationPage() {
       await apiClient.applications.createApplication(requestData);
       
       setSuccess(true);
-      // 成功後、申請一覧ページにリダイレクト
       setTimeout(() => {
         router.push('/dashboard/applications');
       }, 1500);
     } catch (err) {
       const code = (err as { code?: string })?.code;
-      // ASSERTION_RULE_VIOLATION（例: 第5章のdescription形式チェック）や
-      // PREREQUISITE_CHAPTERS_NOT_CLEARED（章の順序ゲート）は、参加者が
-      // メッセージを読めばその場で理解・対応できる具体的な指摘なので、そのまま表示する。
-      // それ以外（例: 第1章のAPPROVER_NOT_FOUND）は詳細を出さず、New Relicで原因を
-      // 確認する運用のまま変更しない。
       const SHOWABLE_ERROR_CODES = ['ASSERTION_RULE_VIOLATION', 'PREREQUISITE_CHAPTERS_NOT_CLEARED'];
       if (code && SHOWABLE_ERROR_CODES.includes(code) && err instanceof Error && err.message) {
         setError(err.message);
@@ -592,7 +577,7 @@ export default function NewApplicationPage() {
         </Box>
       </Paper>
 
-      {/* 確認ダイアログ */}
+      {}
       <Dialog open={confirmDialogOpen} onClose={handleCancelConfirm} maxWidth="md" fullWidth>
         <DialogTitle>申請内容の確認</DialogTitle>
         <DialogContent>
