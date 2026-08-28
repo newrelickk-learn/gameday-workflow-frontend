@@ -105,7 +105,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
     try {
       setLoading(true);
       setError('');
-      const [applicationData, approvalsData] = await Promise.all([
+      const [applicationData, approvalsByAppData] = await Promise.all([
         apiClient.applications.getApplication(id),
         apiClient.approvals.getApprovalsByApplication(id).catch(() => []),
       ]);
@@ -116,6 +116,14 @@ export default function ApplicationDetailPage({ params }: PageProps) {
           setLoading(false);
           return;
         }
+      }
+
+      let approvalsData = approvalsByAppData;
+      if (approvalsData.length === 0) {
+        // workflow-notification側にapplications/{id}/approvalsが未実装のため、
+        // 自分が承認者であるapprovalの一覧から該当申請分を補完する
+        const myApprovals = await apiClient.approvals.getApprovals().catch(() => []);
+        approvalsData = myApprovals.filter((a) => a.applicationId === id);
       }
 
       setApplication(applicationData);
