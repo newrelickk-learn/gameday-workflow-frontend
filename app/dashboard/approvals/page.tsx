@@ -16,31 +16,17 @@ import {
   CircularProgress,
   Alert,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   IconButton,
-  Divider,
-  Grid,
   Collapse,
 } from '@mui/material';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
 import type { Approval, Application } from '@/lib/api/types';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getCurrentUserId, getUserRoleFromId } from '@/lib/utils/auth';
+import { getCurrentUserId, getUserRoleFromId } from '@/lib/utils/auth';
 import WorkflowProgress from '@/components/ui/WorkflowProgress';
-import { useRageClickHint } from '@/lib/hooks/useRageClickHint';
-import { useRageClickStatus } from '@/lib/hooks/useRageClickStatus';
-
-const RAGE_CLICK_TARGET_TITLE = 'Awesome AI Coding Agent ライセンス費用申請';
 
 const getStatusColor = (status: Approval['status']) => {
   switch (status) {
@@ -87,23 +73,7 @@ export default function ApprovalsPage() {
   const [applications, setApplications] = useState<Record<string, Application>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [approvalDialog, setApprovalDialog] = useState<{
-    open: boolean;
-    approvalId: string | null;
-    action: 'approve' | 'reject' | null;
-  }>({ open: false, approvalId: null, action: null });
-  const [confirmDialog, setConfirmDialog] = useState<{
-    open: boolean;
-    approvalId: string | null;
-    action: 'approve' | 'reject' | null;
-    comment: string;
-  }>({ open: false, approvalId: null, action: null, comment: '' });
-  const [comment, setComment] = useState('');
-  const [processing, setProcessing] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const { hasClickedOnce: rageClickHintVisible, registerClick: registerRageClickHint } = useRageClickHint();
-  const currentUserEmail = getCurrentUser()?.email ?? null;
-  const { ok: rageClickOk } = useRageClickStatus(currentUserEmail, { enabled: rageClickHintVisible });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -178,68 +148,6 @@ export default function ApprovalsPage() {
 
     fetchData();
   }, []);
-
-  const handleOpenDialog = (approvalId: string, action: 'approve' | 'reject') => {
-    setApprovalDialog({ open: true, approvalId, action });
-    setComment('');
-  };
-
-  const handleCloseDialog = () => {
-    setApprovalDialog({ open: false, approvalId: null, action: null });
-    setComment('');
-  };
-
-  const handleOpenConfirmDialog = () => {
-    if (!approvalDialog.approvalId || !approvalDialog.action) return;
-    setConfirmDialog({
-      open: true,
-      approvalId: approvalDialog.approvalId,
-      action: approvalDialog.action,
-      comment: comment,
-    });
-    handleCloseDialog();
-  };
-
-  const handleCloseConfirmDialog = () => {
-    setConfirmDialog({ open: false, approvalId: null, action: null, comment: '' });
-    setComment('');
-  };
-
-  const handleSubmitApproval = async () => {
-    if (!confirmDialog.approvalId || !confirmDialog.action) return;
-
-    try {
-      const approverId = getCurrentUserId();
-      if (!approverId) {
-        setError('ログイン情報が見つかりません。再度ログインしてください。');
-        return;
-      }
-
-      const approval = approvals.find(a => a.id === confirmDialog.approvalId);
-      if (!approval) {
-        setError('承認データが見つかりません。');
-        return;
-      }
-
-      setProcessing(true);
-      await apiClient.approvals.updateApproval(confirmDialog.approvalId, {
-        status: confirmDialog.action === 'approve' ? 'approved' : 'rejected',
-        comment: confirmDialog.comment || undefined,
-        approverId,
-        applicationId: approval.applicationId,
-      });
-
-      const approvalsData = await apiClient.approvals.getApprovals();
-      setApprovals(approvalsData);
-
-      handleCloseConfirmDialog();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '承認処理に失敗しました');
-      console.error('承認処理エラー:', err);
-    } finally {
-      setProcessing(false);
-    }
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('ja-JP');
@@ -345,7 +253,6 @@ export default function ApprovalsPage() {
                     <TableCell>申請者</TableCell>
                     <TableCell>次の承認者</TableCell>
                     <TableCell>作成日時</TableCell>
-                    <TableCell align="right">操作</TableCell>
                   </TableRow>
               </TableHead>
               <TableBody>
@@ -353,8 +260,7 @@ export default function ApprovalsPage() {
                   const application = applications[approval.applicationId];
                   const isExpanded = expandedRows.has(approval.applicationId);
                   const applicationApprovals: Approval[] = [];
-                  const isRageClickTarget = application?.title === RAGE_CLICK_TARGET_TITLE;
-                  
+
                   return (
                     <>
                       <TableRow
@@ -410,59 +316,7 @@ export default function ApprovalsPage() {
                           })()}
                         </TableCell>
                         <TableCell>{formatDate(approval.createdAt)}</TableCell>
-                        <TableCell align="right">
-                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                            {}
-                            {currentUserId && String(approval.approverId) === String(currentUserId) && application?.status === 'pending' && (
-                              <>
-                                <IconButton
-                                  size="small"
-                                  color="success"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (isRageClickTarget) {
-                                      registerRageClickHint();
-                                      return;
-                                    }
-                                    handleOpenDialog(approval.id, 'approve');
-                                  }}
-                                  aria-label="承認"
-                                >
-                                  <CheckIcon />
-                                </IconButton>
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenDialog(approval.id, 'reject');
-                                  }}
-                                  aria-label="却下"
-                                >
-                                  <CloseIcon />
-                                </IconButton>
-                              </>
-                            )}
-                          </Box>
-                        </TableCell>
                       </TableRow>
-                      {isRageClickTarget && rageClickHintVisible && (
-                        <TableRow>
-                          <TableCell colSpan={8} sx={{ py: 1 }}>
-                            {rageClickOk ? (
-                              <Chip
-                                icon={<CheckCircleIcon />}
-                                color="success"
-                                label="Rage Click操作OK"
-                              />
-                            ) : (
-                              <Alert severity="info" sx={{ py: 0 }}>
-                                このボタンは反応しません。もう少し連続してクリックしてみてください（Rage Clickを発生させよう）
-                              </Alert>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      )}
                       {application && (
                         <TableRow>
                           <TableCell colSpan={8} sx={{ py: 0, borderBottom: isExpanded ? '1px solid rgba(224, 224, 224, 1)' : 'none' }}>
@@ -482,100 +336,6 @@ export default function ApprovalsPage() {
           </TableContainer>
         )}
       </Paper>
-
-      {}
-      <Dialog open={approvalDialog.open} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {approvalDialog.action === 'approve' ? '承認' : '却下'} - コメント入力
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            コメントを入力してください（任意）。確認画面に進みます。
-          </Typography>
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            label="コメント（任意）"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="承認または却下の理由を入力してください"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>
-            キャンセル
-          </Button>
-          <Button
-            onClick={handleOpenConfirmDialog}
-            variant="contained"
-            color={approvalDialog.action === 'approve' ? 'success' : 'error'}
-          >
-            確認画面へ
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {}
-      <Dialog open={confirmDialog.open} onClose={handleCloseConfirmDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {confirmDialog.action === 'approve' ? '承認' : '却下'} - 確認
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            {confirmDialog.action === 'approve' 
-              ? 'この申請を承認しますか？' 
-              : 'この申請を却下しますか？'}
-          </Typography>
-          <Divider sx={{ mb: 3 }} />
-          {confirmDialog.approvalId && (() => {
-            const approval = approvals.find(a => a.id === confirmDialog.approvalId);
-            const application = approval ? applications[approval.applicationId] : null;
-            return (
-              <Grid container spacing={2}>
-                {application && (
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                      申請タイトル
-                    </Typography>
-                    <Typography variant="body1">
-                      {application.title}
-                    </Typography>
-                  </Grid>
-                )}
-                {confirmDialog.comment && (
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                      コメント
-                    </Typography>
-                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                      {confirmDialog.comment}
-                    </Typography>
-                  </Grid>
-                )}
-              </Grid>
-            );
-          })()}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseConfirmDialog} disabled={processing}>
-            キャンセル
-          </Button>
-          <Button
-            onClick={handleSubmitApproval}
-            variant="contained"
-            color={confirmDialog.action === 'approve' ? 'success' : 'error'}
-            disabled={processing}
-            startIcon={processing ? <CircularProgress size={20} /> : null}
-          >
-            {processing
-              ? '処理中...'
-              : confirmDialog.action === 'approve'
-              ? '承認する'
-              : '却下する'}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Container>
   );
 }
