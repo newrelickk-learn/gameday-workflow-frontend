@@ -48,7 +48,7 @@ function LoginForm() {
       if (code === 'POD_SATURATED') {
         setPodInputRequired(true);
         setError(
-          '現在サーバーが高負荷のためログインできません。New Relicで問題のPodを確認し、Pod名を入力してください'
+          '現在サーバーが高負荷のためログインできません。New Relicで継続的にCPU % が50以上となっているPodを確認し、Pod名を入力してください'
         );
       } else {
         setError('ログインに失敗しました');

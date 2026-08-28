@@ -170,7 +170,7 @@ export default function NPlusOneDiagnosisQuiz() {
         この画面が遅い原因を診断する
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        New Relicで調査した内容を元に、3つの質問に回答してください。
+        New RelicのPerformance Risks Inboxを使いましょう。調査した内容を元に、3つの質問に回答してください。
       </Typography>
 
       {error && (
@@ -226,7 +226,7 @@ export default function NPlusOneDiagnosisQuiz() {
 
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <Typography variant="subtitle1">Q3. どんな改善方法が提案されるか</Typography>
+            <Typography variant="subtitle1">Q3. どんな改善方法が提案されているか</Typography>
             <ResultBadge result={results?.q3} />
           </Box>
           <Autocomplete
