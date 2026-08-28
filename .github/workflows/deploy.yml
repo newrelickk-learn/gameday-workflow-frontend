@@ -124,12 +124,16 @@ jobs:
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Ensure Rage Click secrets
+        env:
+          RAGE_CLICK_JWT_PUBLIC_KEY: ${{ secrets.RAGE_CLICK_JWT_PUBLIC_KEY }}
+          RAGE_CLICK_NR_USER_API_KEY: ${{ secrets.NR_USER_KEY }}
+          RAGE_CLICK_NR_ACCOUNT_ID: ${{ vars.NEW_RELIC_ACCOUNT_ID || vars.NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID }}
         run: |
           kubectl create secret generic gameday-workflow-rage-click-secrets \
             -n ${{ env.K8S_NAMESPACE }} \
-            --from-literal=jwt-public-key=${{ secrets.RAGE_CLICK_JWT_PUBLIC_KEY }} \
-            --from-literal=nr-user-api-key=${{ secrets.NR_USER_KEY }} \
-            --from-literal=nr-account-id=${{ vars.NEW_RELIC_ACCOUNT_ID }} \
+            --from-literal=jwt-public-key="$RAGE_CLICK_JWT_PUBLIC_KEY" \
+            --from-literal=nr-user-api-key="$RAGE_CLICK_NR_USER_API_KEY" \
+            --from-literal=nr-account-id="$RAGE_CLICK_NR_ACCOUNT_ID" \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy to Kubernetes
