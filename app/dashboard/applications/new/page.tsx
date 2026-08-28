@@ -26,6 +26,7 @@ import { getCurrentUserId, getCurrentUser, isManager } from '@/lib/utils/auth';
 import { getVirtualToday } from '@/lib/utils/virtual-date';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import type { City } from '@/lib/api/types';
+import ChapterDiagnosisDropdown from '@/components/ChapterDiagnosisDropdown';
 
 const SERVICE_OPTIONS = [
   'gameday-workflow-frontend',
@@ -427,7 +428,10 @@ export default function NewApplicationPage() {
                   </Box>
                 )}
                 {!travelCostLoading && travelCostError && (
-                  <Alert severity="error">{travelCostError}</Alert>
+                  <>
+                    <Alert severity="error">{travelCostError}</Alert>
+                    <ChapterDiagnosisDropdown chapter={3} title="概算出張費の取得に失敗する原因を診断する" />
+                  </>
                 )}
                 {!travelCostLoading && !travelCostError && amount && (
                   <Typography variant="body1" fontWeight="bold">
