@@ -147,7 +147,7 @@ export default function NewApplicationPage() {
       .catch(() => {
         if (cancelled) return;
         setAmount('');
-        setTravelCostError('概算費用の取得に失敗しました。しばらくしてから再度お試しください。');
+        setTravelCostError('旅費サービスとの接続がタイムアウトし、概算費用の取得に失敗しました。しばらくしてから再度お試しください。');
         setTravelCostLoading(false);
       });
 
