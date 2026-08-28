@@ -874,10 +874,14 @@ export class DownstreamClient {
     const arrivalCity = cities.find((c) => c.id === data.arrivalCityId);
     const isUnstableRoute = Boolean(departureCity?.isUnstable || arrivalCity?.isUnstable);
 
+    const clearedChapters = await this.getClearedChapters(token).catch(() => [] as number[]);
+    const isChapter3Cleared = clearedChapters.includes(3);
+
     const { header: applicationCode, isRisky, resolutionCode } = buildApplicationCode({
       isUnstableRoute,
       description: data.description,
       companyId: data.companyId ?? 'unknown',
+      forceResolved: isChapter3Cleared,
     });
 
     if (isRisky) {

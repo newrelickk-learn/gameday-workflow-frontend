@@ -104,6 +104,20 @@ export default function NewApplicationPage() {
   const [arrivalCityId, setArrivalCityId] = useState<string>('');
   const [travelCostLoading, setTravelCostLoading] = useState(false);
   const [travelCostError, setTravelCostError] = useState('');
+  const [travelCostRetryToken, setTravelCostRetryToken] = useState(0);
+
+  useEffect(() => {
+    const handleChapterCleared = (event: Event) => {
+      const detail = (event as CustomEvent<{ chapter?: number }>).detail;
+      if (detail?.chapter === 3) {
+        setTravelCostRetryToken((prev) => prev + 1);
+      }
+    };
+    window.addEventListener('gameday:chapterCleared', handleChapterCleared);
+    return () => {
+      window.removeEventListener('gameday:chapterCleared', handleChapterCleared);
+    };
+  }, []);
 
   useEffect(() => {
     getVirtualToday().then(setVirtualToday);
@@ -121,7 +135,6 @@ export default function NewApplicationPage() {
 
   const debouncedDepartureCityId = useDebouncedValue(departureCityId, 800);
   const debouncedArrivalCityId = useDebouncedValue(arrivalCityId, 800);
-  const debouncedDescriptionForTravel = useDebouncedValue(description, 800);
 
   useEffect(() => {
     if (!isBusinessTripType || !debouncedDepartureCityId || !debouncedArrivalCityId) {
@@ -136,7 +149,7 @@ export default function NewApplicationPage() {
       .estimateCost({
         departureCityId: debouncedDepartureCityId,
         arrivalCityId: debouncedArrivalCityId,
-        description: debouncedDescriptionForTravel,
+        description,
         companyId: currentUser?.companyId,
       })
       .then((result) => {
@@ -154,7 +167,7 @@ export default function NewApplicationPage() {
     return () => {
       cancelled = true;
     };
-  }, [isBusinessTripType, debouncedDepartureCityId, debouncedArrivalCityId, debouncedDescriptionForTravel]);
+  }, [isBusinessTripType, debouncedDepartureCityId, debouncedArrivalCityId, travelCostRetryToken]);
 
   const TWO_WEEK_RULE_DAYS = 14;
 

@@ -9,6 +9,7 @@ export interface BuildApplicationCodeParams {
   description: string;
   companyId: number | string;
   now?: Date;
+  forceResolved?: boolean;
 }
 
 export interface ApplicationCodeResult {
@@ -18,10 +19,10 @@ export interface ApplicationCodeResult {
 }
 
 export function buildApplicationCode(params: BuildApplicationCodeParams): ApplicationCodeResult {
-  const { isUnstableRoute, description, companyId, now = new Date() } = params;
+  const { isUnstableRoute, description, companyId, now = new Date(), forceResolved = false } = params;
   const resolutionCode = generateResolutionCode(now, companyId);
 
-  if (!isUnstableRoute || isResolutionCodePresent(description, resolutionCode)) {
+  if (!isUnstableRoute || forceResolved || isResolutionCodePresent(description, resolutionCode)) {
     return { header: `s${randomApplicationNumber()}`, isRisky: false, resolutionCode };
   }
 
