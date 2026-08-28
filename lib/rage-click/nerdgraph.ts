@@ -15,6 +15,7 @@ export async function hasRecentRageClick(email: string): Promise<boolean> {
   }
 
   const nrql = `SELECT count(*) FROM \`UserAction\` WHERE rageClick AND enduser.id = '${escapeNrqlString(email)}' SINCE 10 minutes ago`;
+  console.log('[rage-click][nerdgraph] 実行NRQL:', nrql, 'accountId=', accountId);
 
   const query = `
     query($accountId: Int!, $nrql: Nrql!) {
@@ -39,7 +40,8 @@ export async function hasRecentRageClick(email: string): Promise<boolean> {
     });
 
     if (!response.ok) {
-      console.error('[rage-click] NerdGraphへのリクエストが失敗しました:', response.status);
+      const bodyText = await response.text().catch(() => '');
+      console.error('[rage-click][nerdgraph] リクエストが失敗しました status=', response.status, 'body=', bodyText);
       return false;
     }
 
@@ -47,13 +49,15 @@ export async function hasRecentRageClick(email: string): Promise<boolean> {
       data?: { actor?: { account?: { nrql?: { results?: Array<{ count?: number }> } } } };
       errors?: unknown;
     };
+    console.log('[rage-click][nerdgraph] レスポンス:', JSON.stringify(json));
 
     if (json.errors) {
-      console.error('[rage-click] NerdGraphがエラーを返しました:', json.errors);
+      console.error('[rage-click][nerdgraph] NerdGraphがエラーを返しました:', JSON.stringify(json.errors));
       return false;
     }
 
     const count = json.data?.actor?.account?.nrql?.results?.[0]?.count ?? 0;
+    console.log('[rage-click][nerdgraph] count=', count, 'matched=', count > 0);
     return count > 0;
   } catch (error) {
     console.error('[rage-click] NerdGraph呼び出し中に例外が発生しました:', error);

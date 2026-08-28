@@ -34,12 +34,15 @@ export function verifyRageClickJwt(authHeader: string | null): VerifyResult {
   try {
     decoded = jwt.verify(token, publicKey, { algorithms: ['RS256'] });
   } catch (error) {
-    console.warn('[rage-click] JWT検証に失敗しました:', error instanceof Error ? error.message : error);
+    console.warn('[rage-click][jwt] JWT検証に失敗しました:', error instanceof Error ? error.message : error);
     return { ok: false, reason: 'invalid_token' };
   }
 
+  console.log('[rage-click][jwt] JWT署名検証OK claims=', JSON.stringify(decoded));
+
   const email = (decoded as Record<string, unknown> | null)?.email;
   if (typeof email !== 'string' || !EMAIL_PATTERN.test(email)) {
+    console.warn('[rage-click][jwt] emailクレームが不正または存在しません:', JSON.stringify(decoded));
     return { ok: false, reason: 'missing_email_claim' };
   }
 
