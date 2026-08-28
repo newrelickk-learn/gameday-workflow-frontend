@@ -31,11 +31,16 @@ import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
 import type { Approval, Application } from '@/lib/api/types';
 import { useRouter } from 'next/navigation';
-import { getCurrentUserId, getUserRoleFromId } from '@/lib/utils/auth';
+import { getCurrentUser, getCurrentUserId, getUserRoleFromId } from '@/lib/utils/auth';
 import WorkflowProgress from '@/components/ui/WorkflowProgress';
+import { useRageClickHint } from '@/lib/hooks/useRageClickHint';
+import { useRageClickStatus } from '@/lib/hooks/useRageClickStatus';
+
+const RAGE_CLICK_TARGET_TITLE = 'Awesome AI Coding Agent ライセンス費用申請';
 
 const getStatusColor = (status: Approval['status']) => {
   switch (status) {
@@ -96,6 +101,9 @@ export default function ApprovalsPage() {
   const [comment, setComment] = useState('');
   const [processing, setProcessing] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const { hasClickedOnce: rageClickHintVisible, registerClick: registerRageClickHint } = useRageClickHint();
+  const currentUserEmail = getCurrentUser()?.email ?? null;
+  const { ok: rageClickOk } = useRageClickStatus(currentUserEmail, { enabled: rageClickHintVisible });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -345,6 +353,7 @@ export default function ApprovalsPage() {
                   const application = applications[approval.applicationId];
                   const isExpanded = expandedRows.has(approval.applicationId);
                   const applicationApprovals: Approval[] = [];
+                  const isRageClickTarget = application?.title === RAGE_CLICK_TARGET_TITLE;
                   
                   return (
                     <>
@@ -411,6 +420,10 @@ export default function ApprovalsPage() {
                                   color="success"
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    if (isRageClickTarget) {
+                                      registerRageClickHint();
+                                      return;
+                                    }
                                     handleOpenDialog(approval.id, 'approve');
                                   }}
                                   aria-label="承認"
@@ -433,6 +446,23 @@ export default function ApprovalsPage() {
                           </Box>
                         </TableCell>
                       </TableRow>
+                      {isRageClickTarget && rageClickHintVisible && (
+                        <TableRow>
+                          <TableCell colSpan={8} sx={{ py: 1 }}>
+                            {rageClickOk ? (
+                              <Chip
+                                icon={<CheckCircleIcon />}
+                                color="success"
+                                label="Rage Click操作OK"
+                              />
+                            ) : (
+                              <Alert severity="info" sx={{ py: 0 }}>
+                                このボタンは反応しません。もう少し連続してクリックしてみてください（Rage Clickを発生させよう）
+                              </Alert>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )}
                       {application && (
                         <TableRow>
                           <TableCell colSpan={8} sx={{ py: 0, borderBottom: isExpanded ? '1px solid rgba(224, 224, 224, 1)' : 'none' }}>

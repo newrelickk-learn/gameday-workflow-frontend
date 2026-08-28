@@ -17,10 +17,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { apiClient } from '@/lib/api/client';
 import type { Application, Approval } from '@/lib/api/types';
-import { isManager, isDirector } from '@/lib/utils/auth';
+import { getCurrentUser, isManager, isDirector } from '@/lib/utils/auth';
 import WorkflowProgress from '@/components/ui/WorkflowProgress';
 import ReceiptCarousel from '@/components/ReceiptCarousel';
 import ChapterDiagnosisDropdown from '@/components/ChapterDiagnosisDropdown';
+import { useRageClickStatus } from '@/lib/hooks/useRageClickStatus';
 
 const getStatusColor = (status: 'pending' | 'approved' | 'rejected') => {
   switch (status) {
@@ -117,6 +118,9 @@ export default function ApplicationDetailPage({ params }: PageProps) {
     application?.type === 'expense' &&
     !!application.receiptImageUrls &&
     application.receiptImageUrls.length > 0;
+
+  const currentUserEmail = getCurrentUser()?.email ?? null;
+  const { ok: rageClickOk } = useRageClickStatus(currentUserEmail, { enabled: hasReceipts });
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -340,7 +344,16 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                 <ReceiptCarousel images={application.receiptImageUrls!} />
               </Paper>
               <Box sx={{ mt: 3 }}>
-                <ChapterDiagnosisDropdown chapter={4} title="この画面の表示が遅い原因を診断する" />
+                {rageClickOk ? (
+                  <ChapterDiagnosisDropdown
+                    chapter={4}
+                    title="このRage ClickがOKになった仕組みはどれでしょうか？"
+                  />
+                ) : (
+                  <Alert severity="info">
+                    承認一覧でこの申請の承認ボタンを連続でクリックし、Rage Clickを発生させてください。New Relic側の検知処理が完了すると、ここに原因診断クイズが表示されます。
+                  </Alert>
+                )}
               </Box>
             </Grid>
           )}

@@ -170,7 +170,7 @@ export default function NPlusOneDiagnosisQuiz() {
         この画面が遅い原因を診断する
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        New RelicのPerformance Risks Inboxを使いましょう。調査した内容を元に、3つの質問に回答してください。
+        New RelicのPerformance Risks Inboxを使いましょう。調査した内容を元に、3つの質問に回答してください。ヒント：gameday-workflow-application-approval
       </Typography>
 
       {error && (
