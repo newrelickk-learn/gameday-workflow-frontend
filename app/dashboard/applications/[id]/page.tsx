@@ -98,8 +98,31 @@ export default function ApplicationDetailPage({ params }: PageProps) {
   const [comment, setComment] = useState('');
   const [processing, setProcessing] = useState(false);
   const { hasClickedOnce: rageClickHintVisible, registerClick: registerRageClickHint } = useRageClickHint();
+  const [chapter4Cleared, setChapter4Cleared] = useState(false);
 
   const fromPage = searchParams.get('from') || 'applications';
+
+  useEffect(() => {
+    apiClient.chapters
+      .getClearedChapters()
+      .then((cleared) => {
+        if (cleared.includes(4)) {
+          setChapter4Cleared(true);
+        }
+      })
+      .catch(() => {});
+
+    const handleChapterCleared = (event: Event) => {
+      const detail = (event as CustomEvent<{ chapter: number }>).detail;
+      if (detail?.chapter === 4) {
+        setChapter4Cleared(true);
+      }
+    };
+    window.addEventListener('gameday:chapterCleared', handleChapterCleared);
+    return () => {
+      window.removeEventListener('gameday:chapterCleared', handleChapterCleared);
+    };
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -275,7 +298,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                         color="success"
                         startIcon={<CheckIcon />}
                         onClick={() => {
-                          if (hasReceipts) {
+                          if (hasReceipts && !chapter4Cleared) {
                             registerRageClickHint();
                             return;
                           }
