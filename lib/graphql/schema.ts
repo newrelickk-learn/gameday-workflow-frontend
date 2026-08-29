@@ -209,6 +209,25 @@ export const typeDefs = `#graphql
     allCorrect: Boolean!
   }
 
+  type RageClickQuizOptions {
+    q1: [String!]!
+    q2: [String!]!
+    q3: [String!]!
+  }
+
+  input RageClickQuizAnswersInput {
+    q1: String!
+    q2: String!
+    q3: String!
+  }
+
+  type RageClickQuizResult {
+    q1: Boolean!
+    q2: Boolean!
+    q3: Boolean!
+    allCorrect: Boolean!
+  }
+
   type Notification {
     id: ID!
     notificationType: NotificationType!
@@ -269,6 +288,8 @@ export const typeDefs = `#graphql
     clearedChapters: [Int!]!
 
     nPlusOneQuizOptions: NPlusOneQuizOptions!
+
+    rageClickQuizOptions: RageClickQuizOptions!
   }
 
   type Mutation {
@@ -292,6 +313,8 @@ export const typeDefs = `#graphql
     checkChapterAnswer(chapter: Int!, selectedText: String!): Boolean!
 
     checkNPlusOneQuizAnswers(input: NPlusOneQuizAnswersInput!): NPlusOneQuizResult!
+
+    checkRageClickQuizAnswers(input: RageClickQuizAnswersInput!): RageClickQuizResult!
 
     checkDependencyChain(dependencyChain: [String!]!): Boolean!
   }

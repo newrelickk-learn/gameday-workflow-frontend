@@ -21,6 +21,9 @@ import type {
   NPlusOneQuizOptions,
   NPlusOneQuizAnswersInput,
   NPlusOneQuizResult,
+  RageClickQuizOptions,
+  RageClickQuizAnswersInput,
+  RageClickQuizResult,
 } from '../api/types';
 import { stubUserService } from '../api/stubs/user-service';
 import { stubApplicationService } from '../api/stubs/application-service';
@@ -329,6 +332,34 @@ export class DownstreamClient {
     }
     return this.request<NPlusOneQuizResult>(
       `${this.applicationServiceUrl}/api/v1/chapters/2/nplus1-quiz/check-answers`,
+      {
+        method: 'POST',
+        body: JSON.stringify(answers),
+      },
+      token
+    );
+  }
+
+  async getRageClickQuizOptions(token?: string): Promise<RageClickQuizOptions> {
+    if (this.useStubs) {
+      return { q1: [], q2: [], q3: [] };
+    }
+    return this.request<RageClickQuizOptions>(
+      `${this.applicationServiceUrl}/api/v1/chapters/4/ragequiz/options`,
+      { method: 'GET' },
+      token
+    );
+  }
+
+  async checkRageClickQuizAnswers(
+    answers: RageClickQuizAnswersInput,
+    token?: string
+  ): Promise<RageClickQuizResult> {
+    if (this.useStubs) {
+      return { q1: false, q2: false, q3: false, allCorrect: false };
+    }
+    return this.request<RageClickQuizResult>(
+      `${this.applicationServiceUrl}/api/v1/chapters/4/ragequiz/check-answers`,
       {
         method: 'POST',
         body: JSON.stringify(answers),

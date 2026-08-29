@@ -27,7 +27,7 @@ import type { Application, Approval } from '@/lib/api/types';
 import { getCurrentUser, getCurrentUserId, isManager, isDirector } from '@/lib/utils/auth';
 import WorkflowProgress from '@/components/ui/WorkflowProgress';
 import ReceiptCarousel from '@/components/ReceiptCarousel';
-import ChapterDiagnosisDropdown from '@/components/ChapterDiagnosisDropdown';
+import RageClickDiagnosisQuiz from '@/components/RageClickDiagnosisQuiz';
 import { useRageClickHint } from '@/lib/hooks/useRageClickHint';
 import { useRageClickStatus } from '@/lib/hooks/useRageClickStatus';
 
@@ -294,17 +294,14 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                       </Button>
                     </Box>
                     <Box sx={{ mt: 3 }}>
-                   {rageClickOk ? (
-                     <ChapterDiagnosisDropdown
-                       chapter={4}
-                       title="このRage ClickがOKになった仕組みはどれでしょうか？"
-                     />
-                   ) : (
-                     <Alert severity="info">
-                       承認ボタンでRage Clickを発生させてください。
-                     </Alert>
-                   )}
-                 </Box>
+                      {rageClickOk ? (
+                        <RageClickDiagnosisQuiz />
+                      ) : (
+                        <Alert severity="info">
+                          承認ボタンでRage Clickを発生させてください。
+                        </Alert>
+                      )}
+                    </Box>
                   </Grid>
                 )}
 

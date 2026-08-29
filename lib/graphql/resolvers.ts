@@ -322,6 +322,18 @@ export const resolvers: Resolvers & {
         });
       }
     },
+
+    rageClickQuizOptions: async (_, __, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.getRageClickQuizOptions(token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to fetch Rage Click quiz options: ${errorMessage}`, {
+          extensions: { code: 'RAGE_CLICK_QUIZ_OPTIONS_FETCH_ERROR', originalError: errorMessage },
+        });
+      }
+    },
   },
 
   Mutation: {
@@ -517,6 +529,18 @@ export const resolvers: Resolvers & {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         throw new GraphQLError(`Failed to check N+1 quiz answers: ${errorMessage}`, {
           extensions: { code: 'CHECK_NPLUS_ONE_QUIZ_ANSWERS_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
+    checkRageClickQuizAnswers: async (_, { input }, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.checkRageClickQuizAnswers(input, token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to check Rage Click quiz answers: ${errorMessage}`, {
+          extensions: { code: 'CHECK_RAGE_CLICK_QUIZ_ANSWERS_ERROR', originalError: errorMessage },
         });
       }
     },

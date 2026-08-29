@@ -180,6 +180,14 @@ export async function handleGraphQLStub(
     return { checkNPlusOneQuizAnswers: { q1: false, q2: false, q3: false, allCorrect: false } };
   }
 
+  if (normalizedQuery.includes('query RageClickQuizOptions') || normalizedQuery.includes('rageClickQuizOptions')) {
+    return { rageClickQuizOptions: { q1: [], q2: [], q3: [] } };
+  }
+
+  if (normalizedQuery.includes('mutation CheckRageClickQuizAnswers') || normalizedQuery.includes('checkRageClickQuizAnswers(')) {
+    return { checkRageClickQuizAnswers: { q1: false, q2: false, q3: false, allCorrect: false } };
+  }
+
   throw new Error(`Unknown GraphQL query/mutation: ${normalizedQuery.substring(0, 100)}`);
 }
 

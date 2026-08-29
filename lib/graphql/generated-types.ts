@@ -21,6 +21,9 @@ import type {
   NPlusOneQuizOptions,
   NPlusOneQuizAnswersInput,
   NPlusOneQuizResult,
+  RageClickQuizOptions,
+  RageClickQuizAnswersInput,
+  RageClickQuizResult,
 } from '../api/types';
 
 export interface GraphQLContext {
@@ -119,6 +122,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<NPlusOneQuizOptions>;
+    rageClickQuizOptions: (
+      parent: unknown,
+      args: {},
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<RageClickQuizOptions>;
   };
   Mutation: {
     login: (
@@ -193,6 +202,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<NPlusOneQuizResult>;
+    checkRageClickQuizAnswers: (
+      parent: unknown,
+      args: { input: RageClickQuizAnswersInput },
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<RageClickQuizResult>;
     checkDependencyChain: (
       parent: unknown,
       args: { dependencyChain: string[] },

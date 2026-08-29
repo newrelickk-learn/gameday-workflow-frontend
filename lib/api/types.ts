@@ -179,3 +179,22 @@ export interface NPlusOneQuizResult {
   allCorrect: boolean;
 }
 
+export interface RageClickQuizOptions {
+  q1: string[];
+  q2: string[];
+  q3: string[];
+}
+
+export interface RageClickQuizAnswersInput {
+  q1: string;
+  q2: string;
+  q3: string;
+}
+
+export interface RageClickQuizResult {
+  q1: boolean;
+  q2: boolean;
+  q3: boolean;
+  allCorrect: boolean;
+}
+
