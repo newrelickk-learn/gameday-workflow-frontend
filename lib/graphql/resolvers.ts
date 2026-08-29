@@ -311,6 +311,18 @@ export const resolvers: Resolvers & {
       }
     },
 
+    chapterMissions: async (_, __, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.getChapterMissions(token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to fetch chapter missions: ${errorMessage}`, {
+          extensions: { code: 'CHAPTER_MISSIONS_FETCH_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
     nPlusOneQuizOptions: async (_, __, context) => {
       try {
         const token = getTokenFromRequest(context.request);

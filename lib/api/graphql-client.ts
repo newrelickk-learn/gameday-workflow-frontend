@@ -10,6 +10,7 @@ import type {
   Notification,
   City,
   EstimateTravelCostResponse,
+  ChapterMission,
 } from './types';
 import { handleGraphQLStub } from './graphql-stub-handler';
 
@@ -547,6 +548,20 @@ export const graphqlClient = {
       `;
       const data = await graphqlRequest<{ clearedChapters: number[] }>(query);
       return data.clearedChapters;
+    },
+
+    async getChapterMissions(): Promise<ChapterMission[]> {
+      const query = `
+        query ChapterMissions {
+          chapterMissions {
+            chapter
+            title
+            description
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ chapterMissions: ChapterMission[] }>(query);
+      return data.chapterMissions;
     },
 
     async getNPlusOneQuizOptions(): Promise<{ q1: string[]; q2: string[]; q3: string[] }> {

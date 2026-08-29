@@ -24,6 +24,7 @@ import type {
   RageClickQuizOptions,
   RageClickQuizAnswersInput,
   RageClickQuizResult,
+  ChapterMission,
 } from '../api/types';
 
 export interface GraphQLContext {
@@ -116,6 +117,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<number[]>;
+    chapterMissions: (
+      parent: unknown,
+      args: {},
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<ChapterMission[]>;
     nPlusOneQuizOptions: (
       parent: unknown,
       args: {},

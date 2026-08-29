@@ -198,3 +198,9 @@ export interface RageClickQuizResult {
   allCorrect: boolean;
 }
 
+export interface ChapterMission {
+  chapter: number;
+  title: string;
+  description?: string | null;
+}
+

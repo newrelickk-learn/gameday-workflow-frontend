@@ -24,6 +24,7 @@ import type {
   RageClickQuizOptions,
   RageClickQuizAnswersInput,
   RageClickQuizResult,
+  ChapterMission,
 } from '../api/types';
 import { stubUserService } from '../api/stubs/user-service';
 import { stubApplicationService } from '../api/stubs/application-service';
@@ -393,6 +394,18 @@ export class DownstreamClient {
       token
     );
     return data.clearedChapters;
+  }
+
+  async getChapterMissions(token?: string): Promise<ChapterMission[]> {
+    if (this.useStubs) {
+      return [];
+    }
+    const data = await this.request<{ missions: ChapterMission[] }>(
+      `${this.applicationServiceUrl}/api/v1/chapters/missions`,
+      { method: 'GET' },
+      token
+    );
+    return data.missions;
   }
 
   async createApplication(

@@ -18,6 +18,7 @@ import { apiClient } from '@/lib/api/client';
 import type { Application, Approval } from '@/lib/api/types';
 import { getCurrentUserId, getUserRoleFromId, isHr, isManager, isDirector, isAccounting } from '@/lib/utils/auth';
 import { setNewRelicUserId } from '@/lib/newrelic-browser';
+import ChapterMissionPanels from '@/components/ChapterMissionPanels';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -220,6 +221,8 @@ export default function DashboardPage() {
           </Grid>
         )}
       </Grid>
+
+      <ChapterMissionPanels />
     </Container>
   );
 }

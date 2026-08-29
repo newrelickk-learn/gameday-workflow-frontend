@@ -228,6 +228,12 @@ export const typeDefs = `#graphql
     allCorrect: Boolean!
   }
 
+  type ChapterMission {
+    chapter: Int!
+    title: String!
+    description: String
+  }
+
   type Notification {
     id: ID!
     notificationType: NotificationType!
@@ -286,6 +292,8 @@ export const typeDefs = `#graphql
     chapterDiagnosisOptions(chapter: Int!): [String!]!
 
     clearedChapters: [Int!]!
+
+    chapterMissions: [ChapterMission!]!
 
     nPlusOneQuizOptions: NPlusOneQuizOptions!
 
