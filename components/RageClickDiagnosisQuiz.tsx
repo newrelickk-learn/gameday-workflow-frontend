@@ -155,7 +155,7 @@ export default function RageClickDiagnosisQuiz() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CheckCircleIcon color="success" />
           <Typography variant="h6" color="success.dark">
-            正解です！原因を特定できました。
+            正解です！
           </Typography>
         </Box>
       </Paper>
