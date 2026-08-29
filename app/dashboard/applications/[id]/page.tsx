@@ -317,7 +317,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                       </Button>
                     </Box>
                     <Box sx={{ mt: 3 }}>
-                      {rageClickOk ? (
+                      {rageClickOk || chapter4Cleared ? (
                         <RageClickDiagnosisQuiz />
                       ) : (
                         <Alert severity="info">
