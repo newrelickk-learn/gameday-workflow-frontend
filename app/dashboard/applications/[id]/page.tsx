@@ -293,6 +293,18 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                         却下
                       </Button>
                     </Box>
+                    <Box sx={{ mt: 3 }}>
+                   {rageClickOk ? (
+                     <ChapterDiagnosisDropdown
+                       chapter={4}
+                       title="このRage ClickがOKになった仕組みはどれでしょうか？"
+                     />
+                   ) : (
+                     <Alert severity="info">
+                       承認ボタンでRage Clickを発生させてください。
+                     </Alert>
+                   )}
+                 </Box>
                   </Grid>
                 )}
 
@@ -462,22 +474,6 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                 </Typography>
                 <ReceiptCarousel images={application.receiptImageUrls!} />
               </Paper>
-              <Box sx={{ mt: 3 }}>
-                {rageClickOk ? (
-                  <ChapterDiagnosisDropdown
-                    chapter={4}
-                    title="このRage ClickがOKになった仕組みはどれでしょうか？"
-                  />
-                ) : rageClickHintVisible ? (
-                  <Alert severity="info">
-                    このボタンは反応しません。もう少し連続してクリックしてみてください（Rage Clickを発生させよう）
-                  </Alert>
-                ) : (
-                  <Alert severity="info">
-                    このボタンでRage Clickを発生させてください。
-                  </Alert>
-                )}
-              </Box>
             </Grid>
           )}
         </Grid>
