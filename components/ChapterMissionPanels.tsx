@@ -12,6 +12,7 @@ import {
   DialogActions,
   Button,
   Stack,
+  Chip,
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import { apiClient } from '@/lib/api/client';
@@ -49,10 +50,9 @@ export default function ChapterMissionPanels() {
 
   const sortedMissions = [...missions].sort((a, b) => a.chapter - b.chapter);
   const lastChapter = sortedMissions[sortedMissions.length - 1].chapter;
-  const otherChapters = sortedMissions
-    .filter((mission) => mission.chapter !== lastChapter)
-    .map((mission) => mission.chapter);
-  const allOthersCleared = otherChapters.every((chapter) => clearedChapters.includes(chapter));
+  // 次にクリアすべきミッション = 未クリアのうち最も若い章
+  const nextMission = sortedMissions.find((mission) => !clearedChapters.includes(mission.chapter));
+  const nextChapter = nextMission ? nextMission.chapter : null;
 
   return (
     <Box sx={{ mt: 5 }}>
@@ -63,8 +63,9 @@ export default function ChapterMissionPanels() {
         {sortedMissions.map((mission) => {
           const isLast = mission.chapter === lastChapter;
           const isCleared = clearedChapters.includes(mission.chapter);
-          const isVisible = isCleared || isLast;
-          const isDisabled = isLast ? !allOthersCleared : !isCleared;
+          const isNext = mission.chapter === nextChapter;
+          const isVisible = isCleared || isNext || isLast;
+          const isDisabled = !isCleared && !isNext;
 
           return (
             <Box key={mission.chapter} sx={{ width: 168, height: 120, perspective: 900 }}>
@@ -107,10 +108,39 @@ export default function ChapterMissionPanels() {
                     bgcolor: isCleared ? 'success.light' : 'background.paper',
                   }}
                 >
-                  <CardContent sx={{ height: '100%', display: 'flex', alignItems: 'center' }}>
+                  <CardContent
+                    sx={{
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: 1,
+                      p: 1.5,
+                      '&:last-child': { pb: 1.5 },
+                    }}
+                  >
                     <Typography variant="body2" fontWeight="bold">
                       {mission.title}
                     </Typography>
+                    {(isCleared || isNext) && (
+                      <Chip
+                        size="small"
+                        label={isCleared ? 'Cleared!!' : 'Next'}
+                        sx={{
+                          alignSelf: 'flex-start',
+                          fontWeight: 'bold',
+                          ...(isCleared
+                            ? { bgcolor: 'success.main', color: 'success.contrastText' }
+                            : {
+                                // 未クリアのパネルと同じ色味でNextを示す
+                                bgcolor: 'background.paper',
+                                color: 'text.primary',
+                                border: 1,
+                                borderColor: 'divider',
+                              }),
+                        }}
+                      />
+                    )}
                   </CardContent>
                 </Card>
               </Box>
