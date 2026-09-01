@@ -15,9 +15,9 @@ jest.mock('@/lib/api/client', () => ({
 }));
 
 const MISSIONS = [
-  { chapter: 1, title: '第1章 経費申請', description: '経費を申請する' },
-  { chapter: 2, title: '第2章 国内出張', description: '国内出張を申請する' },
-  { chapter: 3, title: '第3章 プロモーション', description: 'プロモーションを申請する' },
+  { chapter: 1, title: '第1章 経費申請', description: '経費を申請する', clearKeyword: 'AAA-BBB-CCC' },
+  { chapter: 2, title: '第2章 国内出張', description: '国内出張を申請する', clearKeyword: null },
+  { chapter: 3, title: '第3章 プロモーション', description: 'プロモーションを申請する', clearKeyword: null },
 ];
 
 describe('ChapterMissionPanels', () => {
@@ -64,5 +64,20 @@ describe('ChapterMissionPanels', () => {
 
     await waitFor(() => expect(screen.getAllByText('Cleared!!')).toHaveLength(3));
     expect(screen.queryByText('Next')).not.toBeInTheDocument();
+  });
+
+  it('クリア済みミッションのカードには合言葉が表示される', async () => {
+    getClearedChapters.mockResolvedValue([1]);
+    render(<ChapterMissionPanels />);
+
+    await waitFor(() => expect(screen.getByText('合言葉: AAA-BBB-CCC')).toBeInTheDocument());
+  });
+
+  it('未クリアミッションのカードには合言葉が表示されない', async () => {
+    getClearedChapters.mockResolvedValue([1]);
+    render(<ChapterMissionPanels />);
+
+    await waitFor(() => expect(screen.getByText('Next')).toBeInTheDocument());
+    expect(screen.getAllByText(/合言葉:/)).toHaveLength(1);
   });
 });

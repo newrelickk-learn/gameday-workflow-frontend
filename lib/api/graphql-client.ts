@@ -557,6 +557,7 @@ export const graphqlClient = {
             chapter
             title
             description
+            clearKeyword
           }
         }
       `;

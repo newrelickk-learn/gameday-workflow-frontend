@@ -232,6 +232,7 @@ export const typeDefs = `#graphql
     chapter: Int!
     title: String!
     description: String
+    clearKeyword: String
   }
 
   type Notification {

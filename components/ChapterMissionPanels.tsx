@@ -68,7 +68,10 @@ export default function ChapterMissionPanels() {
           const isDisabled = !isCleared && !isNext;
 
           return (
-            <Box key={mission.chapter} sx={{ width: 168, height: 120, perspective: 900 }}>
+            <Box
+              key={mission.chapter}
+              sx={{ width: 168, height: isCleared ? 160 : 120, perspective: 900 }}
+            >
               <Box
                 onClick={() => {
                   if (!isDisabled) setSelected(mission);
@@ -140,6 +143,15 @@ export default function ChapterMissionPanels() {
                               }),
                         }}
                       />
+                    )}
+                    {isCleared && mission.clearKeyword && (
+                      <Typography
+                        variant="caption"
+                        fontWeight="bold"
+                        sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}
+                      >
+                        合言葉: {mission.clearKeyword}
+                      </Typography>
                     )}
                   </CardContent>
                 </Card>

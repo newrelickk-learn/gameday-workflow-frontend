@@ -202,5 +202,6 @@ export interface ChapterMission {
   chapter: number;
   title: string;
   description?: string | null;
+  clearKeyword?: string | null;
 }
 
