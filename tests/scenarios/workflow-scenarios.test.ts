@@ -21,10 +21,10 @@ const COMPANY_USER_SETS: { companyId: number; users: CompanyUsers }[] = [
   {
     companyId: 1,
     users: {
-      engineer: { id: '28151', email: 'engineer@learn.nrkk.technology', password: PASSWORD },
-      manager: { id: '21051', email: 'manager@learn.nrkk.technology', password: PASSWORD },
-      director: { id: '1051', email: 'director@learn.nrkk.technology', password: PASSWORD },
-      accounting: { id: '16051', email: 'accounting@learn.nrkk.technology', password: PASSWORD },
+      engineer: { id: '28151', email: 'sekine.hiroto@learn.nrkk.technology', password: PASSWORD },
+      manager: { id: '21051', email: 'nishiyama.takashi@learn.nrkk.technology', password: PASSWORD },
+      director: { id: '1051', email: 'takada.shuichi@learn.nrkk.technology', password: PASSWORD },
+      accounting: { id: '16051', email: 'hirano.mao@learn.nrkk.technology', password: PASSWORD },
     },
   },
   {

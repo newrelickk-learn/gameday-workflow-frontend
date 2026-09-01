@@ -3,7 +3,7 @@ const GRAPHQL_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:300
 
 const MANAGER = {
   id: '21051',
-  email: 'manager@learn.nrkk.technology',
+  email: 'nishiyama.takashi@learn.nrkk.technology',
   password: 'password',
 };
 
