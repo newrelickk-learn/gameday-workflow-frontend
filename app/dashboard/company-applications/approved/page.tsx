@@ -22,7 +22,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { apiClient } from '@/lib/api/client';
 import type { Application } from '@/lib/api/types';
 import { isManager, isDirector, isAccounting } from '@/lib/utils/auth';
-import NPlusOneDiagnosisQuiz from '@/components/NPlusOneDiagnosisQuiz';
+import SlowApprovedListDiagnosisQuiz from '@/components/SlowApprovedListDiagnosisQuiz';
 
 const getTypeLabel = (type: string) => {
   switch (type) {
@@ -85,7 +85,7 @@ export default function ApprovedCompanyApplicationsPage() {
         </Alert>
       )}
 
-      <NPlusOneDiagnosisQuiz />
+      <SlowApprovedListDiagnosisQuiz />
 
       <Paper sx={{ p: 3 }}>
         {loading ? (

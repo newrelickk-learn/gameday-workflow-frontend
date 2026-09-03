@@ -71,7 +71,7 @@ function ResultBadge({ result }: { result: boolean | undefined }) {
   );
 }
 
-export default function NPlusOneDiagnosisQuiz() {
+export default function SlowApprovedListDiagnosisQuiz() {
   const [options, setOptions] = useState<QuizOptions>(EMPTY_OPTIONS);
   const [optionsLoading, setOptionsLoading] = useState(true);
   const [answers, setAnswers] = useState<QuizAnswers>(EMPTY_ANSWERS);
@@ -226,7 +226,7 @@ export default function NPlusOneDiagnosisQuiz() {
 
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <Typography variant="subtitle1">Q3. どんな改善方法が提案されているか</Typography>
+            <Typography variant="subtitle1">Q3. どんな改善方法が提案されているか (ヒント：Generate insightsをクリックして改善例を確認しよう)</Typography>
             <ResultBadge result={results?.q3} />
           </Box>
           <Autocomplete
