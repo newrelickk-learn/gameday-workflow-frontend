@@ -542,7 +542,7 @@ export default function NewApplicationPage() {
                 正しい呼び出し順を1〜3番目まで選択して申請することがクリア条件です。
               </Typography>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                実際に申請して確認してみましょう。ヒント：CreateApplication / Transaction 360
+                実際に申請して確認してみましょう。ヒント：CreateApplication / <a href="https://dojo.learn.nrkk.technology/course/contents/277" target="_blank">Transaction 360</a>
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 {[0, 1, 2].map((index) => (
