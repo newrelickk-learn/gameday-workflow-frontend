@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Alert, Autocomplete, Box, Button, Chip, Paper, TextField, Typography } from '@mui/material';
+import { Alert, Autocomplete, Box, Button, Paper, TextField, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
 import { apiClient } from '@/lib/api/client';
 
 const CHAPTER = 4;
@@ -21,23 +20,17 @@ interface QuizAnswers {
   q3: string;
 }
 
-interface QuizResults {
-  q1: boolean;
-  q2: boolean;
-  q3: boolean;
-}
-
 const EMPTY_OPTIONS: QuizOptions = { q1: [], q2: [], q3: [] };
 const EMPTY_ANSWERS: QuizAnswers = { q1: '', q2: '', q3: '' };
 
-function loadPersisted(): { answers: QuizAnswers; results: QuizResults | null } {
+function loadPersisted(): { answers: QuizAnswers; allCorrect: boolean | null } {
   if (typeof window === 'undefined') {
-    return { answers: EMPTY_ANSWERS, results: null };
+    return { answers: EMPTY_ANSWERS, allCorrect: null };
   }
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      return { answers: EMPTY_ANSWERS, results: null };
+      return { answers: EMPTY_ANSWERS, allCorrect: null };
     }
     const parsed = JSON.parse(raw);
     return {
@@ -46,36 +39,25 @@ function loadPersisted(): { answers: QuizAnswers; results: QuizResults | null } 
         q2: parsed.answers?.q2 ?? '',
         q3: parsed.answers?.q3 ?? '',
       },
-      results: parsed.results ?? null,
+      allCorrect: parsed.allCorrect ?? null,
     };
   } catch {
-    return { answers: EMPTY_ANSWERS, results: null };
+    return { answers: EMPTY_ANSWERS, allCorrect: null };
   }
 }
 
-function persist(answers: QuizAnswers, results: QuizResults | null) {
+function persist(answers: QuizAnswers, allCorrect: boolean | null) {
   if (typeof window === 'undefined') {
     return;
   }
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ answers, results }));
-}
-
-function ResultBadge({ result }: { result: boolean | undefined }) {
-  if (result === undefined) {
-    return null;
-  }
-  return result ? (
-    <Chip icon={<CheckCircleIcon />} label="正解" color="success" size="small" />
-  ) : (
-    <Chip icon={<CancelIcon />} label="不正解" color="error" size="small" />
-  );
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ answers, allCorrect }));
 }
 
 export default function RageClickDiagnosisQuiz() {
   const [options, setOptions] = useState<QuizOptions>(EMPTY_OPTIONS);
   const [optionsLoading, setOptionsLoading] = useState(true);
   const [answers, setAnswers] = useState<QuizAnswers>(EMPTY_ANSWERS);
-  const [results, setResults] = useState<QuizResults | null>(null);
+  const [allCorrect, setAllCorrect] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(false);
   const [cleared, setCleared] = useState(false);
   const [error, setError] = useState('');
@@ -98,7 +80,7 @@ export default function RageClickDiagnosisQuiz() {
 
         const persisted = loadPersisted();
         setAnswers(persisted.answers);
-        setResults(persisted.results);
+        setAllCorrect(persisted.allCorrect);
 
         const data = await apiClient.chapters.getRageClickQuizOptions();
         if (!cancelled) {
@@ -134,9 +116,8 @@ export default function RageClickDiagnosisQuiz() {
         q2: answers.q2.trim(),
         q3: answers.q3.trim(),
       });
-      const newResults: QuizResults = { q1: result.q1, q2: result.q2, q3: result.q3 };
-      setResults(newResults);
-      persist(answers, newResults);
+      setAllCorrect(result.allCorrect);
+      persist(answers, result.allCorrect);
 
       if (result.allCorrect) {
         setCleared(true);
@@ -162,7 +143,7 @@ export default function RageClickDiagnosisQuiz() {
     );
   }
 
-  const showIncorrectAlert = results !== null && (!results.q1 || !results.q2 || !results.q3);
+  const showIncorrectAlert = allCorrect === false;
 
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
@@ -179,7 +160,7 @@ export default function RageClickDiagnosisQuiz() {
         </Alert>
       )}
       {showIncorrectAlert && (
-        <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setResults(null)}>
+        <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setAllCorrect(null)}>
           不正解でした。もう一度New Relicで調査し、選び直してください。
         </Alert>
       )}
@@ -188,7 +169,6 @@ export default function RageClickDiagnosisQuiz() {
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <Typography variant="subtitle1">Q1. 検知に使用されたクエリはどれでしょうか</Typography>
-            <ResultBadge result={results?.q1} />
           </Box>
           <Autocomplete
             freeSolo
@@ -209,7 +189,6 @@ export default function RageClickDiagnosisQuiz() {
             <Typography variant="subtitle1">
               Q2. Rage Clickが検知された後、通知に成功した通知先はどれでしょうか
             </Typography>
-            <ResultBadge result={results?.q2} />
           </Box>
           <Autocomplete
             freeSolo
@@ -228,7 +207,6 @@ export default function RageClickDiagnosisQuiz() {
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <Typography variant="subtitle1">Q3. 通知の処理として一番近い内容を選択してください</Typography>
-            <ResultBadge result={results?.q3} />
           </Box>
           <Autocomplete
             freeSolo
