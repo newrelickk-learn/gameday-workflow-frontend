@@ -321,7 +321,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                         <RageClickDiagnosisQuiz />
                       ) : (
                         <Alert severity="info">
-                          承認ボタンでRage Clickを発生させてください。
+                          承認ボタンで<a href="https://docs.newrelic.com/jp/docs/browser/new-relic-browser/browser-pro-features/user-impact/">Rage Click(レイジクリック/怒りクリック)</a>を発生させてください。（発生するとこのUIが変わります。少し時間がかかります。）
                         </Alert>
                       )}
                     </Box>
