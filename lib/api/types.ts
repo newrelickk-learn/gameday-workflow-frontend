@@ -205,3 +205,13 @@ export interface ChapterMission {
   clearKeyword?: string | null;
 }
 
+export interface TeamProgressItem {
+  companyId: string;
+  clearedChapters: number;
+}
+
+export interface TeamProgressResponse {
+  totalChapters: number;
+  teams: TeamProgressItem[];
+}
+
