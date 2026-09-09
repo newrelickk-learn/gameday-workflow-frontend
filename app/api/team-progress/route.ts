@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
 
-const APPLICATION_SERVICE_URL =
-  process.env.APPLICATION_SERVICE_URL || 'http://localhost:8002';
-const APPLICATION_SERVICE_INTERNAL_API_KEY =
-  process.env.APPLICATION_SERVICE_INTERNAL_API_KEY || 'InternalServiceApiKeyForGameDayWorkflow2024!';
+const GAME_MASTER_SERVICE_URL =
+  process.env.GAME_MASTER_SERVICE_URL || 'http://localhost:8006';
+const GAME_MASTER_SERVICE_INTERNAL_API_KEY =
+  process.env.GAME_MASTER_SERVICE_INTERNAL_API_KEY || 'InternalServiceApiKeyForGameDayWorkflow2024!';
 
 export async function GET() {
   try {
-    const response = await fetch(`${APPLICATION_SERVICE_URL}/api/v1/admin/team-progress`, {
+    const response = await fetch(`${GAME_MASTER_SERVICE_URL}/api/v1/admin/team-progress`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-Key': APPLICATION_SERVICE_INTERNAL_API_KEY,
+        'X-API-Key': GAME_MASTER_SERVICE_INTERNAL_API_KEY,
       },
       cache: 'no-store',
     });
@@ -24,7 +24,7 @@ export async function GET() {
     return NextResponse.json(data);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.warn(`[team-progress BFF] application-approvalへの接続に失敗しました: ${errorMessage}`);
+    console.warn(`[team-progress BFF] game-masterへの接続に失敗しました: ${errorMessage}`);
     return NextResponse.json({ totalChapters: 0, teams: [] });
   }
 }

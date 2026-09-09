@@ -42,6 +42,7 @@ export class DownstreamClient {
   private workflowServiceUrl: string;
   private aiServiceUrl: string;
   private travelServiceUrl: string;
+  private gameMasterServiceUrl: string;
   private useStubs: boolean;
 
   constructor() {
@@ -52,6 +53,8 @@ export class DownstreamClient {
     this.workflowServiceUrl = process.env.WORKFLOW_SERVICE_URL || 'http://localhost:8003';
     this.aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8004';
     this.travelServiceUrl = process.env.TRAVEL_SERVICE_URL || 'http://localhost:8005';
+    // 進捗管理・スコア管理(game-progress/chapters系)はgame-masterサービスが担う
+    this.gameMasterServiceUrl = process.env.GAME_MASTER_SERVICE_URL || 'http://localhost:8006';
   }
 
   private static readonly DEFAULT_TIMEOUT_MS = 30000;
@@ -291,7 +294,7 @@ export class DownstreamClient {
       return [];
     }
     const data = await this.request<{ options: string[] }>(
-      `${this.applicationServiceUrl}/api/v1/chapters/${chapter}/diagnosis-options`,
+      `${this.gameMasterServiceUrl}/api/v1/chapters/${chapter}/diagnosis-options`,
       { method: 'GET' },
       token
     );
@@ -303,7 +306,7 @@ export class DownstreamClient {
       return false;
     }
     const data = await this.request<{ correct: boolean }>(
-      `${this.applicationServiceUrl}/api/v1/chapters/${chapter}/check-answer`,
+      `${this.gameMasterServiceUrl}/api/v1/chapters/${chapter}/check-answer`,
       {
         method: 'POST',
         body: JSON.stringify({ selectedText }),
@@ -318,7 +321,7 @@ export class DownstreamClient {
       return { q1: [], q2: [], q3: [] };
     }
     return this.request<NPlusOneQuizOptions>(
-      `${this.applicationServiceUrl}/api/v1/chapters/2/nplus1-quiz/options`,
+      `${this.gameMasterServiceUrl}/api/v1/chapters/2/nplus1-quiz/options`,
       { method: 'GET' },
       token
     );
@@ -332,7 +335,7 @@ export class DownstreamClient {
       return { q1: false, q2: false, q3: false, allCorrect: false };
     }
     return this.request<NPlusOneQuizResult>(
-      `${this.applicationServiceUrl}/api/v1/chapters/2/nplus1-quiz/check-answers`,
+      `${this.gameMasterServiceUrl}/api/v1/chapters/2/nplus1-quiz/check-answers`,
       {
         method: 'POST',
         body: JSON.stringify(answers),
@@ -346,7 +349,7 @@ export class DownstreamClient {
       return { q1: [], q2: [], q3: [] };
     }
     return this.request<RageClickQuizOptions>(
-      `${this.applicationServiceUrl}/api/v1/chapters/4/ragequiz/options`,
+      `${this.gameMasterServiceUrl}/api/v1/chapters/4/ragequiz/options`,
       { method: 'GET' },
       token
     );
@@ -360,7 +363,7 @@ export class DownstreamClient {
       return { q1: false, q2: false, q3: false, allCorrect: false };
     }
     return this.request<RageClickQuizResult>(
-      `${this.applicationServiceUrl}/api/v1/chapters/4/ragequiz/check-answers`,
+      `${this.gameMasterServiceUrl}/api/v1/chapters/4/ragequiz/check-answers`,
       {
         method: 'POST',
         body: JSON.stringify(answers),
@@ -374,7 +377,7 @@ export class DownstreamClient {
       return false;
     }
     const data = await this.request<{ correct: boolean }>(
-      `${this.applicationServiceUrl}/api/v1/chapters/1/check-dependency-chain`,
+      `${this.gameMasterServiceUrl}/api/v1/chapters/1/check-dependency-chain`,
       {
         method: 'POST',
         body: JSON.stringify({ dependencyChain }),
@@ -389,7 +392,7 @@ export class DownstreamClient {
       return [];
     }
     const data = await this.request<{ clearedChapters: number[] }>(
-      `${this.applicationServiceUrl}/api/v1/chapters/progress`,
+      `${this.gameMasterServiceUrl}/api/v1/chapters/progress`,
       { method: 'GET' },
       token
     );
@@ -401,7 +404,7 @@ export class DownstreamClient {
       return [];
     }
     const data = await this.request<{ missions: ChapterMission[] }>(
-      `${this.applicationServiceUrl}/api/v1/chapters/missions`,
+      `${this.gameMasterServiceUrl}/api/v1/chapters/missions`,
       { method: 'GET' },
       token
     );

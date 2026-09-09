@@ -20,6 +20,8 @@ services:
       # 注意: 各サービスのdocker-compose.ymlで定義されたコンテナ名/サービス名を使用
       - USER_SERVICE_URL=http://gameday_workflow_user_api:80
       - APPLICATION_SERVICE_URL=http://gameday-workflow-application-approval-service:8002
+      - GAME_MASTER_SERVICE_URL=http://gameday-workflow-game-master-service:8006
+      - GAME_MASTER_SERVICE_INTERNAL_API_KEY=${GAME_MASTER_SERVICE_INTERNAL_API_KEY:-InternalServiceApiKeyForGameDayWorkflow2024!}
       - WORKFLOW_SERVICE_URL=http://workflow-notification-service:8003
       # ワークフローサービスのエンドポイントパス（必要に応じて変更）
       - WORKFLOW_APPROVALS_PATH=${WORKFLOW_APPROVALS_PATH:-/api/v1/notifications/history}

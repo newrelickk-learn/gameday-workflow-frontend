@@ -38,6 +38,13 @@ spec:
               value: "http://gameday-workflow-user.gameday-workflow.svc.cluster.local"
             - name: APPLICATION_SERVICE_URL
               value: "http://gameday-workflow-application-approval.gameday-workflow.svc.cluster.local:8002"
+            - name: GAME_MASTER_SERVICE_URL
+              value: "http://gameday-workflow-game-master.gameday-workflow.svc.cluster.local:8006"
+            - name: GAME_MASTER_SERVICE_INTERNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: gameday-workflow-application-approval-secrets
+                  key: user-service-api-key
             - name: WORKFLOW_SERVICE_URL
               value: "http://gameday-workflow-workflow-notification.gameday-workflow.svc.cluster.local:8003"
             - name: TRAVEL_SERVICE_URL
