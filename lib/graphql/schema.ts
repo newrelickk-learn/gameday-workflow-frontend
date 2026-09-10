@@ -75,7 +75,6 @@ export const typeDefs = `#graphql
     endDate: String
     days: Int
     applicantId: String!
-    dependencyChain: [String!]
   }
 
   type Approval {
@@ -228,6 +227,28 @@ export const typeDefs = `#graphql
     allCorrect: Boolean!
   }
 
+  type Transaction360QuizOptions {
+    q1: [String!]!
+    q2: [String!]!
+    q3: [String!]!
+    q4: [String!]!
+  }
+
+  input Transaction360QuizAnswersInput {
+    q1: [String!]!
+    q2: [String!]!
+    q3: [String!]!
+    q4: [String!]!
+  }
+
+  type Transaction360QuizResult {
+    q1: Boolean!
+    q2: Boolean!
+    q3: Boolean!
+    q4: Boolean!
+    allCorrect: Boolean!
+  }
+
   type ChapterMission {
     chapter: Int!
     title: String!
@@ -299,6 +320,8 @@ export const typeDefs = `#graphql
     nPlusOneQuizOptions: NPlusOneQuizOptions!
 
     rageClickQuizOptions: RageClickQuizOptions!
+
+    transaction360QuizOptions: Transaction360QuizOptions!
   }
 
   type Mutation {
@@ -325,7 +348,7 @@ export const typeDefs = `#graphql
 
     checkRageClickQuizAnswers(input: RageClickQuizAnswersInput!): RageClickQuizResult!
 
-    checkDependencyChain(dependencyChain: [String!]!): Boolean!
+    checkTransaction360QuizAnswers(input: Transaction360QuizAnswersInput!): Transaction360QuizResult!
 
     recordChapterMistake(chapter: Int!): Boolean!
   }

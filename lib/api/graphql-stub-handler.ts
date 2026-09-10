@@ -188,6 +188,14 @@ export async function handleGraphQLStub(
     return { checkRageClickQuizAnswers: { q1: false, q2: false, q3: false, allCorrect: false } };
   }
 
+  if (normalizedQuery.includes('query Transaction360QuizOptions') || normalizedQuery.includes('transaction360QuizOptions')) {
+    return { transaction360QuizOptions: { q1: [], q2: [], q3: [], q4: [] } };
+  }
+
+  if (normalizedQuery.includes('mutation CheckTransaction360QuizAnswers') || normalizedQuery.includes('checkTransaction360QuizAnswers(')) {
+    return { checkTransaction360QuizAnswers: { q1: false, q2: false, q3: false, q4: false, allCorrect: false } };
+  }
+
   throw new Error(`Unknown GraphQL query/mutation: ${normalizedQuery.substring(0, 100)}`);
 }
 

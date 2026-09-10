@@ -323,6 +323,18 @@ export const resolvers: Resolvers & {
       }
     },
 
+    transaction360QuizOptions: async (_, __, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.getTransaction360QuizOptions(token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to fetch Transaction 360 quiz options: ${errorMessage}`, {
+          extensions: { code: 'TRANSACTION360_QUIZ_OPTIONS_FETCH_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
     nPlusOneQuizOptions: async (_, __, context) => {
       try {
         const token = getTokenFromRequest(context.request);
@@ -413,7 +425,6 @@ export const resolvers: Resolvers & {
             endDate: input.endDate ?? undefined,
             days: input.days ?? undefined,
             applicantId,
-            dependencyChain: input.dependencyChain ?? undefined,
           },
           token
         );
@@ -557,14 +568,14 @@ export const resolvers: Resolvers & {
       }
     },
 
-    checkDependencyChain: async (_, { dependencyChain }, context) => {
+    checkTransaction360QuizAnswers: async (_, { input }, context) => {
       try {
         const token = getTokenFromRequest(context.request);
-        return await downstreamClient.checkDependencyChain(dependencyChain, token);
+        return await downstreamClient.checkTransaction360QuizAnswers(input, token);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        throw new GraphQLError(`Failed to check dependency chain: ${errorMessage}`, {
-          extensions: { code: 'CHECK_DEPENDENCY_CHAIN_ERROR', originalError: errorMessage },
+        throw new GraphQLError(`Failed to check Transaction 360 quiz answers: ${errorMessage}`, {
+          extensions: { code: 'CHECK_TRANSACTION360_QUIZ_ANSWERS_ERROR', originalError: errorMessage },
         });
       }
     },

@@ -24,6 +24,9 @@ import type {
   RageClickQuizOptions,
   RageClickQuizAnswersInput,
   RageClickQuizResult,
+  Transaction360QuizOptions,
+  Transaction360QuizAnswersInput,
+  Transaction360QuizResult,
   ChapterMission,
 } from '../api/types';
 import { stubUserService } from '../api/stubs/user-service';
@@ -372,19 +375,32 @@ export class DownstreamClient {
     );
   }
 
-  async checkDependencyChain(dependencyChain: string[], token?: string): Promise<boolean> {
+  async getTransaction360QuizOptions(token?: string): Promise<Transaction360QuizOptions> {
     if (this.useStubs) {
-      return false;
+      return { q1: [], q2: [], q3: [], q4: [] };
     }
-    const data = await this.request<{ correct: boolean }>(
-      `${this.gameMasterServiceUrl}/api/v1/chapters/1/check-dependency-chain`,
+    return this.request<Transaction360QuizOptions>(
+      `${this.gameMasterServiceUrl}/api/v1/chapters/1/transaction360-quiz/options`,
+      { method: 'GET' },
+      token
+    );
+  }
+
+  async checkTransaction360QuizAnswers(
+    answers: Transaction360QuizAnswersInput,
+    token?: string
+  ): Promise<Transaction360QuizResult> {
+    if (this.useStubs) {
+      return { q1: false, q2: false, q3: false, q4: false, allCorrect: false };
+    }
+    return this.request<Transaction360QuizResult>(
+      `${this.gameMasterServiceUrl}/api/v1/chapters/1/transaction360-quiz/check-answers`,
       {
         method: 'POST',
-        body: JSON.stringify({ dependencyChain }),
+        body: JSON.stringify(answers),
       },
       token
     );
-    return data.correct;
   }
 
   async recordChapterMistake(chapter: number, token?: string): Promise<boolean> {

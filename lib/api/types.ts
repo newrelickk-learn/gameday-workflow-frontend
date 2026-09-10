@@ -53,7 +53,6 @@ export interface CreateApplicationRequest {
   endDate?: string;
   days?: number;
   applicantId: string;
-  dependencyChain?: string[];
 }
 
 export interface Approval {
@@ -195,6 +194,28 @@ export interface RageClickQuizResult {
   q1: boolean;
   q2: boolean;
   q3: boolean;
+  allCorrect: boolean;
+}
+
+export interface Transaction360QuizOptions {
+  q1: string[];
+  q2: string[];
+  q3: string[];
+  q4: string[];
+}
+
+export interface Transaction360QuizAnswersInput {
+  q1: string[];
+  q2: string[];
+  q3: string[];
+  q4: string[];
+}
+
+export interface Transaction360QuizResult {
+  q1: boolean;
+  q2: boolean;
+  q3: boolean;
+  q4: boolean;
   allCorrect: boolean;
 }
 

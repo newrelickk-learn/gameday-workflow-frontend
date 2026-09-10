@@ -21,21 +21,13 @@ import {
   InputAdornment,
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
 import { getCurrentUserId, getCurrentUser, isManager } from '@/lib/utils/auth';
 import { getVirtualToday } from '@/lib/utils/virtual-date';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import type { City } from '@/lib/api/types';
 import ChapterDiagnosisDropdown from '@/components/ChapterDiagnosisDropdown';
-
-const SERVICE_OPTIONS = [
-  'gameday-workflow-frontend',
-  'gameday-workflow-application-approval',
-  'gameday-workflow-user',
-  'gameday-workflow-workflow-notification',
-  'gameday-workflow-travel',
-];
+import Transaction360DiagnosisQuiz from '@/components/Transaction360DiagnosisQuiz';
 
 const getTypeLabel = (type: string) => {
   switch (type) {
@@ -66,39 +58,6 @@ export default function NewApplicationPage() {
   const [success, setSuccess] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [virtualToday, setVirtualToday] = useState<Date | null>(null);
-
-  const [dependencyChain, setDependencyChain] = useState<string[]>(['', '', '']);
-
-  const handleDependencyChainChange = (index: number, value: string) => {
-    setDependencyChain((prev) => {
-      const next = [...prev];
-      next[index] = value;
-      return next;
-    });
-  };
-
-  const isDependencyChainAnswered = dependencyChain.every((step) => step !== '');
-  const [isDependencyChainCorrect, setIsDependencyChainCorrect] = useState(false);
-
-  useEffect(() => {
-    if (!isDependencyChainAnswered) {
-      setIsDependencyChainCorrect(false);
-      return;
-    }
-    let cancelled = false;
-    apiClient.chapters
-      .checkDependencyChain(dependencyChain)
-      .then((correct) => {
-        if (!cancelled) setIsDependencyChainCorrect(correct);
-      })
-      .catch(() => {
-        if (!cancelled) setIsDependencyChainCorrect(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDependencyChainAnswered, dependencyChain.join(',')]);
 
   const [cities, setCities] = useState<City[]>([]);
   const [departureCityId, setDepartureCityId] = useState<string>('');
@@ -284,7 +243,6 @@ export default function NewApplicationPage() {
         endDate?: string;
         days?: number;
         applicantId: string;
-        dependencyChain?: string[];
       } = {
         type,
         title,
@@ -300,10 +258,6 @@ export default function NewApplicationPage() {
         requestData.startDate = startDate;
         requestData.endDate = endDate;
         requestData.days = parseInt(days);
-      }
-
-      if (isExpenseType) {
-        requestData.dependencyChain = dependencyChain;
       }
 
       await apiClient.applications.createApplication(requestData);
@@ -536,55 +490,7 @@ export default function NewApplicationPage() {
           />
           {isExpenseType && (
             <Box sx={{ mb: 3 }}>
-              {isDependencyChainCorrect ? (
-                <Paper sx={{ p: 3, bgcolor: 'success.50', border: '1px solid', borderColor: 'success.light' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CheckCircleIcon color="success" />
-                    <Typography variant="h6" color="success.dark">
-                      正解！起こっているエラーをNew Relicで確認し解消しましょう。
-                    </Typography>
-                  </Box>
-                </Paper>
-              ) : (
-                <>
-                  <Typography variant="subtitle2" gutterBottom>
-                    この経費申請を作成すると、どのサービスがどの順番で呼び出されますか？
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    正しい呼び出し順を1〜3番目まで選択して申請することがクリア条件です。
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    実際に申請して確認してみましょう。ヒント：CreateApplication / <a href="https://dojo.learn.nrkk.technology/course/contents/277" target="_blank">Transaction 360</a>
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    {[0, 1, 2].map((index) => (
-                      <TextField
-                        key={index}
-                        select
-                        fullWidth
-                        label={`${index + 1}番目に呼び出されるサービス`}
-                        value={dependencyChain[index]}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          handleDependencyChainChange(index, e.target.value)
-                        }
-                        disabled={loading}
-                      >
-                        <MenuItem value="">選択してください</MenuItem>
-                        {SERVICE_OPTIONS.map((service) => (
-                          <MenuItem key={service} value={service}>
-                            {service}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    ))}
-                  </Box>
-                  {isDependencyChainAnswered && (
-                    <Alert severity="error" sx={{ mt: 2 }}>
-                      不正解です。New Relicの分散トレースで呼び出し順を確認してください。
-                    </Alert>
-                  )}
-                </>
-              )}
+              <Transaction360DiagnosisQuiz />
             </Box>
           )}
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>

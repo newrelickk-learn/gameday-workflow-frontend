@@ -528,16 +528,44 @@ export const graphqlClient = {
       return data.checkChapterAnswer;
     },
 
-    async checkDependencyChain(dependencyChain: string[]): Promise<boolean> {
+    async getTransaction360QuizOptions(): Promise<{ q1: string[]; q2: string[]; q3: string[]; q4: string[] }> {
       const query = `
-        mutation CheckDependencyChain($dependencyChain: [String!]!) {
-          checkDependencyChain(dependencyChain: $dependencyChain)
+        query Transaction360QuizOptions {
+          transaction360QuizOptions {
+            q1
+            q2
+            q3
+            q4
+          }
         }
       `;
-      const data = await graphqlRequest<{ checkDependencyChain: boolean }>(query, {
-        dependencyChain,
-      });
-      return data.checkDependencyChain;
+      const data = await graphqlRequest<{
+        transaction360QuizOptions: { q1: string[]; q2: string[]; q3: string[]; q4: string[] };
+      }>(query);
+      return data.transaction360QuizOptions;
+    },
+
+    async checkTransaction360QuizAnswers(answers: {
+      q1: string[];
+      q2: string[];
+      q3: string[];
+      q4: string[];
+    }): Promise<{ q1: boolean; q2: boolean; q3: boolean; q4: boolean; allCorrect: boolean }> {
+      const query = `
+        mutation CheckTransaction360QuizAnswers($input: Transaction360QuizAnswersInput!) {
+          checkTransaction360QuizAnswers(input: $input) {
+            q1
+            q2
+            q3
+            q4
+            allCorrect
+          }
+        }
+      `;
+      const data = await graphqlRequest<{
+        checkTransaction360QuizAnswers: { q1: boolean; q2: boolean; q3: boolean; q4: boolean; allCorrect: boolean };
+      }>(query, { input: answers });
+      return data.checkTransaction360QuizAnswers;
     },
 
     async recordMistake(chapter: number): Promise<boolean> {

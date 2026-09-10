@@ -24,6 +24,9 @@ import type {
   RageClickQuizOptions,
   RageClickQuizAnswersInput,
   RageClickQuizResult,
+  Transaction360QuizOptions,
+  Transaction360QuizAnswersInput,
+  Transaction360QuizResult,
   ChapterMission,
 } from '../api/types';
 
@@ -135,6 +138,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<RageClickQuizOptions>;
+    transaction360QuizOptions: (
+      parent: unknown,
+      args: {},
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<Transaction360QuizOptions>;
   };
   Mutation: {
     login: (
@@ -215,12 +224,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<RageClickQuizResult>;
-    checkDependencyChain: (
+    checkTransaction360QuizAnswers: (
       parent: unknown,
-      args: { dependencyChain: string[] },
+      args: { input: Transaction360QuizAnswersInput },
       context: GraphQLContext,
       info: GraphQLResolveInfo
-    ) => Promise<boolean>;
+    ) => Promise<Transaction360QuizResult>;
     recordChapterMistake: (
       parent: unknown,
       args: { chapter: number },
@@ -243,7 +252,6 @@ export interface CreateApplicationInput {
   endDate?: string | null;
   days?: number | null;
   applicantId: string;
-  dependencyChain?: string[] | null;
 }
 
 export interface UpdateApprovalInput {
