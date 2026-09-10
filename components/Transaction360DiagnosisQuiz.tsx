@@ -141,12 +141,15 @@ export default function Transaction360DiagnosisQuiz() {
   if (cleared) {
     return (
       <Paper sx={{ p: 3, mb: 3, bgcolor: 'success.50', border: '1px solid', borderColor: 'success.light' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
           <CheckCircleIcon color="success" />
           <Typography variant="h6" color="success.dark">
             正解です！CreateApplicationトランザクションの理解を深めることができました。
           </Typography>
         </Box>
+        <Typography variant="body2" color="success.dark">
+          申請エラーが発生している場合はエラーの内容も確認して解決しましょう
+        </Typography>
       </Paper>
     );
   }
@@ -156,7 +159,7 @@ export default function Transaction360DiagnosisQuiz() {
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
-        CreateApplicationトランザクションを理解する
+        gameday-workflow-frontendのCreateApplicationトランザクションを理解する
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         実際に申請して確認してみましょう。ヒント：CreateApplication /{' '}
