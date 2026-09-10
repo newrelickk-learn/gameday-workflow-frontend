@@ -569,6 +569,18 @@ export const resolvers: Resolvers & {
       }
     },
 
+    recordChapterMistake: async (_, { chapter }, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.recordChapterMistake(chapter, token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to record chapter mistake: ${errorMessage}`, {
+          extensions: { code: 'RECORD_CHAPTER_MISTAKE_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
     startWorkflow: async (_, { input }, context) => {
       try {
         const token = getTokenFromRequest(context.request);

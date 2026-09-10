@@ -221,6 +221,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<boolean>;
+    recordChapterMistake: (
+      parent: unknown,
+      args: { chapter: number },
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<boolean>;
   };
 }
 

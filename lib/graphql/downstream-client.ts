@@ -387,6 +387,18 @@ export class DownstreamClient {
     return data.correct;
   }
 
+  async recordChapterMistake(chapter: number, token?: string): Promise<boolean> {
+    if (this.useStubs) {
+      return false;
+    }
+    const data = await this.request<{ recorded: boolean }>(
+      `${this.gameMasterServiceUrl}/api/v1/chapters/${chapter}/record-mistake`,
+      { method: 'POST', body: JSON.stringify({}) },
+      token
+    );
+    return data.recorded;
+  }
+
   async getClearedChapters(token?: string): Promise<number[]> {
     if (this.useStubs) {
       return [];

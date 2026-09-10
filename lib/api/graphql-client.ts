@@ -540,6 +540,18 @@ export const graphqlClient = {
       return data.checkDependencyChain;
     },
 
+    async recordMistake(chapter: number): Promise<boolean> {
+      const query = `
+        mutation RecordChapterMistake($chapter: Int!) {
+          recordChapterMistake(chapter: $chapter)
+        }
+      `;
+      const data = await graphqlRequest<{ recordChapterMistake: boolean }>(query, {
+        chapter,
+      });
+      return data.recordChapterMistake;
+    },
+
     async getClearedChapters(): Promise<number[]> {
       const query = `
         query ClearedChapters {

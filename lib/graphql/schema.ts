@@ -326,6 +326,8 @@ export const typeDefs = `#graphql
     checkRageClickQuizAnswers(input: RageClickQuizAnswersInput!): RageClickQuizResult!
 
     checkDependencyChain(dependencyChain: [String!]!): Boolean!
+
+    recordChapterMistake(chapter: Int!): Boolean!
   }
 `;
 

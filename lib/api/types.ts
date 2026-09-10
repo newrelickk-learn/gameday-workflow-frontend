@@ -215,3 +215,40 @@ export interface TeamProgressResponse {
   teams: TeamProgressItem[];
 }
 
+export interface ChapterScoreRule {
+  chapter: number;
+  title: string;
+  clearPoints: number;
+  mistakePenaltyPoints: number;
+  /** 早解き1位/2位/3位のボーナス点 */
+  bonusPoints: number[];
+}
+
+export interface TeamChapterScore {
+  chapter: number;
+  cleared: boolean;
+  clearedAt?: string | null;
+  mistakeCount: number;
+  basePoints: number;
+  penaltyPoints: number;
+  /** 早解きボーナスの順位(1〜3)。ボーナス圏外はnull */
+  bonusRank?: number | null;
+  bonusPoints: number;
+  score: number;
+}
+
+export interface TeamScoreItem {
+  companyId: string;
+  totalScore: number;
+  clearedChapters: number;
+  chapters: TeamChapterScore[];
+}
+
+export interface TeamScoreResponse {
+  totalChapters: number;
+  /** 1チームが取り得る最大得点(全クエストを1位クリア) */
+  maxScore: number;
+  chapters: ChapterScoreRule[];
+  teams: TeamScoreItem[];
+}
+

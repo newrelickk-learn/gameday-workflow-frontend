@@ -65,6 +65,9 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
       setResult(correct ? 'correct' : 'incorrect');
       if (correct) {
         window.dispatchEvent(new CustomEvent('gameday:chapterCleared', { detail: { chapter } }));
+      } else {
+        // 不正解はスコアの減点対象として記録する(記録に失敗しても回答結果の表示は続ける)。
+        apiClient.chapters.recordMistake(chapter).catch(() => {});
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '判定に失敗しました');

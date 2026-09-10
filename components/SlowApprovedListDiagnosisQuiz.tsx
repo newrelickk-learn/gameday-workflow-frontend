@@ -122,6 +122,9 @@ export default function SlowApprovedListDiagnosisQuiz() {
       if (result.allCorrect) {
         setCleared(true);
         window.dispatchEvent(new CustomEvent('gameday:chapterCleared', { detail: { chapter: CHAPTER } }));
+      } else {
+        // 不正解はスコアの減点対象として記録する(記録に失敗しても回答結果の表示は続ける)。
+        apiClient.chapters.recordMistake(CHAPTER).catch(() => {});
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '判定に失敗しました');
