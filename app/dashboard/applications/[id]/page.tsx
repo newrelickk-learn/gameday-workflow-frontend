@@ -17,11 +17,13 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  Link,
 } from '@mui/material';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { apiClient } from '@/lib/api/client';
 import type { Application, Approval } from '@/lib/api/types';
 import { getCurrentUser, getCurrentUserId, isManager, isDirector } from '@/lib/utils/auth';
@@ -321,7 +323,24 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                         <RageClickDiagnosisQuiz />
                       ) : (
                         <Alert severity="info">
-                          承認ボタンで<a href="https://docs.newrelic.com/jp/docs/browser/new-relic-browser/browser-pro-features/user-impact/">Rage Click(レイジクリック/怒りクリック)</a>を発生させてください。（発生するとこのUIが変わります。少し時間がかかります。）
+                          承認ボタンで
+                          <Link
+                            href="https://docs.newrelic.com/jp/docs/browser/new-relic-browser/browser-pro-features/user-impact/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{
+                              fontWeight: 'bold',
+                              textDecoration: 'underline',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 0.3,
+                              verticalAlign: 'middle',
+                            }}
+                          >
+                            Rage Click(レイジクリック/怒りクリック)
+                            <OpenInNewIcon sx={{ fontSize: '1rem' }} />
+                          </Link>
+                          を発生させてください。（発生するとこのUIが変わります。リロードしつつ何度かお試しください。データ収集/分析に少し時間がかかります。）
                         </Alert>
                       )}
                     </Box>

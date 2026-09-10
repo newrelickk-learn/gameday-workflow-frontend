@@ -125,7 +125,7 @@ function LoginForm() {
                 name="impactedPodName"
                 label="問題のあるPod名"
                 id="impactedPodName"
-                helperText="ログインはgameday-workflow-userサービスで行っている。APMで問題となっているpodを見つけよう。"
+                helperText="ログインはgameday-workflow-userサービスで行っています。APMのSummary画面の下の方にInfrastructureの情報があるので確認してください。'pod: 'の後の文字列をコピペしましょう"
                 value={impactedPodName}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setImpactedPodName(e.target.value)}
                 disabled={loading}

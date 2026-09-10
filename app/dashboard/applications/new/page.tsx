@@ -21,6 +21,7 @@ import {
   InputAdornment,
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
 import { getCurrentUserId, getCurrentUser, isManager } from '@/lib/utils/auth';
 import { getVirtualToday } from '@/lib/utils/virtual-date';
@@ -535,43 +536,54 @@ export default function NewApplicationPage() {
           />
           {isExpenseType && (
             <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                この経費申請を作成すると、どのサービスがどの順番で呼び出されますか？
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                正しい呼び出し順を1〜3番目まで選択して申請することがクリア条件です。
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                実際に申請して確認してみましょう。ヒント：CreateApplication / <a href="https://dojo.learn.nrkk.technology/course/contents/277" target="_blank">Transaction 360</a>
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                {[0, 1, 2].map((index) => (
-                  <TextField
-                    key={index}
-                    select
-                    fullWidth
-                    label={`${index + 1}番目に呼び出されるサービス`}
-                    value={dependencyChain[index]}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleDependencyChainChange(index, e.target.value)
-                    }
-                    disabled={loading}
-                  >
-                    <MenuItem value="">選択してください</MenuItem>
-                    {SERVICE_OPTIONS.map((service) => (
-                      <MenuItem key={service} value={service}>
-                        {service}
-                      </MenuItem>
+              {isDependencyChainCorrect ? (
+                <Paper sx={{ p: 3, bgcolor: 'success.50', border: '1px solid', borderColor: 'success.light' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CheckCircleIcon color="success" />
+                    <Typography variant="h6" color="success.dark">
+                      正解！起こっているエラーをNew Relicで確認し解消しましょう。
+                    </Typography>
+                  </Box>
+                </Paper>
+              ) : (
+                <>
+                  <Typography variant="subtitle2" gutterBottom>
+                    この経費申請を作成すると、どのサービスがどの順番で呼び出されますか？
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    正しい呼び出し順を1〜3番目まで選択して申請することがクリア条件です。
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    実際に申請して確認してみましょう。ヒント：CreateApplication / <a href="https://dojo.learn.nrkk.technology/course/contents/277" target="_blank">Transaction 360</a>
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    {[0, 1, 2].map((index) => (
+                      <TextField
+                        key={index}
+                        select
+                        fullWidth
+                        label={`${index + 1}番目に呼び出されるサービス`}
+                        value={dependencyChain[index]}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          handleDependencyChainChange(index, e.target.value)
+                        }
+                        disabled={loading}
+                      >
+                        <MenuItem value="">選択してください</MenuItem>
+                        {SERVICE_OPTIONS.map((service) => (
+                          <MenuItem key={service} value={service}>
+                            {service}
+                          </MenuItem>
+                        ))}
+                      </TextField>
                     ))}
-                  </TextField>
-                ))}
-              </Box>
-              {isDependencyChainAnswered && (
-                <Alert severity={isDependencyChainCorrect ? 'success' : 'error'} sx={{ mt: 2 }}>
-                  {isDependencyChainCorrect
-                    ? '正解です。経費申請を続けられます。'
-                    : '不正解です。New Relicの分散トレースで呼び出し順を確認してください。'}
-                </Alert>
+                  </Box>
+                  {isDependencyChainAnswered && (
+                    <Alert severity="error" sx={{ mt: 2 }}>
+                      不正解です。New Relicの分散トレースで呼び出し順を確認してください。
+                    </Alert>
+                  )}
+                </>
               )}
             </Box>
           )}
