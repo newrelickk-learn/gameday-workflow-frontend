@@ -127,6 +127,9 @@ export default function NewApplicationPage() {
     return () => {
       cancelled = true;
     };
+    // descriptionは依存に含めない。debounceしているのは都市IDだけなので、含めると
+    // 説明欄の1文字ごとに旅費サービスへの概算取得が飛んでしまう。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isBusinessTripType, debouncedDepartureCityId, debouncedArrivalCityId, travelCostRetryToken]);
 
   const TWO_WEEK_RULE_DAYS = 14;

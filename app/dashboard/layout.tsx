@@ -24,6 +24,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       window.location.href = `/login?redirect=${encodeURIComponent(currentUrl)}`;
       return;
     }
+    // getCurrentUserId()はlocalStorageを読むためクライアントでしか評価できない。
+    // hydration後にstateへ反映する必要があり、この位置でのsetStateは避けられない。
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAuthChecked(true);
   }, [pathname, searchParams]);
 
@@ -47,6 +50,8 @@ export default function DashboardLayout({
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
+    // getCurrentUser()も同様にlocalStorage依存のため、hydration後に読み込む。
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentUser(getCurrentUser());
   }, []);
 

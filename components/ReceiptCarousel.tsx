@@ -80,6 +80,9 @@ export default function ReceiptCarousel({ images }: ReceiptCarouselProps) {
             return null;
           }
           return (
+            // GameDay第4章はこのレシート画像の読み込みの遅さ(LCP)を題材にしているため、
+            // next/imageによる最適化は意図的に行わない。
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               key={url}
               src={src}
