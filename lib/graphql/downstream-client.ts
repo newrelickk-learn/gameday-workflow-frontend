@@ -28,6 +28,9 @@ import type {
   Transaction360QuizAnswersInput,
   Transaction360QuizResult,
   ChapterMission,
+  ChapterAnswerResult,
+  ChapterChallengeStatus,
+  StartChapterChallengeResult,
 } from '../api/types';
 import { stubUserService } from '../api/stubs/user-service';
 import { stubApplicationService } from '../api/stubs/application-service';
@@ -304,11 +307,15 @@ export class DownstreamClient {
     return data.options;
   }
 
-  async checkChapterAnswer(chapter: number, selectedText: string, token?: string): Promise<boolean> {
+  async checkChapterAnswer(
+    chapter: number,
+    selectedText: string,
+    token?: string
+  ): Promise<ChapterAnswerResult> {
     if (this.useStubs) {
-      return false;
+      return { correct: false, cleared: false, clearBlockedReason: null };
     }
-    const data = await this.request<{ correct: boolean }>(
+    return this.request<ChapterAnswerResult>(
       `${this.gameMasterServiceUrl}/api/v1/chapters/${chapter}/check-answer`,
       {
         method: 'POST',
@@ -316,7 +323,54 @@ export class DownstreamClient {
       },
       token
     );
-    return data.correct;
+  }
+
+  async getChapterChallengeStatus(token?: string): Promise<ChapterChallengeStatus> {
+    if (this.useStubs) {
+      return { counts: [], activeChapter: null };
+    }
+    // game-masterは章番号をキーにしたオブジェクト({"1": 2})で返すため、GraphQLで扱える配列に直す。
+    const data = await this.request<{ counts: Record<string, number>; activeChapter: number | null }>(
+      `${this.gameMasterServiceUrl}/api/v1/chapters/challengers`,
+      { method: 'GET' },
+      token
+    );
+    return {
+      counts: Object.entries(data.counts ?? {}).map(([chapter, teams]) => ({
+        chapter: Number(chapter),
+        teams,
+      })),
+      activeChapter: data.activeChapter ?? null,
+    };
+  }
+
+  async startChapterChallenge(
+    chapter: number,
+    token?: string
+  ): Promise<StartChapterChallengeResult> {
+    if (this.useStubs) {
+      return { started: false, reason: 'stub', activeChapter: null };
+    }
+    return this.request<StartChapterChallengeResult>(
+      `${this.gameMasterServiceUrl}/api/v1/chapters/${chapter}/challenge`,
+      { method: 'POST' },
+      token
+    );
+  }
+
+  async clearHiddenQuest(hiddenQuestToken: string, token?: string): Promise<boolean> {
+    if (this.useStubs) {
+      return false;
+    }
+    const data = await this.request<{ cleared: boolean }>(
+      `${this.gameMasterServiceUrl}/api/v1/chapters/hidden-clear`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ token: hiddenQuestToken }),
+      },
+      token
+    );
+    return data.cleared;
   }
 
   async getNPlusOneQuizOptions(token?: string): Promise<NPlusOneQuizOptions> {

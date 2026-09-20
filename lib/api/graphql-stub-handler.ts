@@ -165,7 +165,19 @@ export async function handleGraphQLStub(
   }
 
   if (normalizedQuery.includes('mutation CheckChapterAnswer') || normalizedQuery.includes('checkChapterAnswer(chapter:')) {
-    return { checkChapterAnswer: false };
+    return { checkChapterAnswer: { correct: false, cleared: false, clearBlockedReason: null } };
+  }
+
+  if (normalizedQuery.includes('query ChapterChallengeStatus') || normalizedQuery.includes('chapterChallengeStatus')) {
+    return { chapterChallengeStatus: { counts: [], activeChapter: null } };
+  }
+
+  if (normalizedQuery.includes('mutation StartChapterChallenge') || normalizedQuery.includes('startChapterChallenge(chapter:')) {
+    return { startChapterChallenge: { started: false, reason: 'stub', activeChapter: null } };
+  }
+
+  if (normalizedQuery.includes('mutation ClearHiddenQuest') || normalizedQuery.includes('clearHiddenQuest(token:')) {
+    return { clearHiddenQuest: false };
   }
 
   if (normalizedQuery.includes('query ClearedChapters') || normalizedQuery.includes('clearedChapters')) {

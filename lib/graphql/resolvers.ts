@@ -323,6 +323,18 @@ export const resolvers: Resolvers & {
       }
     },
 
+    chapterChallengeStatus: async (_, __, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.getChapterChallengeStatus(token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to fetch chapter challenge status: ${errorMessage}`, {
+          extensions: { code: 'CHAPTER_CHALLENGE_STATUS_FETCH_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
     transaction360QuizOptions: async (_, __, context) => {
       try {
         const token = getTokenFromRequest(context.request);
@@ -540,6 +552,30 @@ export const resolvers: Resolvers & {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         throw new GraphQLError(`Failed to check chapter answer: ${errorMessage}`, {
           extensions: { code: 'CHECK_CHAPTER_ANSWER_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
+    startChapterChallenge: async (_, { chapter }, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.startChapterChallenge(chapter, token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to start chapter challenge: ${errorMessage}`, {
+          extensions: { code: 'START_CHAPTER_CHALLENGE_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
+    clearHiddenQuest: async (_, { token: hiddenQuestToken }, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.clearHiddenQuest(hiddenQuestToken, token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to clear hidden quest: ${errorMessage}`, {
+          extensions: { code: 'CLEAR_HIDDEN_QUEST_ERROR', originalError: errorMessage },
         });
       }
     },

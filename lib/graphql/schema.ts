@@ -58,6 +58,7 @@ export const typeDefs = `#graphql
     receiptImageUrls: [String!]
     createdAt: DateTime!
     updatedAt: DateTime!
+    hiddenQuestTokens: [String!]
   }
 
   enum ApplicationStatus {
@@ -206,6 +207,8 @@ export const typeDefs = `#graphql
     q2: Boolean!
     q3: Boolean!
     allCorrect: Boolean!
+    cleared: Boolean
+    clearBlockedReason: String
   }
 
   type RageClickQuizOptions {
@@ -225,6 +228,8 @@ export const typeDefs = `#graphql
     q2: Boolean!
     q3: Boolean!
     allCorrect: Boolean!
+    cleared: Boolean
+    clearBlockedReason: String
   }
 
   type Transaction360QuizOptions {
@@ -247,13 +252,41 @@ export const typeDefs = `#graphql
     q3: Boolean!
     q4: Boolean!
     allCorrect: Boolean!
+    cleared: Boolean
+    clearBlockedReason: String
   }
 
   type ChapterMission {
     chapter: Int!
-    title: String!
+    kind: String!
+    title: String
     description: String
     clearKeyword: String
+    cleared: Boolean!
+    challengeable: Boolean!
+    unlocked: Boolean!
+  }
+
+  type ChapterChallengerCount {
+    chapter: Int!
+    teams: Int!
+  }
+
+  type ChapterChallengeStatus {
+    counts: [ChapterChallengerCount!]!
+    activeChapter: Int
+  }
+
+  type StartChapterChallengeResult {
+    started: Boolean!
+    reason: String!
+    activeChapter: Int
+  }
+
+  type ChapterAnswerResult {
+    correct: Boolean!
+    cleared: Boolean!
+    clearBlockedReason: String
   }
 
   type Notification {
@@ -317,6 +350,8 @@ export const typeDefs = `#graphql
 
     chapterMissions: [ChapterMission!]!
 
+    chapterChallengeStatus: ChapterChallengeStatus!
+
     nPlusOneQuizOptions: NPlusOneQuizOptions!
 
     rageClickQuizOptions: RageClickQuizOptions!
@@ -342,7 +377,11 @@ export const typeDefs = `#graphql
     generateApplicationSuggestion(prompt: String!): String!
     askChat(question: String!): String!
 
-    checkChapterAnswer(chapter: Int!, selectedText: String!): Boolean!
+    checkChapterAnswer(chapter: Int!, selectedText: String!): ChapterAnswerResult!
+
+    startChapterChallenge(chapter: Int!): StartChapterChallengeResult!
+
+    clearHiddenQuest(token: String!): Boolean!
 
     checkNPlusOneQuizAnswers(input: NPlusOneQuizAnswersInput!): NPlusOneQuizResult!
 

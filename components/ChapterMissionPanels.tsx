@@ -13,35 +13,55 @@ import {
   Button,
   Stack,
   Chip,
+  Alert,
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
+import GroupsIcon from '@mui/icons-material/Groups';
 import { apiClient } from '@/lib/api/client';
-import type { ChapterMission } from '@/lib/api/types';
+import type { ChapterMission, ChapterChallengeStatus } from '@/lib/api/types';
+
+/** 挑戦を開始できなかった理由を、参加者向けの文言に変換する。 */
+const START_FAILURE_MESSAGES: Record<string, string> = {
+  another_active: '挑戦中のクエストをクリアするまで、他のクエストには挑戦できません。',
+  locked: 'このクエストはまだ開放されていません。',
+  already_cleared: 'このクエストはすでにクリア済みです。',
+  not_challengeable: 'このクエストは挑戦の対象外です。',
+  unknown_company: 'チームの情報が取得できませんでした。ログインし直してください。',
+};
+
+const CHALLENGE_STATUS_POLL_INTERVAL_MS = 15000;
 
 export default function ChapterMissionPanels() {
   const [missions, setMissions] = useState<ChapterMission[]>([]);
-  const [clearedChapters, setClearedChapters] = useState<number[]>([]);
+  const [status, setStatus] = useState<ChapterChallengeStatus>({ counts: [], activeChapter: null });
   const [selected, setSelected] = useState<ChapterMission | null>(null);
+  const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState('');
 
   const refresh = useCallback(() => {
     Promise.all([
       apiClient.chapters.getChapterMissions(),
-      apiClient.chapters.getClearedChapters(),
+      apiClient.chapters.getChallengeStatus(),
     ])
-      .then(([missionsData, clearedData]) => {
+      .then(([missionsData, statusData]) => {
         setMissions(missionsData);
-        setClearedChapters(clearedData);
+        setStatus(statusData);
       })
       .catch(() => {
         setMissions([]);
-        setClearedChapters([]);
+        setStatus({ counts: [], activeChapter: null });
       });
   }, []);
 
   useEffect(() => {
     refresh();
     window.addEventListener('gameday:chapterCleared', refresh);
-    return () => window.removeEventListener('gameday:chapterCleared', refresh);
+    // 他チームの挑戦状況は自分の操作では変わらないため、定期的に取り直す。
+    const timer = setInterval(refresh, CHALLENGE_STATUS_POLL_INTERVAL_MS);
+    return () => {
+      window.removeEventListener('gameday:chapterCleared', refresh);
+      clearInterval(timer);
+    };
   }, [refresh]);
 
   if (missions.length === 0) {
@@ -49,32 +69,67 @@ export default function ChapterMissionPanels() {
   }
 
   const sortedMissions = [...missions].sort((a, b) => a.chapter - b.chapter);
-  const lastChapter = sortedMissions[sortedMissions.length - 1].chapter;
-  // 次にクリアすべきミッション = 未クリアのうち最も若い章
-  const nextMission = sortedMissions.find((mission) => !clearedChapters.includes(mission.chapter));
-  const nextChapter = nextMission ? nextMission.chapter : null;
+  const mainMissions = sortedMissions.filter((mission) => mission.kind !== 'hidden');
+  const lastMainChapter = mainMissions.length > 0 ? mainMissions[mainMissions.length - 1].chapter : null;
+  const activeChapter = status.activeChapter ?? null;
+
+  const challengerCount = (chapter: number) =>
+    status.counts.find((count) => count.chapter === chapter)?.teams ?? 0;
+
+  const handleStartChallenge = async (mission: ChapterMission) => {
+    try {
+      setStarting(true);
+      setStartError('');
+      const result = await apiClient.chapters.startChallenge(mission.chapter);
+      if (result.started) {
+        setSelected(null);
+        refresh();
+        return;
+      }
+      setStartError(START_FAILURE_MESSAGES[result.reason] ?? '挑戦を開始できませんでした。');
+      refresh();
+    } catch {
+      setStartError('挑戦を開始できませんでした。時間をおいて試してください。');
+    } finally {
+      setStarting(false);
+    }
+  };
+
+  const closeDialog = () => {
+    setSelected(null);
+    setStartError('');
+  };
 
   return (
     <Box sx={{ mt: 5 }}>
       <Typography variant="h6" component="h2" fontWeight="bold" gutterBottom>
         ミッション
       </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        パネルをクリックすると、そのクエストに挑戦できます。挑戦できるのは同時に1つだけで、クリアするまで他のクエストには移れません。
+      </Typography>
       <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap' }}>
         {sortedMissions.map((mission) => {
-          const isLast = mission.chapter === lastChapter;
-          const isCleared = clearedChapters.includes(mission.chapter);
-          const isNext = mission.chapter === nextChapter;
-          const isVisible = isCleared || isNext || isLast;
-          const isDisabled = !isCleared && !isNext;
+          const isHidden = mission.kind === 'hidden';
+          const isCleared = mission.cleared;
+          const isLastMain = mission.chapter === lastMainChapter;
+          const isActive = mission.chapter === activeChapter;
+          // 裏クエストはクリアするまで伏せたまま。メインは開放済み・クリア済み・最後の1枚が表向き。
+          const isVisible = isHidden ? isCleared : isCleared || mission.unlocked || isLastMain;
+          const isClickable = !isHidden && isVisible && !isCleared;
+          const teams = mission.challengeable ? challengerCount(mission.chapter) : 0;
 
           return (
             <Box
               key={mission.chapter}
-              sx={{ width: 168, height: isCleared ? 160 : 120, perspective: 900 }}
+              sx={{ width: 168, height: isCleared ? 160 : 140, perspective: 900 }}
             >
               <Box
                 onClick={() => {
-                  if (!isDisabled) setSelected(mission);
+                  if (isClickable) {
+                    setStartError('');
+                    setSelected(mission);
+                  }
                 }}
                 sx={{
                   width: '100%',
@@ -83,7 +138,7 @@ export default function ChapterMissionPanels() {
                   transformStyle: 'preserve-3d',
                   transition: 'transform 0.7s',
                   transform: isVisible ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                  cursor: isDisabled ? 'default' : 'pointer',
+                  cursor: isClickable ? 'pointer' : 'default',
                 }}
               >
                 <Card
@@ -93,12 +148,20 @@ export default function ChapterMissionPanels() {
                     inset: 0,
                     backfaceVisibility: 'hidden',
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    gap: 1,
                     bgcolor: 'grey.100',
                   }}
                 >
-                  <LockIcon color="disabled" />
+                  {isHidden ? (
+                    <Typography variant="h4" color="text.disabled" fontWeight="bold">
+                      ？
+                    </Typography>
+                  ) : (
+                    <LockIcon color="disabled" />
+                  )}
                 </Card>
                 <Card
                   variant="outlined"
@@ -107,8 +170,10 @@ export default function ChapterMissionPanels() {
                     inset: 0,
                     backfaceVisibility: 'hidden',
                     transform: 'rotateY(180deg)',
-                    opacity: isDisabled ? 0.55 : 1,
+                    opacity: !isCleared && !mission.unlocked ? 0.55 : 1,
                     bgcolor: isCleared ? 'success.light' : 'background.paper',
+                    borderColor: isActive ? 'primary.main' : undefined,
+                    borderWidth: isActive ? 2 : undefined,
                   }}
                 >
                   <CardContent
@@ -123,24 +188,18 @@ export default function ChapterMissionPanels() {
                     }}
                   >
                     <Typography variant="body2" fontWeight="bold">
-                      {mission.title}
+                      {mission.title ?? '？'}
                     </Typography>
-                    {(isCleared || isNext) && (
+                    {(isCleared || isActive) && (
                       <Chip
                         size="small"
-                        label={isCleared ? 'Cleared!!' : 'Next'}
+                        label={isCleared ? 'Cleared!!' : '挑戦中'}
                         sx={{
                           alignSelf: 'flex-start',
                           fontWeight: 'bold',
                           ...(isCleared
                             ? { bgcolor: 'success.main', color: 'success.contrastText' }
-                            : {
-                                // 未クリアのパネルと同じ色味でNextを示す
-                                bgcolor: 'background.paper',
-                                color: 'text.primary',
-                                border: 1,
-                                borderColor: 'divider',
-                              }),
+                            : { bgcolor: 'primary.main', color: 'primary.contrastText' }),
                         }}
                       />
                     )}
@@ -153,6 +212,14 @@ export default function ChapterMissionPanels() {
                         合言葉: {mission.clearKeyword}
                       </Typography>
                     )}
+                    {!isCleared && mission.challengeable && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <GroupsIcon fontSize="small" color="action" />
+                        <Typography variant="caption" color="text.secondary">
+                          {teams}チームが挑戦中
+                        </Typography>
+                      </Box>
+                    )}
                   </CardContent>
                 </Card>
               </Box>
@@ -161,13 +228,39 @@ export default function ChapterMissionPanels() {
         })}
       </Stack>
 
-      <Dialog open={!!selected} onClose={() => setSelected(null)} maxWidth="sm" fullWidth>
-        <DialogTitle>{selected?.title}</DialogTitle>
+      <Dialog open={!!selected} onClose={closeDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>{selected?.title ?? '？'}</DialogTitle>
         <DialogContent>
           <Typography>{selected?.description}</Typography>
+          {selected?.challengeable && selected.chapter === activeChapter && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              このクエストに挑戦中です。クリアすると次のクエストを選べるようになります。
+            </Alert>
+          )}
+          {selected?.challengeable &&
+            activeChapter !== null &&
+            selected.chapter !== activeChapter && (
+              <Alert severity="warning" sx={{ mt: 2 }}>
+                {START_FAILURE_MESSAGES.another_active}
+              </Alert>
+            )}
+          {startError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {startError}
+            </Alert>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSelected(null)}>閉じる</Button>
+          <Button onClick={closeDialog}>閉じる</Button>
+          {selected?.challengeable && selected.chapter !== activeChapter && (
+            <Button
+              variant="contained"
+              disabled={starting || activeChapter !== null || !selected.unlocked}
+              onClick={() => handleStartChallenge(selected)}
+            >
+              このクエストに挑戦する
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>
