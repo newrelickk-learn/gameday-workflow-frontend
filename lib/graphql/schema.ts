@@ -265,6 +265,7 @@ export const typeDefs = `#graphql
     cleared: Boolean!
     challengeable: Boolean!
     unlocked: Boolean!
+    revealed: Boolean!
   }
 
   type ChapterChallengerCount {

@@ -82,8 +82,14 @@ export default function ChapterMissionPanels() {
       setStartError('');
       const result = await apiClient.chapters.startChallenge(mission.chapter);
       if (result.started) {
-        setSelected(null);
-        refresh();
+        // 挑戦を開始すると内容が開示されるので、取り直してそのままダイアログに出す。
+        const [missionsData, statusData] = await Promise.all([
+          apiClient.chapters.getChapterMissions(),
+          apiClient.chapters.getChallengeStatus(),
+        ]);
+        setMissions(missionsData);
+        setStatus(statusData);
+        setSelected(missionsData.find((m) => m.chapter === mission.chapter) ?? null);
         return;
       }
       setStartError(START_FAILURE_MESSAGES[result.reason] ?? '挑戦を開始できませんでした。');
@@ -117,6 +123,8 @@ export default function ChapterMissionPanels() {
           // 裏クエストはクリアするまで伏せたまま。メインは開放済み・クリア済み・最後の1枚が表向き。
           const isVisible = isHidden ? isCleared : isCleared || mission.unlocked || isLastMain;
           const isClickable = !isHidden && isVisible && !isCleared;
+          // 未開封のクエストは内容が伏せられている(タイトルはサーバー側でnullになる)。
+          const isSealed = !isHidden && !mission.revealed;
           const teams = mission.challengeable ? challengerCount(mission.chapter) : 0;
 
           return (
@@ -187,8 +195,12 @@ export default function ChapterMissionPanels() {
                       '&:last-child': { pb: 1.5 },
                     }}
                   >
-                    <Typography variant="body2" fontWeight="bold">
-                      {mission.title ?? '？'}
+                    <Typography
+                      variant="body2"
+                      fontWeight="bold"
+                      color={isSealed ? 'text.secondary' : 'text.primary'}
+                    >
+                      {mission.title ?? (isSealed ? 'どのクエストかは挑戦すると分かります' : '？')}
                     </Typography>
                     {(isCleared || isActive) && (
                       <Chip
@@ -229,9 +241,16 @@ export default function ChapterMissionPanels() {
       </Stack>
 
       <Dialog open={!!selected} onClose={closeDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>{selected?.title ?? '？'}</DialogTitle>
+        <DialogTitle>{selected?.title ?? 'このクエストに挑戦しますか？'}</DialogTitle>
         <DialogContent>
-          <Typography>{selected?.description}</Typography>
+          {selected && !selected.revealed ? (
+            <Typography color="text.secondary">
+              クエストの内容は、挑戦を開始すると表示されます。
+              挑戦できるのは同時に1つだけで、クリアするまで他のクエストには移れません。
+            </Typography>
+          ) : (
+            <Typography>{selected?.description}</Typography>
+          )}
           {selected?.challengeable && selected.chapter === activeChapter && (
             <Alert severity="info" sx={{ mt: 2 }}>
               このクエストに挑戦中です。クリアすると次のクエストを選べるようになります。

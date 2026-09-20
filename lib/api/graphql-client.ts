@@ -610,6 +610,7 @@ export const graphqlClient = {
             cleared
             challengeable
             unlocked
+            revealed
           }
         }
       `;

@@ -239,6 +239,8 @@ export interface ChapterMission {
   /** パネルを開いて挑戦する対象か（ログイン・プロモーション・裏クエストはfalse） */
   challengeable: boolean;
   unlocked: boolean;
+  /** 内容（タイトル・説明）が開示されているか。未開封のクエストはfalseでtitleもnullになる */
+  revealed: boolean;
 }
 
 export interface ChapterChallengerCount {

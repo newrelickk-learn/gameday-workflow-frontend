@@ -25,6 +25,7 @@ const mainMission = (chapter: number, overrides = {}) => ({
   cleared: false,
   challengeable: true,
   unlocked: true,
+  revealed: true,
   ...overrides,
 });
 
@@ -43,6 +44,7 @@ const MISSIONS = [
     cleared: false,
     challengeable: false,
     unlocked: false,
+    revealed: false,
   },
 ];
 
@@ -137,11 +139,51 @@ describe('ChapterMissionPanels', () => {
         cleared: true,
         challengeable: false,
         unlocked: false,
+        revealed: true,
       },
     ]);
     render(<ChapterMissionPanels />);
 
     await waitFor(() => expect(screen.getByText('裏クエスト1')).toBeInTheDocument());
+  });
+
+  it('未開封のクエストは問題文もタイトルも表示しない', async () => {
+    getChapterMissions.mockResolvedValue([
+      MISSIONS[0],
+      mainMission(1, { title: null, description: null, revealed: false }),
+      mainMission(2, { title: null, description: null, revealed: false }),
+    ]);
+    render(<ChapterMissionPanels />);
+
+    await waitFor(() =>
+      expect(screen.getAllByText('どのクエストかは挑戦すると分かります')).toHaveLength(2)
+    );
+    expect(screen.queryByText('第1章')).not.toBeInTheDocument();
+    expect(screen.queryByText('第1章の説明')).not.toBeInTheDocument();
+    // チーム数は伏せずに出す
+    expect(screen.getByText('3チームが挑戦中')).toBeInTheDocument();
+  });
+
+  it('挑戦を開始すると、その場で内容が表示される', async () => {
+    const sealed = mainMission(1, { title: null, description: null, revealed: false });
+    const revealed = mainMission(1, { revealed: true });
+    getChapterMissions.mockResolvedValueOnce([MISSIONS[0], sealed]);
+    render(<ChapterMissionPanels />);
+
+    await waitFor(() =>
+      expect(screen.getByText('どのクエストかは挑戦すると分かります')).toBeInTheDocument()
+    );
+    fireEvent.click(screen.getByText('どのクエストかは挑戦すると分かります'));
+
+    await waitFor(() =>
+      expect(screen.getByText(/クエストの内容は、挑戦を開始すると表示されます/)).toBeInTheDocument()
+    );
+
+    getChapterMissions.mockResolvedValue([MISSIONS[0], revealed]);
+    getChallengeStatus.mockResolvedValue({ counts: [{ chapter: 1, teams: 1 }], activeChapter: 1 });
+    fireEvent.click(screen.getByRole('button', { name: 'このクエストに挑戦する' }));
+
+    await waitFor(() => expect(screen.getByText('第1章の説明')).toBeInTheDocument());
   });
 
   it('挑戦できないクエストにはチーム数を表示しない', async () => {
