@@ -55,6 +55,8 @@ export default function NewApplicationPage() {
   const [days, setDays] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // AIレビュアーからの差し戻し理由。説明欄の下に出す。
+  const [descriptionError, setDescriptionError] = useState('');
   const [success, setSuccess] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [virtualToday, setVirtualToday] = useState<Date | null>(null);
@@ -227,6 +229,7 @@ export default function NewApplicationPage() {
   const handleConfirm = async () => {
     setConfirmDialogOpen(false);
     setError('');
+    setDescriptionError('');
     setLoading(true);
 
     try {
@@ -263,17 +266,36 @@ export default function NewApplicationPage() {
         requestData.days = parseInt(days);
       }
 
-      await apiClient.applications.createApplication(requestData);
-      
+      const created = await apiClient.applications.createApplication(requestData);
+
+      // 裏クエストのクリアは、申請サービスが発行した引換券をブラウザから渡して記録する
+      // (申請そのもののトレースにgame-masterを混ぜないため)。失敗しても申請は成立しているので握りつぶす。
+      const hiddenQuestTokens = created?.hiddenQuestTokens ?? [];
+      if (hiddenQuestTokens.length > 0) {
+        await Promise.all(
+          hiddenQuestTokens.map((questToken) =>
+            apiClient.chapters.clearHiddenQuest(questToken).catch(() => false)
+          )
+        );
+        window.dispatchEvent(new CustomEvent('gameday:chapterCleared'));
+      }
+
       setSuccess(true);
       setTimeout(() => {
         router.push('/dashboard/applications');
       }, 1500);
     } catch (err) {
       const code = (err as { code?: string })?.code;
-      const SHOWABLE_ERROR_CODES = ['ASSERTION_RULE_VIOLATION', 'PREREQUISITE_CHAPTERS_NOT_CLEARED'];
+      const SHOWABLE_ERROR_CODES = [
+        'ASSERTION_RULE_VIOLATION',
+        'PREREQUISITE_CHAPTERS_NOT_CLEARED',
+        'AI_REVIEW_REJECTED',
+      ];
       if (code && SHOWABLE_ERROR_CODES.includes(code) && err instanceof Error && err.message) {
         setError(err.message);
+        if (code === 'AI_REVIEW_REJECTED') {
+          setDescriptionError(err.message);
+        }
       } else {
         setError('申請できませんでした');
       }
@@ -485,9 +507,19 @@ export default function NewApplicationPage() {
             multiline
             rows={6}
             value={description}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setDescription(e.target.value);
+              setDescriptionError('');
+            }}
             required
             disabled={loading}
+            error={!!descriptionError}
+            helperText={
+              descriptionError ||
+              (isBusinessTripType
+                ? '出張の目的・訪問先・そこで行う業務内容を具体的に記入してください（AIレビュアーが確認します）'
+                : undefined)
+            }
             sx={{ mb: 3 }}
             placeholder="申請の詳細を入力してください"
           />

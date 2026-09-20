@@ -11,6 +11,9 @@ import type {
   City,
   EstimateTravelCostResponse,
   ChapterMission,
+  ChapterAnswerResult,
+  ChapterChallengeStatus,
+  StartChapterChallengeResult,
 } from './types';
 import { handleGraphQLStub } from './graphql-stub-handler';
 
@@ -292,6 +295,7 @@ export const graphqlClient = {
             nextApproverDepartment
             createdAt
             updatedAt
+            hiddenQuestTokens
           }
         }
       `;
@@ -515,13 +519,17 @@ export const graphqlClient = {
       return data.chapterDiagnosisOptions;
     },
 
-    async checkAnswer(chapter: number, selectedText: string): Promise<boolean> {
+    async checkAnswer(chapter: number, selectedText: string): Promise<ChapterAnswerResult> {
       const query = `
         mutation CheckChapterAnswer($chapter: Int!, $selectedText: String!) {
-          checkChapterAnswer(chapter: $chapter, selectedText: $selectedText)
+          checkChapterAnswer(chapter: $chapter, selectedText: $selectedText) {
+            correct
+            cleared
+            clearBlockedReason
+          }
         }
       `;
-      const data = await graphqlRequest<{ checkChapterAnswer: boolean }>(query, {
+      const data = await graphqlRequest<{ checkChapterAnswer: ChapterAnswerResult }>(query, {
         chapter,
         selectedText,
       });
@@ -595,14 +603,65 @@ export const graphqlClient = {
         query ChapterMissions {
           chapterMissions {
             chapter
+            kind
             title
             description
             clearKeyword
+            cleared
+            challengeable
+            unlocked
           }
         }
       `;
       const data = await graphqlRequest<{ chapterMissions: ChapterMission[] }>(query);
       return data.chapterMissions;
+    },
+
+    async getChallengeStatus(): Promise<ChapterChallengeStatus> {
+      const query = `
+        query ChapterChallengeStatus {
+          chapterChallengeStatus {
+            counts {
+              chapter
+              teams
+            }
+            activeChapter
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ chapterChallengeStatus: ChapterChallengeStatus }>(query);
+      return data.chapterChallengeStatus;
+    },
+
+    async startChallenge(chapter: number): Promise<StartChapterChallengeResult> {
+      const query = `
+        mutation StartChapterChallenge($chapter: Int!) {
+          startChapterChallenge(chapter: $chapter) {
+            started
+            reason
+            activeChapter
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ startChapterChallenge: StartChapterChallengeResult }>(
+        query,
+        { chapter }
+      );
+      return data.startChapterChallenge;
+    },
+
+    /**
+     * 裏クエストのクリアを記録する。申請サービスが発行した署名付きトークンを
+     * ブラウザから渡す（申請のトレースにgame-masterを混ぜないため）。
+     */
+    async clearHiddenQuest(token: string): Promise<boolean> {
+      const query = `
+        mutation ClearHiddenQuest($token: String!) {
+          clearHiddenQuest(token: $token)
+        }
+      `;
+      const data = await graphqlRequest<{ clearHiddenQuest: boolean }>(query, { token });
+      return data.clearHiddenQuest;
     },
 
     async getNPlusOneQuizOptions(): Promise<{ q1: string[]; q2: string[]; q3: string[] }> {

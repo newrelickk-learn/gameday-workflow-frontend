@@ -42,6 +42,8 @@ export interface Application {
   receiptImageUrls?: string[] | null;
   createdAt: string;
   updatedAt: string;
+  /** 裏クエストのクリア引換券。申請が成立したときだけ返る（ブラウザからgame-masterへ渡す） */
+  hiddenQuestTokens?: string[] | null;
 }
 
 export interface CreateApplicationRequest {
@@ -176,6 +178,8 @@ export interface NPlusOneQuizResult {
   q2: boolean;
   q3: boolean;
   allCorrect: boolean;
+  cleared?: boolean;
+  clearBlockedReason?: string | null;
 }
 
 export interface RageClickQuizOptions {
@@ -195,6 +199,8 @@ export interface RageClickQuizResult {
   q2: boolean;
   q3: boolean;
   allCorrect: boolean;
+  cleared?: boolean;
+  clearBlockedReason?: string | null;
 }
 
 export interface Transaction360QuizOptions {
@@ -217,13 +223,47 @@ export interface Transaction360QuizResult {
   q3: boolean;
   q4: boolean;
   allCorrect: boolean;
+  cleared?: boolean;
+  clearBlockedReason?: string | null;
 }
 
 export interface ChapterMission {
   chapter: number;
-  title: string;
+  /** 'main'（メインストリーム）または 'hidden'（裏クエスト） */
+  kind: string;
+  /** 裏クエストはクリアするまでタイトルも伏せられるためnullになる */
+  title?: string | null;
   description?: string | null;
   clearKeyword?: string | null;
+  cleared: boolean;
+  /** パネルを開いて挑戦する対象か（ログイン・プロモーション・裏クエストはfalse） */
+  challengeable: boolean;
+  unlocked: boolean;
+}
+
+export interface ChapterChallengerCount {
+  chapter: number;
+  teams: number;
+}
+
+export interface ChapterChallengeStatus {
+  counts: ChapterChallengerCount[];
+  /** 自分のチームが今挑戦しているクエスト。挑戦していなければnull */
+  activeChapter?: number | null;
+}
+
+export interface StartChapterChallengeResult {
+  started: boolean;
+  /** started=falseのときの理由（another_active / locked / already_cleared など） */
+  reason: string;
+  activeChapter?: number | null;
+}
+
+export interface ChapterAnswerResult {
+  correct: boolean;
+  cleared: boolean;
+  /** クリアを記録できなかった理由。パネル未オープンならnot_challenging */
+  clearBlockedReason?: string | null;
 }
 
 export interface TeamProgressItem {

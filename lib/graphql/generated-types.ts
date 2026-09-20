@@ -28,6 +28,9 @@ import type {
   Transaction360QuizAnswersInput,
   Transaction360QuizResult,
   ChapterMission,
+  ChapterAnswerResult,
+  ChapterChallengeStatus,
+  StartChapterChallengeResult,
 } from '../api/types';
 
 export interface GraphQLContext {
@@ -126,6 +129,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<ChapterMission[]>;
+    chapterChallengeStatus: (
+      parent: unknown,
+      args: Record<string, never>,
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<ChapterChallengeStatus>;
     nPlusOneQuizOptions: (
       parent: unknown,
       args: {},
@@ -209,6 +218,18 @@ export interface Resolvers {
     checkChapterAnswer: (
       parent: unknown,
       args: { chapter: number; selectedText: string },
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<ChapterAnswerResult>;
+    startChapterChallenge: (
+      parent: unknown,
+      args: { chapter: number },
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<StartChapterChallengeResult>;
+    clearHiddenQuest: (
+      parent: unknown,
+      args: { token: string },
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<boolean>;

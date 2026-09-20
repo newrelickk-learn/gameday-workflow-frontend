@@ -16,6 +16,7 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
   const [selectedText, setSelectedText] = useState('');
   const [checking, setChecking] = useState(false);
   const [result, setResult] = useState<'correct' | 'incorrect' | null>(null);
+  const [notChallenging, setNotChallenging] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -61,9 +62,11 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
     try {
       setChecking(true);
       setError('');
-      const correct = await apiClient.chapters.checkAnswer(chapter, selectedText.trim());
-      setResult(correct ? 'correct' : 'incorrect');
-      if (correct) {
+      const answer = await apiClient.chapters.checkAnswer(chapter, selectedText.trim());
+      setResult(answer.correct ? 'correct' : 'incorrect');
+      if (answer.correct) {
+        // 正解でもパネルを開いていなければクリアにはならない。その場合だけ案内を出す。
+        setNotChallenging(answer.clearBlockedReason === 'not_challenging');
         window.dispatchEvent(new CustomEvent('gameday:chapterCleared', { detail: { chapter } }));
       } else {
         // 不正解はスコアの減点対象として記録する(記録に失敗しても回答結果の表示は続ける)。
@@ -85,6 +88,12 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
             正解です！原因を特定できました。
           </Typography>
         </Box>
+        {notChallenging && (
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            このクエストにはまだ挑戦していないため、クリアとして記録されていません。
+            ダッシュボードでこのクエストのパネルを開いてから、もう一度回答してください。
+          </Alert>
+        )}
       </Paper>
     );
   }
