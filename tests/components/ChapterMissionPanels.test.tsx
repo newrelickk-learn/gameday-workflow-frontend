@@ -62,11 +62,18 @@ describe('ChapterMissionPanels', () => {
     startChallenge.mockResolvedValue({ started: true, reason: 'started', activeChapter: 1 });
   });
 
-  it('クリア済みのクエストにはCleared!!と合言葉が表示される', async () => {
+  it('クリア済みのクエストにはCleared!!が表示される', async () => {
     render(<ChapterMissionPanels />);
 
     await waitFor(() => expect(screen.getByText('Cleared!!')).toBeInTheDocument());
-    expect(screen.getByText('合言葉: AAA-BBB-CCC')).toBeInTheDocument();
+  });
+
+  it('合言葉は表示しない', async () => {
+    render(<ChapterMissionPanels />);
+
+    await waitFor(() => expect(screen.getByText('Cleared!!')).toBeInTheDocument());
+    expect(screen.queryByText(/合言葉/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/AAA-BBB-CCC/)).not.toBeInTheDocument();
   });
 
   it('挑戦中のチーム数がパネルに表示される', async () => {

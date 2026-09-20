@@ -130,7 +130,7 @@ export default function ChapterMissionPanels() {
           return (
             <Box
               key={mission.chapter}
-              sx={{ width: 168, height: isCleared ? 160 : 140, perspective: 900 }}
+              sx={{ width: 168, height: 140, perspective: 900 }}
             >
               <Box
                 onClick={() => {
@@ -215,15 +215,10 @@ export default function ChapterMissionPanels() {
                         }}
                       />
                     )}
-                    {isCleared && mission.clearKeyword && (
-                      <Typography
-                        variant="caption"
-                        fontWeight="bold"
-                        sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}
-                      >
-                        合言葉: {mission.clearKeyword}
-                      </Typography>
-                    )}
+                    {/*
+                      合言葉(clearKeyword)の表示は一旦止めている。運用で使わなくなる見込みのため。
+                      データはAPIから返ってきたまま(mission.clearKeyword)なので、戻すならここを復活させるだけでよい。
+                    */}
                     {!isCleared && mission.challengeable && (
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <GroupsIcon fontSize="small" color="action" />
