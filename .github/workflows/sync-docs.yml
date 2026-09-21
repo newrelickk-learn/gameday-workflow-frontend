@@ -1,0 +1,50 @@
+# content/manual をドキュメントリポジトリ(gameday-workflow-docs)へ一方向に同期する。
+#
+# マニュアルの実体は、参加者が画面で読むこのリポジトリの content/manual。
+# gameday-workflow-docs 側はNew Relic AI Knowledgeに取り込ませるための複製で、
+# 二重管理でズレると「AIが参照する内容」と「画面の内容」が食い違うため自動化する。
+#
+# 必要な準備: gameday-workflow-docs へのpush権限を持つトークンを、このリポジトリの
+# シークレット DOCS_SYNC_TOKEN に登録する(既定のGITHUB_TOKENは他リポジトリへpushできない)。
+name: Sync docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/manual/**'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ${{ vars.RUNNER_LABELS || 'ubuntu-latest' }}
+
+    steps:
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+
+      - name: Checkout docs repository
+        uses: actions/checkout@v4
+        with:
+          repository: newrelickk-learn/gameday-workflow-docs
+          token: ${{ secrets.DOCS_SYNC_TOKEN }}
+          path: docs-repo
+
+      - name: Copy manuals
+        run: |
+          mkdir -p docs-repo/manual
+          # 追加・更新・削除をそのまま反映する(docs側の手編集は上書きされる)
+          rsync -a --delete content/manual/ docs-repo/manual/
+
+      - name: Commit and push
+        working-directory: docs-repo
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "マニュアルに差分なし。何もしない。"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add manual
+          git commit -m "マニュアルをfrontendから同期 (${{ github.sha }})"
+          git push
