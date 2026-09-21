@@ -67,11 +67,15 @@ export default function NewApplicationPage() {
   const [travelCostLoading, setTravelCostLoading] = useState(false);
   const [travelCostError, setTravelCostError] = useState('');
   const [travelCostRetryToken, setTravelCostRetryToken] = useState(0);
+  // 正解すると概算取得が成功するようになり、エラー表示ごと診断パネルが消えてしまうため、
+  // クリア済みかどうかを別に持っておき、正解表示は出したままにする。
+  const [chapter3Cleared, setChapter3Cleared] = useState(false);
 
   useEffect(() => {
     const handleChapterCleared = (event: Event) => {
       const detail = (event as CustomEvent<{ chapter?: number }>).detail;
       if (detail?.chapter === 3) {
+        setChapter3Cleared(true);
         setTravelCostRetryToken((prev) => prev + 1);
       }
     };
@@ -93,6 +97,22 @@ export default function NewApplicationPage() {
   useEffect(() => {
     if (!isBusinessTripType) return;
     apiClient.travel.getCities().then(setCities).catch(() => setCities([]));
+  }, [isBusinessTripType]);
+
+  useEffect(() => {
+    if (!isBusinessTripType) return;
+    let cancelled = false;
+    apiClient.chapters
+      .getClearedChapters()
+      .then((chapters) => {
+        if (!cancelled) {
+          setChapter3Cleared(chapters.includes(3));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [isBusinessTripType]);
 
   const debouncedDepartureCityId = useDebouncedValue(departureCityId, 800);
@@ -421,10 +441,10 @@ export default function NewApplicationPage() {
                   </Box>
                 )}
                 {!travelCostLoading && travelCostError && (
-                  <>
-                    <Alert severity="error">{travelCostError}</Alert>
-                    <ChapterDiagnosisDropdown chapter={3} title="概算出張費の取得に失敗する原因を診断する" />
-                  </>
+                  <Alert severity="error">{travelCostError}</Alert>
+                )}
+                {!travelCostLoading && (travelCostError || chapter3Cleared) && (
+                  <ChapterDiagnosisDropdown chapter={3} title="概算出張費の取得に失敗する原因を診断する" />
                 )}
                 {!travelCostLoading && !travelCostError && amount && (
                   <Typography variant="body1" fontWeight="bold">
