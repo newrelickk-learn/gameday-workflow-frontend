@@ -90,7 +90,7 @@ describe('ChapterMissionPanels', () => {
     fireEvent.click(screen.getByText('第2章 承認済み一覧'));
 
     await waitFor(() => expect(screen.getByText('第2章の説明')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: 'このクエストに挑戦する' }));
+    fireEvent.click(screen.getByRole('button', { name: 'このミッションに挑戦する' }));
 
     await waitFor(() => expect(startChallenge).toHaveBeenCalledWith(2));
   });
@@ -107,10 +107,10 @@ describe('ChapterMissionPanels', () => {
 
     await waitFor(() =>
       expect(
-        screen.getByText('挑戦中のクエストをクリアするまで、他のクエストには挑戦できません。')
+        screen.getByText('挑戦中のミッションをクリアするまで、他のミッションには挑戦できません。')
       ).toBeInTheDocument()
     );
-    expect(screen.getByRole('button', { name: 'このクエストに挑戦する' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'このミッションに挑戦する' })).toBeDisabled();
     expect(startChallenge).not.toHaveBeenCalled();
   });
 
@@ -131,7 +131,7 @@ describe('ChapterMissionPanels', () => {
     expect(screen.getAllByText('？')).toHaveLength(2);
 
     fireEvent.click(screen.getAllByText('？')[0]);
-    expect(screen.queryByRole('button', { name: 'このクエストに挑戦する' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'このミッションに挑戦する' })).not.toBeInTheDocument();
   });
 
   it('クリア済みの裏クエストはタイトルが見える', async () => {
@@ -162,9 +162,8 @@ describe('ChapterMissionPanels', () => {
     ]);
     render(<ChapterMissionPanels />);
 
-    await waitFor(() =>
-      expect(screen.getAllByText('このミッションに挑戦する')).toHaveLength(2)
-    );
+    await waitFor(() => expect(screen.getByText(/ミッション1\s*に挑戦/)).toBeInTheDocument());
+    expect(screen.getByText(/ミッション2\s*に挑戦/)).toBeInTheDocument();
     expect(screen.queryByText('第1章')).not.toBeInTheDocument();
     expect(screen.queryByText('第1章の説明')).not.toBeInTheDocument();
     // チーム数は伏せずに出す
@@ -177,18 +176,16 @@ describe('ChapterMissionPanels', () => {
     getChapterMissions.mockResolvedValueOnce([MISSIONS[0], sealed]);
     render(<ChapterMissionPanels />);
 
-    await waitFor(() =>
-      expect(screen.getByText('このミッションに挑戦する')).toBeInTheDocument()
-    );
-    fireEvent.click(screen.getByText('このミッションに挑戦する'));
+    await waitFor(() => expect(screen.getByText(/ミッション1\s*に挑戦/)).toBeInTheDocument());
+    fireEvent.click(screen.getByText(/ミッション1\s*に挑戦/));
 
     await waitFor(() =>
-      expect(screen.getByText(/クエストの内容は、挑戦を開始すると表示されます/)).toBeInTheDocument()
+      expect(screen.getByText(/ミッションの内容は、挑戦を開始すると表示されます/)).toBeInTheDocument()
     );
 
     getChapterMissions.mockResolvedValue([MISSIONS[0], revealed]);
     getChallengeStatus.mockResolvedValue({ counts: [{ chapter: 1, teams: 1 }], activeChapter: 1 });
-    fireEvent.click(screen.getByRole('button', { name: 'このクエストに挑戦する' }));
+    fireEvent.click(screen.getByRole('button', { name: 'このミッションに挑戦する' }));
 
     await waitFor(() => expect(screen.getByText('第1章の説明')).toBeInTheDocument());
   });
