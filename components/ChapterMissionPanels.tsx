@@ -200,7 +200,7 @@ export default function ChapterMissionPanels() {
                       fontWeight="bold"
                       color={isSealed ? 'text.secondary' : 'text.primary'}
                     >
-                      {mission.title ?? (isSealed ? 'どのクエストかは挑戦すると分かります' : '？')}
+                      {mission.title ?? (isSealed ? 'このミッションに挑戦する' : '？')}
                     </Typography>
                     {(isCleared || isActive) && (
                       <Chip

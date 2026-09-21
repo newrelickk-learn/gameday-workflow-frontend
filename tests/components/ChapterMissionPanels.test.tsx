@@ -163,7 +163,7 @@ describe('ChapterMissionPanels', () => {
     render(<ChapterMissionPanels />);
 
     await waitFor(() =>
-      expect(screen.getAllByText('どのクエストかは挑戦すると分かります')).toHaveLength(2)
+      expect(screen.getAllByText('このミッションに挑戦する')).toHaveLength(2)
     );
     expect(screen.queryByText('第1章')).not.toBeInTheDocument();
     expect(screen.queryByText('第1章の説明')).not.toBeInTheDocument();
@@ -178,9 +178,9 @@ describe('ChapterMissionPanels', () => {
     render(<ChapterMissionPanels />);
 
     await waitFor(() =>
-      expect(screen.getByText('どのクエストかは挑戦すると分かります')).toBeInTheDocument()
+      expect(screen.getByText('このミッションに挑戦する')).toBeInTheDocument()
     );
-    fireEvent.click(screen.getByText('どのクエストかは挑戦すると分かります'));
+    fireEvent.click(screen.getByText('このミッションに挑戦する'));
 
     await waitFor(() =>
       expect(screen.getByText(/クエストの内容は、挑戦を開始すると表示されます/)).toBeInTheDocument()
