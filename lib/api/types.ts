@@ -261,6 +261,14 @@ export interface StartChapterChallengeResult {
   activeChapter?: number | null;
 }
 
+export interface RemediationResult {
+  applied: boolean;
+  alreadyApplied: boolean;
+  /** applied=falseのときの理由。原因の切り分けが未完了ならinvestigation_incomplete */
+  reason?: string | null;
+  hiddenQuestTokens?: string[] | null;
+}
+
 export interface ChapterAnswerResult {
   correct: boolean;
   cleared: boolean;

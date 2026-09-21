@@ -284,6 +284,13 @@ export const typeDefs = `#graphql
     activeChapter: Int
   }
 
+  type RemediationResult {
+    applied: Boolean!
+    alreadyApplied: Boolean!
+    reason: String
+    hiddenQuestTokens: [String!]
+  }
+
   type ChapterAnswerResult {
     correct: Boolean!
     cleared: Boolean!
@@ -383,6 +390,8 @@ export const typeDefs = `#graphql
     startChapterChallenge(chapter: Int!): StartChapterChallengeResult!
 
     clearHiddenQuest(token: String!): Boolean!
+
+    applyApprovedListRemediation: RemediationResult!
 
     checkNPlusOneQuizAnswers(input: NPlusOneQuizAnswersInput!): NPlusOneQuizResult!
 

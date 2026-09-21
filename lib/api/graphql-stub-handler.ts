@@ -180,6 +180,17 @@ export async function handleGraphQLStub(
     return { clearHiddenQuest: false };
   }
 
+  if (normalizedQuery.includes('mutation ApplyApprovedListRemediation') || normalizedQuery.includes('applyApprovedListRemediation')) {
+    return {
+      applyApprovedListRemediation: {
+        applied: false,
+        alreadyApplied: false,
+        reason: 'stub',
+        hiddenQuestTokens: null,
+      },
+    };
+  }
+
   if (normalizedQuery.includes('query ClearedChapters') || normalizedQuery.includes('clearedChapters')) {
     return { clearedChapters: [] };
   }

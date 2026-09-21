@@ -556,6 +556,18 @@ export const resolvers: Resolvers & {
       }
     },
 
+    applyApprovedListRemediation: async (_, __, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.applyApprovedListRemediation(token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to apply remediation: ${errorMessage}`, {
+          extensions: { code: 'APPLY_REMEDIATION_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
     startChapterChallenge: async (_, { chapter }, context) => {
       try {
         const token = getTokenFromRequest(context.request);

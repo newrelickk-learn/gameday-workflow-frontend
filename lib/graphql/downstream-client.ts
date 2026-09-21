@@ -31,6 +31,7 @@ import type {
   ChapterAnswerResult,
   ChapterChallengeStatus,
   StartChapterChallengeResult,
+  RemediationResult,
 } from '../api/types';
 import { stubUserService } from '../api/stubs/user-service';
 import { stubApplicationService } from '../api/stubs/application-service';
@@ -321,6 +322,17 @@ export class DownstreamClient {
         method: 'POST',
         body: JSON.stringify({ selectedText }),
       },
+      token
+    );
+  }
+
+  async applyApprovedListRemediation(token?: string): Promise<RemediationResult> {
+    if (this.useStubs) {
+      return { applied: false, alreadyApplied: false, reason: 'stub', hiddenQuestTokens: null };
+    }
+    return this.request<RemediationResult>(
+      `${this.applicationServiceUrl}/api/v1/remediations/approved-list-slow`,
+      { method: 'POST' },
       token
     );
   }
