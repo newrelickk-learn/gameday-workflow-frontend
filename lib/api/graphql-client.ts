@@ -14,6 +14,7 @@ import type {
   ChapterAnswerResult,
   ChapterChallengeStatus,
   StartChapterChallengeResult,
+  RemediationResult,
 } from './types';
 import { handleGraphQLStub } from './graphql-stub-handler';
 
@@ -649,6 +650,24 @@ export const graphqlClient = {
         { chapter }
       );
       return data.startChapterChallenge;
+    },
+
+    /**
+     * ランブックの暫定対応を、ログイン中のユーザーが所属する会社にのみ適用する。
+     */
+    async applyApprovedListRemediation(): Promise<RemediationResult> {
+      const query = `
+        mutation ApplyApprovedListRemediation {
+          applyApprovedListRemediation {
+            applied
+            alreadyApplied
+            reason
+            hiddenQuestTokens
+          }
+        }
+      `;
+      const data = await graphqlRequest<{ applyApprovedListRemediation: RemediationResult }>(query);
+      return data.applyApprovedListRemediation;
     },
 
     /**

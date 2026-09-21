@@ -31,6 +31,7 @@ import type {
   ChapterAnswerResult,
   ChapterChallengeStatus,
   StartChapterChallengeResult,
+  RemediationResult,
 } from '../api/types';
 
 export interface GraphQLContext {
@@ -233,6 +234,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<boolean>;
+    applyApprovedListRemediation: (
+      parent: unknown,
+      args: Record<string, never>,
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<RemediationResult>;
     checkNPlusOneQuizAnswers: (
       parent: unknown,
       args: { input: NPlusOneQuizAnswersInput },
