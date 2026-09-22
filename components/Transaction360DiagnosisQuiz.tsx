@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Autocomplete, Box, Button, Paper, TextField, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
+import { useT } from '@/lib/i18n/LocaleProvider';
 
 const CHAPTER = 1;
 const STORAGE_KEY = 'gameday:transaction360-quiz:v1';
@@ -57,6 +58,7 @@ function persist(answers: QuizAnswers, allCorrect: boolean | null) {
 }
 
 export default function Transaction360DiagnosisQuiz() {
+  const t = useT();
   const [options, setOptions] = useState<QuizOptions>(EMPTY_OPTIONS);
   const [optionsLoading, setOptionsLoading] = useState(true);
   const [answers, setAnswers] = useState<QuizAnswers>(EMPTY_ANSWERS);
@@ -91,7 +93,7 @@ export default function Transaction360DiagnosisQuiz() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : '選択肢の取得に失敗しました');
+          setError(err instanceof Error ? err.message : t.diagnosis.optionsFailed);
         }
       } finally {
         if (!cancelled) {
@@ -103,7 +105,7 @@ export default function Transaction360DiagnosisQuiz() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t.diagnosis.optionsFailed]);
 
   const canSubmit =
     answers.q1.length > 0 && answers.q2.length > 0 && answers.q3.length > 0 && answers.q4.length > 0;
@@ -132,7 +134,7 @@ export default function Transaction360DiagnosisQuiz() {
         apiClient.chapters.recordMistake(CHAPTER).catch(() => {});
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '判定に失敗しました');
+      setError(err instanceof Error ? err.message : t.diagnosis.checkFailed);
     } finally {
       setChecking(false);
     }
@@ -144,11 +146,11 @@ export default function Transaction360DiagnosisQuiz() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
           <CheckCircleIcon color="success" />
           <Typography variant="h6" color="success.dark">
-            正解です！CreateApplicationトランザクションの理解を深めることができました。
+            {t.quiz.transaction360.correct}
           </Typography>
         </Box>
         <Typography variant="body2" color="success.dark">
-          申請エラーが発生している場合はエラーの内容も確認して解決しましょう
+          {t.quiz.transaction360.correctHint}
         </Typography>
       </Paper>
     );
@@ -159,14 +161,14 @@ export default function Transaction360DiagnosisQuiz() {
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
-        gameday-workflow-frontendのCreateApplicationトランザクションを理解する
+        {t.quiz.transaction360.heading}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        実際に申請して確認してみましょう。ヒント：CreateApplication /{' '}
+        {t.quiz.transaction360.intro}{' '}
         <a href="https://dojo.learn.nrkk.technology/course/contents/277" target="_blank" rel="noreferrer">
           Transaction 360
         </a>
-        を確認し、以下の4つの質問に回答してください（当てはまるものをすべて選んでください）。
+        {t.quiz.transaction360.introTail}
       </Typography>
 
       {error && (
@@ -176,7 +178,7 @@ export default function Transaction360DiagnosisQuiz() {
       )}
       {showIncorrectAlert && (
         <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setAllCorrect(null)}>
-          不正解でした。もう一度New Relicで調査し、選び直してください。
+          {t.diagnosis.incorrect}
         </Alert>
       )}
 
@@ -184,7 +186,7 @@ export default function Transaction360DiagnosisQuiz() {
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <Typography variant="subtitle1">
-              Q1. CreateApplicationというリクエストに関連しているアプリケーションを全て選びましょう
+              {t.quiz.transaction360.q1}
             </Typography>
           </Box>
           <Autocomplete
@@ -197,7 +199,7 @@ export default function Transaction360DiagnosisQuiz() {
             onChange={(_, newValue) => setAnswers((prev) => ({ ...prev, q1: newValue }))}
             disabled={checking}
             renderInput={(params) => (
-              <TextField {...params} label="関連アプリケーション（複数選択可）" placeholder="選択肢を検索、または直接入力してEnter" />
+              <TextField {...params} label={t.quiz.transaction360.q1Label} placeholder={t.quiz.searchOrTypeEnter} />
             )}
           />
         </Box>
@@ -205,8 +207,7 @@ export default function Transaction360DiagnosisQuiz() {
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <Typography variant="subtitle1">
-              Q2. Transaction-initiating sessionsのリストに表示されているのは、Browserエージェントで収集した操作履歴です。
-              この操作の中には、必ずCreateApplication(申請)を行う操作が含まれていますか？（3つほど確認してみましょう）
+              {t.quiz.transaction360.q2}
             </Typography>
           </Box>
           <Autocomplete
@@ -219,7 +220,7 @@ export default function Transaction360DiagnosisQuiz() {
             onChange={(_, newValue) => setAnswers((prev) => ({ ...prev, q2: newValue }))}
             disabled={checking}
             renderInput={(params) => (
-              <TextField {...params} label="Yes / No（当てはまるものを選択）" placeholder="選択肢を検索、または直接入力してEnter" />
+              <TextField {...params} label={t.quiz.transaction360.q2Label} placeholder={t.quiz.searchOrTypeEnter} />
             )}
           />
         </Box>
@@ -227,7 +228,7 @@ export default function Transaction360DiagnosisQuiz() {
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <Typography variant="subtitle1">
-              Q3. Supporting infrastructure entitiesのパネルで確認できる、正しい選択肢を全て選びましょう
+              {t.quiz.transaction360.q3}
             </Typography>
           </Box>
           <Autocomplete
@@ -240,7 +241,7 @@ export default function Transaction360DiagnosisQuiz() {
             onChange={(_, newValue) => setAnswers((prev) => ({ ...prev, q3: newValue }))}
             disabled={checking}
             renderInput={(params) => (
-              <TextField {...params} label="インフラに関する正しい記述（複数選択可）" placeholder="選択肢を検索、または直接入力してEnter" />
+              <TextField {...params} label={t.quiz.transaction360.q3Label} placeholder={t.quiz.searchOrTypeEnter} />
             )}
           />
         </Box>
@@ -248,7 +249,7 @@ export default function Transaction360DiagnosisQuiz() {
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <Typography variant="subtitle1">
-              Q4. gameday-workflow-frontendから直接呼び出しているサービスを全て選んでください
+              {t.quiz.transaction360.q4}
             </Typography>
           </Box>
           <Autocomplete
@@ -261,14 +262,14 @@ export default function Transaction360DiagnosisQuiz() {
             onChange={(_, newValue) => setAnswers((prev) => ({ ...prev, q4: newValue }))}
             disabled={checking}
             renderInput={(params) => (
-              <TextField {...params} label="直接呼び出しているサービス（複数選択可）" placeholder="選択肢を検索、または直接入力してEnter" />
+              <TextField {...params} label={t.quiz.transaction360.q4Label} placeholder={t.quiz.searchOrTypeEnter} />
             )}
           />
         </Box>
 
         <Box>
           <Button variant="contained" onClick={handleSubmit} disabled={checking || !canSubmit}>
-            送信する
+            {t.quiz.submit}
           </Button>
         </Box>
       </Box>

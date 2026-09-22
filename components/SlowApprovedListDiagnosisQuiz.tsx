@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Autocomplete, Box, Button, Paper, TextField, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
+import { useT } from '@/lib/i18n/LocaleProvider';
 
 const CHAPTER = 2;
 const STORAGE_KEY = 'gameday:nplus1-quiz:v1';
@@ -54,6 +55,7 @@ function persist(answers: QuizAnswers, allCorrect: boolean | null) {
 }
 
 export default function SlowApprovedListDiagnosisQuiz() {
+  const t = useT();
   const [options, setOptions] = useState<QuizOptions>(EMPTY_OPTIONS);
   const [optionsLoading, setOptionsLoading] = useState(true);
   const [answers, setAnswers] = useState<QuizAnswers>(EMPTY_ANSWERS);
@@ -88,7 +90,7 @@ export default function SlowApprovedListDiagnosisQuiz() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : '選択肢の取得に失敗しました');
+          setError(err instanceof Error ? err.message : t.diagnosis.optionsFailed);
         }
       } finally {
         if (!cancelled) {
@@ -100,7 +102,7 @@ export default function SlowApprovedListDiagnosisQuiz() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t.diagnosis.optionsFailed]);
 
   const canSubmit = answers.q1.trim() !== '' && answers.q2.length > 0 && answers.q3.trim() !== '';
 
@@ -127,7 +129,7 @@ export default function SlowApprovedListDiagnosisQuiz() {
         apiClient.chapters.recordMistake(CHAPTER).catch(() => {});
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '判定に失敗しました');
+      setError(err instanceof Error ? err.message : t.diagnosis.checkFailed);
     } finally {
       setChecking(false);
     }
@@ -139,7 +141,7 @@ export default function SlowApprovedListDiagnosisQuiz() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CheckCircleIcon color="success" />
           <Typography variant="h6" color="success.dark">
-            正解です！原因を特定できました。
+            {t.quiz.slowList.correct}
           </Typography>
         </Box>
       </Paper>
@@ -151,10 +153,10 @@ export default function SlowApprovedListDiagnosisQuiz() {
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
-        この画面が遅い原因を診断する
+        {t.quiz.slowList.heading}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        New RelicのPerformance Risks Inboxを使いましょう。調査した内容を元に、3つの質問に回答してください。ヒント：gameday-workflow-application-approval
+        {t.quiz.slowList.intro}
       </Typography>
 
       {error && (
@@ -164,14 +166,14 @@ export default function SlowApprovedListDiagnosisQuiz() {
       )}
       {showIncorrectAlert && (
         <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setAllCorrect(null)}>
-          不正解でした。もう一度New Relicで調査し、選び直してください。
+          {t.diagnosis.incorrect}
         </Alert>
       )}
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <Typography variant="subtitle1">Q1. どんなパフォーマンス問題が起こっているか</Typography>
+            <Typography variant="subtitle1">{t.quiz.slowList.q1}</Typography>
           </Box>
           <Autocomplete
             freeSolo
@@ -182,14 +184,14 @@ export default function SlowApprovedListDiagnosisQuiz() {
             onInputChange={(_, value) => setAnswers((prev) => ({ ...prev, q1: value }))}
             disabled={checking}
             renderInput={(params) => (
-              <TextField {...params} label="問題の種類（選択または直接入力）" placeholder="選択肢を検索、または直接入力" />
+              <TextField {...params} label={t.quiz.slowList.q1Label} placeholder={t.quiz.searchOrType} />
             )}
           />
         </Box>
 
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <Typography variant="subtitle1">Q2. 問題が発生しているテーブル（複数選択可）</Typography>
+            <Typography variant="subtitle1">{t.quiz.slowList.q2}</Typography>
           </Box>
           <Autocomplete
             freeSolo
@@ -201,14 +203,14 @@ export default function SlowApprovedListDiagnosisQuiz() {
             onChange={(_, newValue) => setAnswers((prev) => ({ ...prev, q2: newValue }))}
             disabled={checking}
             renderInput={(params) => (
-              <TextField {...params} label="テーブル名（複数選択可）" placeholder="選択肢を検索、または直接入力してEnter" />
+              <TextField {...params} label={t.quiz.slowList.q2Label} placeholder={t.quiz.searchOrTypeEnter} />
             )}
           />
         </Box>
 
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <Typography variant="subtitle1">Q3. どんな改善方法が提案されているか (ヒント：Generate insightsをクリックして改善例を確認しよう)</Typography>
+            <Typography variant="subtitle1">{t.quiz.slowList.q3}</Typography>
           </Box>
           <Autocomplete
             freeSolo
@@ -219,14 +221,14 @@ export default function SlowApprovedListDiagnosisQuiz() {
             onInputChange={(_, value) => setAnswers((prev) => ({ ...prev, q3: value }))}
             disabled={checking}
             renderInput={(params) => (
-              <TextField {...params} label="改善方法（選択または直接入力）" placeholder="選択肢を検索、または直接入力" />
+              <TextField {...params} label={t.quiz.slowList.q3Label} placeholder={t.quiz.searchOrType} />
             )}
           />
         </Box>
 
         <Box>
           <Button variant="contained" onClick={handleSubmit} disabled={checking || !canSubmit}>
-            送信する
+            {t.quiz.submit}
           </Button>
         </Box>
       </Box>

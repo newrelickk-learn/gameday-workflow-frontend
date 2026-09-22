@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Autocomplete, Box, Button, Paper, TextField, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
+import { useT } from '@/lib/i18n/LocaleProvider';
 
 const CHAPTER = 4;
 const STORAGE_KEY = 'gameday:ragequiz:v1';
@@ -54,6 +55,7 @@ function persist(answers: QuizAnswers, allCorrect: boolean | null) {
 }
 
 export default function RageClickDiagnosisQuiz() {
+  const t = useT();
   const [options, setOptions] = useState<QuizOptions>(EMPTY_OPTIONS);
   const [optionsLoading, setOptionsLoading] = useState(true);
   const [answers, setAnswers] = useState<QuizAnswers>(EMPTY_ANSWERS);
@@ -88,7 +90,7 @@ export default function RageClickDiagnosisQuiz() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : '選択肢の取得に失敗しました');
+          setError(err instanceof Error ? err.message : t.diagnosis.optionsFailed);
         }
       } finally {
         if (!cancelled) {
@@ -100,7 +102,7 @@ export default function RageClickDiagnosisQuiz() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t.diagnosis.optionsFailed]);
 
   const canSubmit = answers.q1.trim() !== '' && answers.q2.trim() !== '' && answers.q3.trim() !== '';
 
@@ -127,7 +129,7 @@ export default function RageClickDiagnosisQuiz() {
         apiClient.chapters.recordMistake(CHAPTER).catch(() => {});
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '判定に失敗しました');
+      setError(err instanceof Error ? err.message : t.diagnosis.checkFailed);
     } finally {
       setChecking(false);
     }
@@ -139,7 +141,7 @@ export default function RageClickDiagnosisQuiz() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CheckCircleIcon color="success" />
           <Typography variant="h6" color="success.dark">
-            正解です！
+            {t.quiz.rageClick.correct}
           </Typography>
         </Box>
       </Paper>
@@ -151,10 +153,10 @@ export default function RageClickDiagnosisQuiz() {
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
-        Rage Clickが検知されました。設問に答えてください。
+        {t.quiz.rageClick.heading}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        New Relicで調査した内容を元に、3つの質問に回答してください。
+        {t.quiz.rageClick.intro}
       </Typography>
 
       {error && (
@@ -164,14 +166,14 @@ export default function RageClickDiagnosisQuiz() {
       )}
       {showIncorrectAlert && (
         <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setAllCorrect(null)}>
-          不正解でした。もう一度New Relicで調査し、選び直してください。
+          {t.diagnosis.incorrect}
         </Alert>
       )}
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <Typography variant="subtitle1">Q1. 検知に使用されたクエリはどれでしょうか</Typography>
+            <Typography variant="subtitle1">{t.quiz.rageClick.q1}</Typography>
           </Box>
           <Autocomplete
             freeSolo
@@ -182,7 +184,7 @@ export default function RageClickDiagnosisQuiz() {
             onInputChange={(_, value) => setAnswers((prev) => ({ ...prev, q1: value }))}
             disabled={checking}
             renderInput={(params) => (
-              <TextField {...params} label="NRQLクエリ（選択または直接入力）" placeholder="選択肢を検索、または直接入力" />
+              <TextField {...params} label={t.quiz.rageClick.q1Label} placeholder={t.quiz.searchOrType} />
             )}
           />
         </Box>
@@ -190,7 +192,7 @@ export default function RageClickDiagnosisQuiz() {
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <Typography variant="subtitle1">
-              Q2. Rage Clickが検知された後、通知に成功した通知先はどれでしょうか
+              {t.quiz.rageClick.q2}
             </Typography>
           </Box>
           <Autocomplete
@@ -202,14 +204,14 @@ export default function RageClickDiagnosisQuiz() {
             onInputChange={(_, value) => setAnswers((prev) => ({ ...prev, q2: value }))}
             disabled={checking}
             renderInput={(params) => (
-              <TextField {...params} label="通知先（選択または直接入力）" placeholder="選択肢を検索、または直接入力" />
+              <TextField {...params} label={t.quiz.rageClick.q2Label} placeholder={t.quiz.searchOrType} />
             )}
           />
         </Box>
 
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <Typography variant="subtitle1">Q3. 通知の処理として一番近い内容を選択してください</Typography>
+            <Typography variant="subtitle1">{t.quiz.rageClick.q3}</Typography>
           </Box>
           <Autocomplete
             freeSolo
@@ -220,14 +222,14 @@ export default function RageClickDiagnosisQuiz() {
             onInputChange={(_, value) => setAnswers((prev) => ({ ...prev, q3: value }))}
             disabled={checking}
             renderInput={(params) => (
-              <TextField {...params} label="通知の処理内容（選択または直接入力）" placeholder="選択肢を検索、または直接入力" />
+              <TextField {...params} label={t.quiz.rageClick.q3Label} placeholder={t.quiz.searchOrType} />
             )}
           />
         </Box>
 
         <Box>
           <Button variant="contained" onClick={handleSubmit} disabled={checking || !canSubmit}>
-            送信する
+            {t.quiz.submit}
           </Button>
         </Box>
       </Box>
