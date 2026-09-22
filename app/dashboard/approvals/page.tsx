@@ -23,6 +23,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { apiClient } from '@/lib/api/client';
+import { useT } from '@/lib/i18n/LocaleProvider';
+import { applicationStatusLabel } from '@/lib/i18n/labels';
 import type { Approval, Application } from '@/lib/api/types';
 import { useRouter } from 'next/navigation';
 import { getCurrentUserId, getUserRoleFromId } from '@/lib/utils/auth';
@@ -41,19 +43,6 @@ const getStatusColor = (status: Approval['status']) => {
   }
 };
 
-const getStatusLabel = (status: Approval['status'] | Application['status']) => {
-  switch (status) {
-    case 'approved':
-      return '承認済み';
-    case 'rejected':
-      return '却下';
-    case 'pending':
-      return '承認待ち';
-    default:
-      return status;
-  }
-};
-
 const getApplicationStatusColor = (status: Application['status']) => {
   switch (status) {
     case 'approved':
@@ -68,6 +57,7 @@ const getApplicationStatusColor = (status: Application['status']) => {
 };
 
 export default function ApprovalsPage() {
+  const t = useT();
   const router = useRouter();
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [applications, setApplications] = useState<Record<string, Application>>({});
@@ -139,7 +129,7 @@ export default function ApprovalsPage() {
         console.log('[ApprovalsPage] Filtered approvals count:', filteredApprovals.length);
         setApprovals(filteredApprovals);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '承認一覧の取得に失敗しました');
+        setError(err instanceof Error ? err.message : t.lists.loadApprovalsFailed);
         console.error('承認一覧取得エラー:', err);
       } finally {
         setLoading(false);
@@ -147,7 +137,7 @@ export default function ApprovalsPage() {
     };
 
     fetchData();
-  }, []);
+  }, [t.lists.loadApprovalsFailed]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('ja-JP');
@@ -177,15 +167,15 @@ export default function ApprovalsPage() {
     }
     
     if (application.status === 'rejected') {
-      return { label: '却下', color: 'error' };
+      return { label: t.status.rejected, color: 'error' };
     }
     
     if (application.status === 'approved') {
       if (!application.nextApproverId && !application.nextApproverName) {
-        return { label: '最終承認済み', color: 'success' };
+        return { label: t.lists.finalApproved, color: 'success' };
       }
       return {
-        label: application.nextApproverName || `ID: ${application.nextApproverId}` || '最終承認済み',
+        label: application.nextApproverName || `ID: ${application.nextApproverId}` || t.lists.finalApproved,
         color: 'success',
       };
     }
@@ -202,7 +192,7 @@ export default function ApprovalsPage() {
           color: 'warning',
         };
       } else {
-        return { label: '承認待ち', color: 'warning' };
+        return { label: t.status.pending, color: 'warning' };
       }
     }
     
@@ -218,13 +208,13 @@ export default function ApprovalsPage() {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1" fontWeight="bold">
-          承認一覧
+          {t.lists.approvalsTitle}
         </Typography>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => router.push('/dashboard')}
         >
-          ダッシュボード
+          {t.lists.toDashboard}
         </Button>
       </Box>
 
@@ -241,18 +231,18 @@ export default function ApprovalsPage() {
           </Box>
         ) : pendingApprovals.length === 0 ? (
           <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 4 }}>
-            承認待ちの申請がありません
+            {t.lists.emptyApprovals}
           </Typography>
         ) : (
           <TableContainer>
             <Table>
               <TableHead>
                   <TableRow>
-                    <TableCell>申請タイトル</TableCell>
-                    <TableCell>申請ID</TableCell>
-                    <TableCell>申請者</TableCell>
-                    <TableCell>次の承認者</TableCell>
-                    <TableCell>作成日時</TableCell>
+                    <TableCell>{t.lists.applicationTitle}</TableCell>
+                    <TableCell>{t.lists.applicationId}</TableCell>
+                    <TableCell>{t.lists.applicant}</TableCell>
+                    <TableCell>{t.lists.nextApprover}</TableCell>
+                    <TableCell>{t.lists.createdAt}</TableCell>
                   </TableRow>
               </TableHead>
               <TableBody>
@@ -283,7 +273,7 @@ export default function ApprovalsPage() {
                             >
                               {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                             </IconButton>
-                            {application ? application.title : '読み込み中...'}
+                            {application ? application.title : t.lists.loading}
                           </Box>
                         </TableCell>
                         <TableCell>{approval.applicationId}</TableCell>

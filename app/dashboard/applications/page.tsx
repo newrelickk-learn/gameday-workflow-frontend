@@ -21,6 +21,8 @@ import { useRouter } from 'next/navigation';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { apiClient } from '@/lib/api/client';
+import { useT, format } from '@/lib/i18n/LocaleProvider';
+import { applicationTypeLabel, applicationStatusLabel } from '@/lib/i18n/labels';
 import type { Application } from '@/lib/api/types';
 import { getCurrentUserId, getUserRoleFromId, isManager } from '@/lib/utils/auth';
 
@@ -37,33 +39,8 @@ const getStatusColor = (status: Application['status']) => {
   }
 };
 
-const getStatusLabel = (status: Application['status']) => {
-  switch (status) {
-    case 'approved':
-      return '承認済み';
-    case 'rejected':
-      return '却下';
-    case 'pending':
-      return '承認待ち';
-    default:
-      return status;
-  }
-};
-
-const getTypeLabel = (type: string) => {
-  switch (type) {
-    case 'business-trip':
-      return '出張申請';
-    case 'expense':
-      return '経費申請';
-    case 'promotion':
-      return 'プロモーション申請';
-    default:
-      return type;
-  }
-};
-
 export default function ApplicationsPage() {
+  const t = useT();
   const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,7 +53,7 @@ export default function ApplicationsPage() {
         setError('');
         const userId = getCurrentUserId();
         if (!userId) {
-          setError('ログイン情報が見つかりません。再度ログインしてください。');
+          setError(t.applications.errorNoLogin);
           setLoading(false);
           return;
         }
@@ -93,7 +70,7 @@ export default function ApplicationsPage() {
         
         setApplications(filteredData);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '申請一覧の取得に失敗しました');
+        setError(err instanceof Error ? err.message : t.lists.loadFailed);
         console.error('申請一覧取得エラー:', err);
       } finally {
         setLoading(false);
@@ -101,7 +78,7 @@ export default function ApplicationsPage() {
     };
 
     fetchApplications();
-  }, []);
+  }, [t.applications.errorNoLogin, t.lists.loadFailed]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('ja-JP');
@@ -111,21 +88,21 @@ export default function ApplicationsPage() {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1" fontWeight="bold">
-          申請一覧
+          {t.lists.applicationsTitle}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
             startIcon={<ArrowBackIcon />}
             onClick={() => router.push('/dashboard')}
           >
-            ダッシュボード
+            {t.lists.toDashboard}
           </Button>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => router.push('/dashboard/applications/new')}
           >
-            新規申請
+            {t.lists.newApplication}
           </Button>
         </Box>
       </Box>
@@ -143,24 +120,24 @@ export default function ApplicationsPage() {
           </Box>
         ) : applications.length === 0 ? (
           <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 4 }}>
-            申請がありません
+            {t.lists.empty}
           </Typography>
         ) : (
           <TableContainer>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>申請書番号</TableCell>
-                  <TableCell>タイトル</TableCell>
-                  <TableCell>タイプ</TableCell>
-                  <TableCell>申請者</TableCell>
-                  <TableCell>金額</TableCell>
-                  <TableCell>期間</TableCell>
-                  <TableCell>ステータス</TableCell>
-                  <TableCell>承認ステップ</TableCell>
-                  <TableCell>次の承認者</TableCell>
-                  <TableCell>作成日時</TableCell>
-                  <TableCell>更新日時</TableCell>
+                  <TableCell>{t.lists.number}</TableCell>
+                  <TableCell>{t.lists.title}</TableCell>
+                  <TableCell>{t.lists.type}</TableCell>
+                  <TableCell>{t.lists.applicant}</TableCell>
+                  <TableCell>{t.lists.amount}</TableCell>
+                  <TableCell>{t.lists.period}</TableCell>
+                  <TableCell>{t.lists.status}</TableCell>
+                  <TableCell>{t.lists.step}</TableCell>
+                  <TableCell>{t.lists.nextApprover}</TableCell>
+                  <TableCell>{t.lists.createdAt}</TableCell>
+                  <TableCell>{t.lists.updatedAt}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -175,7 +152,7 @@ export default function ApplicationsPage() {
                   >
                     <TableCell>{application.applicationNumber ?? '-'}</TableCell>
                     <TableCell>{application.title}</TableCell>
-                    <TableCell>{getTypeLabel(application.type)}</TableCell>
+                    <TableCell>{applicationTypeLabel(t, application.type)}</TableCell>
                     <TableCell>
                       <Box>
                         <Typography variant="body2" fontWeight="bold">
@@ -195,12 +172,12 @@ export default function ApplicationsPage() {
                     </TableCell>
                     <TableCell>
                       {application.type === 'business-trip' && application.startDate && application.endDate
-                        ? `${new Date(application.startDate).toLocaleDateString('ja-JP')} 〜 ${new Date(application.endDate).toLocaleDateString('ja-JP')}${application.days !== undefined ? ` (${application.days}日)` : ''}`
+                        ? `${new Date(application.startDate).toLocaleDateString()} - ${new Date(application.endDate).toLocaleDateString()}${application.days !== undefined ? ` (${application.days}${t.lists.daysSuffix})` : ''}`
                         : '-'}
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={getStatusLabel(application.status)}
+                        label={applicationStatusLabel(t, application.status)}
                         color={getStatusColor(application.status) as any}
                         size="small"
                       />
@@ -209,7 +186,7 @@ export default function ApplicationsPage() {
                       {application.currentStep && application.totalSteps ? (
                         <Box>
                           <Typography variant="body2" fontWeight="bold">
-                            ステップ {application.currentStep} / {application.totalSteps}
+                            {format(t.lists.stepValue, { current: application.currentStep ?? '-', total: application.totalSteps ?? '-' })}
                           </Typography>
                         </Box>
                       ) : (
@@ -230,11 +207,11 @@ export default function ApplicationsPage() {
                         </Box>
                       ) : application.status === 'approved' ? (
                         <Typography variant="body2" color="text.secondary">
-                          承認完了
+                          {t.lists.approvedDone}
                         </Typography>
                       ) : application.status === 'rejected' ? (
                         <Typography variant="body2" color="text.secondary">
-                          却下
+                          {t.status.rejected}
                         </Typography>
                       ) : (
                         '-'

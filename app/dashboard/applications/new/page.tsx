@@ -27,24 +27,12 @@ import { getVirtualToday } from '@/lib/utils/virtual-date';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import type { City } from '@/lib/api/types';
 import ChapterDiagnosisDropdown from '@/components/ChapterDiagnosisDropdown';
+import { useT, format } from '@/lib/i18n/LocaleProvider';
+import { applicationTypeLabel } from '@/lib/i18n/labels';
 import Transaction360DiagnosisQuiz from '@/components/Transaction360DiagnosisQuiz';
 
-const getTypeLabel = (type: string) => {
-  switch (type) {
-    case 'business-trip':
-      return '出張申請';
-    case 'expense':
-      return '経費申請';
-    case 'vacation':
-      return '有給休暇申請';
-    case 'promotion':
-      return 'プロモーション申請';
-    default:
-      return type;
-  }
-};
-
 export default function NewApplicationPage() {
+  const t = useT();
   const router = useRouter();
   const [type, setType] = useState('');
   const [title, setTitle] = useState('');
@@ -142,7 +130,7 @@ export default function NewApplicationPage() {
       .catch(() => {
         if (cancelled) return;
         setAmount('');
-        setTravelCostError('旅費サービスとの接続がタイムアウトし、概算費用の取得に失敗しました。しばらくしてから再度お試しください。');
+        setTravelCostError(t.applications.estimateFailed);
         setTravelCostLoading(false);
       });
 
@@ -222,22 +210,22 @@ export default function NewApplicationPage() {
     if (isExpenseType) {
       const amountNum = parseFloat(amount);
       if (!amount || isNaN(amountNum) || amountNum <= 0) {
-        setError('金額を正しく入力してください');
+        setError(t.applications.errorAmount);
         return;
       }
     }
     
     if (isDateRequiredType) {
       if (!startDate || !endDate) {
-        setError('開始日と終了日を入力してください');
+        setError(t.applications.errorDates);
         return;
       }
       if (new Date(startDate) > new Date(endDate)) {
-        setError('開始日は終了日より前である必要があります');
+        setError(t.applications.errorDateOrder);
         return;
       }
       if (!days || parseInt(days) <= 0) {
-        setError('日数を入力してください');
+        setError(t.applications.errorDays);
         return;
       }
     }
@@ -255,7 +243,7 @@ export default function NewApplicationPage() {
     try {
       const applicantId = getCurrentUserId();
       if (!applicantId) {
-        setError('ログイン情報が見つかりません。再度ログインしてください。');
+        setError(t.applications.errorNoLogin);
         setLoading(false);
         return;
       }
@@ -317,7 +305,7 @@ export default function NewApplicationPage() {
           setDescriptionError(err.message);
         }
       } else {
-        setError('申請できませんでした');
+        setError(t.applications.errorCreate);
       }
       console.error('申請作成エラー:', err);
     } finally {
@@ -336,7 +324,7 @@ export default function NewApplicationPage() {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
-        新規申請
+        {t.applications.newTitle}
       </Typography>
       <Paper sx={{ p: 4, mt: 3 }}>
         {error && (
@@ -348,40 +336,40 @@ export default function NewApplicationPage() {
           <TextField
             select
             fullWidth
-            label="申請タイプ"
+            label={t.applications.type}
             value={type}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setType(e.target.value)}
             required
             disabled={loading}
             sx={{ mb: 3 }}
           >
-            <MenuItem value="">選択してください</MenuItem>
-            <MenuItem value="business-trip">出張申請</MenuItem>
-            <MenuItem value="vacation">有給休暇申請</MenuItem>
-            <MenuItem value="expense">経費申請</MenuItem>
-            {isManager() && <MenuItem value="promotion">プロモーション申請</MenuItem>}
+            <MenuItem value="">{t.applications.selectPlaceholder}</MenuItem>
+            <MenuItem value="business-trip">{t.applications.typeBusinessTrip}</MenuItem>
+            <MenuItem value="vacation">{t.applications.typeVacation}</MenuItem>
+            <MenuItem value="expense">{t.applications.typeExpense}</MenuItem>
+            {isManager() && <MenuItem value="promotion">{t.applications.typePromotion}</MenuItem>}
           </TextField>
           <TextField
             fullWidth
-            label="タイトル"
+            label={t.applications.title}
             value={title}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
             required
             disabled={loading}
             sx={{ mb: 3 }}
-            placeholder="申請のタイトルを入力してください"
+            placeholder={t.applications.titlePlaceholder}
           />
           {isExpenseType && (
             <TextField
               fullWidth
-              label="金額"
+              label={t.applications.amount}
               type="number"
               value={amount}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value)}
               required={isExpenseType}
               disabled={loading}
               sx={{ mb: 3 }}
-              placeholder="金額を入力してください"
+              placeholder={t.applications.amountPlaceholder}
               inputProps={{ min: 0, step: 1 }}
               InputProps={{
                 startAdornment: (
@@ -398,13 +386,13 @@ export default function NewApplicationPage() {
                 <TextField
                   select
                   fullWidth
-                  label="出発地"
+                  label={t.applications.departure}
                   value={departureCityId}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDepartureCityId(e.target.value)}
                   required
                   disabled={loading}
                 >
-                  <MenuItem value="">選択してください</MenuItem>
+                  <MenuItem value="">{t.applications.selectPlaceholder}</MenuItem>
                   {cities.map((city) => (
                     <MenuItem key={city.id} value={String(city.id)}>
                       {city.nameJa}
@@ -414,13 +402,13 @@ export default function NewApplicationPage() {
                 <TextField
                   select
                   fullWidth
-                  label="到着地"
+                  label={t.applications.arrival}
                   value={arrivalCityId}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setArrivalCityId(e.target.value)}
                   required
                   disabled={loading}
                 >
-                  <MenuItem value="">選択してください</MenuItem>
+                  <MenuItem value="">{t.applications.selectPlaceholder}</MenuItem>
                   {cities.map((city) => (
                     <MenuItem key={city.id} value={String(city.id)}>
                       {city.nameJa}
@@ -430,13 +418,13 @@ export default function NewApplicationPage() {
               </Box>
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  概算出張費
+                  {t.applications.estimatedCost}
                 </Typography>
                 {travelCostLoading && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <CircularProgress size={18} />
                     <Typography variant="body2" color="text.secondary">
-                      算出中...
+                      {t.applications.estimating}
                     </Typography>
                   </Box>
                 )}
@@ -444,7 +432,7 @@ export default function NewApplicationPage() {
                   <Alert severity="error">{travelCostError}</Alert>
                 )}
                 {!travelCostLoading && (travelCostError || chapter3Cleared) && (
-                  <ChapterDiagnosisDropdown chapter={3} title="概算出張費の取得に失敗する原因を診断する" />
+                  <ChapterDiagnosisDropdown chapter={3} title={t.applications.estimateDiagnosisTitle} />
                 )}
                 {!travelCostLoading && !travelCostError && amount && (
                   <Typography variant="body1" fontWeight="bold">
@@ -453,7 +441,7 @@ export default function NewApplicationPage() {
                 )}
                 {!travelCostLoading && !travelCostError && !amount && (
                   <Typography variant="body2" color="text.secondary">
-                    出発地・到着地を選択すると自動的に算出されます
+                    {t.applications.estimateHint}
                   </Typography>
                 )}
               </Box>
@@ -464,7 +452,7 @@ export default function NewApplicationPage() {
               <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
                 <TextField
                   fullWidth
-                  label="開始日"
+                  label={t.applications.startDate}
                   type="date"
                   value={startDate}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleStartDateChange(e.target.value)}
@@ -476,7 +464,7 @@ export default function NewApplicationPage() {
                 />
                 <TextField
                   fullWidth
-                  label="終了日"
+                  label={t.applications.endDate}
                   type="date"
                   value={endDate}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleEndDateChange(e.target.value)}
@@ -489,23 +477,23 @@ export default function NewApplicationPage() {
               </Box>
               <TextField
                 fullWidth
-                label="日数"
+                label={t.applications.days}
                 type="number"
                 value={days}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDays(e.target.value)}
                 required={isDateRequiredType}
                 disabled={loading}
                 sx={{ mb: 3 }}
-                placeholder="日数を入力してください"
+                placeholder={t.applications.daysPlaceholder}
                 inputProps={{ min: 1, step: 1 }}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Typography>日</Typography>
+                      <Typography>{t.applications.daysUnit}</Typography>
                     </InputAdornment>
                   ),
                 }}
-                helperText={startDate && endDate ? `自動計算: ${calculateDays(startDate, endDate)}日` : '開始日と終了日を入力すると自動計算されます'}
+                helperText={startDate && endDate ? format(t.applications.daysAuto, { days: calculateDays(startDate, endDate) }) : t.applications.daysAutoHint}
               />
               {isBusinessTripType && businessTripDepartureCheck && (
                 <Alert
@@ -513,17 +501,17 @@ export default function NewApplicationPage() {
                   sx={{ mb: 3 }}
                 >
                   {businessTripDepartureCheck.daysUntilDeparture >= 0
-                    ? `出発日まであと${businessTripDepartureCheck.daysUntilDeparture}日です。`
-                    : '出発日が既に過去の日付になっています。'}
+                    ? format(t.applications.departureIn, { days: businessTripDepartureCheck.daysUntilDeparture })
+                    : t.applications.departurePast}
                   {!businessTripDepartureCheck.meetsTwoWeekRule &&
-                    ` 社内規定の「2週間前ルール」（出発日の${TWO_WEEK_RULE_DAYS}日前までの申請）を満たしていない可能性があります。ご注意ください。`}
+                    format(t.applications.twoWeekRule, { days: TWO_WEEK_RULE_DAYS })}
                 </Alert>
               )}
             </>
           )}
           <TextField
             fullWidth
-            label="説明"
+            label={t.applications.description}
             multiline
             rows={6}
             value={description}
@@ -537,11 +525,11 @@ export default function NewApplicationPage() {
             helperText={
               descriptionError ||
               (isBusinessTripType
-                ? '出張の目的・訪問先・そこで行う業務内容を具体的に記入してください（AIレビュアーが確認します）'
+                ? t.applications.descriptionAiHint
                 : undefined)
             }
             sx={{ mb: 3 }}
-            placeholder="申請の詳細を入力してください"
+            placeholder={t.applications.descriptionPlaceholder}
           />
           {isExpenseType && (
             <Box sx={{ mb: 3 }}>
@@ -554,14 +542,14 @@ export default function NewApplicationPage() {
               onClick={() => router.push('/dashboard/applications')}
               disabled={loading}
             >
-              キャンセル
+              {t.common.cancel}
             </Button>
             <Button 
               type="submit" 
               variant="contained"
               disabled={loading || !isFormValid}
             >
-              確認画面へ
+              {t.applications.toConfirm}
             </Button>
           </Box>
         </Box>
@@ -569,23 +557,23 @@ export default function NewApplicationPage() {
 
       {}
       <Dialog open={confirmDialogOpen} onClose={handleCancelConfirm} maxWidth="md" fullWidth>
-        <DialogTitle>申請内容の確認</DialogTitle>
+        <DialogTitle>{t.applications.confirmTitle}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            以下の内容で申請します。内容をご確認の上、申請ボタンを押してください。
+            {t.applications.confirmBody}
           </Typography>
           <Divider sx={{ mb: 3 }} />
           <Grid container spacing={2}>
             <Grid item xs={12} sm={4}>
               <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                申請タイプ
+                {t.applications.type}
               </Typography>
-              <Typography variant="body1">{getTypeLabel(type)}</Typography>
+              <Typography variant="body1">{applicationTypeLabel(t, type)}</Typography>
             </Grid>
             {isExpenseType && amount && (
               <Grid item xs={12} sm={4}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  金額
+                  {t.applications.amount}
                 </Typography>
                 <Typography variant="body1" fontWeight="bold">
                   ¥{parseFloat(amount).toLocaleString()}
@@ -595,7 +583,7 @@ export default function NewApplicationPage() {
             {isBusinessTripType && amount && (
               <Grid item xs={12} sm={4}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  概算出張費
+                  {t.applications.estimatedCost}
                 </Typography>
                 <Typography variant="body1" fontWeight="bold">
                   ¥{parseFloat(amount).toLocaleString()}
@@ -606,7 +594,7 @@ export default function NewApplicationPage() {
               <>
                 <Grid item xs={12} sm={4}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    開始日
+                    {t.applications.startDate}
                   </Typography>
                   <Typography variant="body1">
                     {new Date(startDate).toLocaleDateString('ja-JP')}
@@ -614,7 +602,7 @@ export default function NewApplicationPage() {
                 </Grid>
                 <Grid item xs={12} sm={4}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    終了日
+                    {t.applications.endDate}
                   </Typography>
                   <Typography variant="body1">
                     {new Date(endDate).toLocaleDateString('ja-JP')}
@@ -622,23 +610,23 @@ export default function NewApplicationPage() {
                 </Grid>
                 <Grid item xs={12} sm={4}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    日数
+                    {t.applications.days}
                   </Typography>
                   <Typography variant="body1" fontWeight="bold">
-                    {days}日
+                    {days}{t.applications.daysUnit}
                   </Typography>
                 </Grid>
               </>
             )}
             <Grid item xs={12}>
               <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                タイトル
+                {t.applications.title}
               </Typography>
               <Typography variant="body1">{title}</Typography>
             </Grid>
             <Grid item xs={12}>
               <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                説明
+                {t.applications.description}
               </Typography>
               <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                 {description}
@@ -648,7 +636,7 @@ export default function NewApplicationPage() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancelConfirm} disabled={loading}>
-            キャンセル
+            {t.common.cancel}
           </Button>
           <Button
             onClick={handleConfirm}
@@ -656,7 +644,7 @@ export default function NewApplicationPage() {
             disabled={loading}
             startIcon={loading ? <CircularProgress size={20} /> : null}
           >
-            {loading ? '申請中...' : '申請する'}
+            {loading ? t.applications.submitting : t.common.submit}
           </Button>
         </DialogActions>
       </Dialog>
@@ -668,7 +656,7 @@ export default function NewApplicationPage() {
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-          申請が正常に作成されました
+          {t.applications.created}
         </Alert>
       </Snackbar>
     </Container>
