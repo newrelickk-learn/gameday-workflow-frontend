@@ -23,10 +23,12 @@ import {
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
+import { useT } from '@/lib/i18n/LocaleProvider';
 
 type State = 'loading' | 'unauthenticated' | 'applied' | 'already' | 'blocked' | 'error';
 
 export default function ApprovedListSlowRunbookPage() {
+  const t = useT();
   const router = useRouter();
   const [state, setState] = useState<State>('loading');
 
@@ -81,65 +83,62 @@ export default function ApprovedListSlowRunbookPage() {
     <Container maxWidth="sm" sx={{ py: 6 }}>
       <Paper sx={{ p: 4 }}>
         <Typography variant="h5" component="h1" fontWeight="bold" gutterBottom>
-          暫定対応: 承認済み一覧の表示遅延
+          {t.runbook.title}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          一覧取得の読み込み方法を切り替えます。適用はアクセスした方が所属する会社にのみ行われ、
-          他社には影響しません。適用状態は当日限りで、日次のメンテナンスでリセットされます。
+          {t.runbook.description}
         </Typography>
 
         {state === 'loading' && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <CircularProgress size={20} />
-            <Typography>適用しています…</Typography>
+            <Typography>{t.runbook.applying}</Typography>
           </Box>
         )}
 
         {state === 'applied' && (
           <Alert severity="success">
-            暫定対応を適用しました。次回以降の承認済み一覧の取得からデータベース呼び出し回数が減ります。
-            New Relicで適用前後の値を比較して、効果を確認してください。
+            {t.runbook.applied}
           </Alert>
         )}
 
         {state === 'already' && (
           <Alert severity="info">
-            この会社にはすでに暫定対応が適用されています。
+            {t.runbook.already}
           </Alert>
         )}
 
         {state === 'blocked' && (
           <Alert severity="warning">
-            原因の切り分けが完了していないため、暫定対応は適用できません。
-            先にランブックの「原因の切り分け」を完了してから、もう一度このページにアクセスしてください。
+            {t.runbook.blocked}
           </Alert>
         )}
 
         {state === 'unauthenticated' && (
           <Alert severity="warning">
-            適用先の会社を特定できないため、ログインが必要です。ログインしてからもう一度アクセスしてください。
+            {t.runbook.unauthenticated}
           </Alert>
         )}
 
         {state === 'error' && (
           <Alert severity="error">
-            暫定対応を適用できませんでした。時間をおいて、もう一度お試しください。
+            {t.runbook.error}
           </Alert>
         )}
 
         <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
           {state === 'unauthenticated' ? (
             <Button variant="contained" onClick={() => router.push('/')}>
-              ログイン画面へ
+              {t.runbook.toLogin}
             </Button>
           ) : (
             <Button variant="contained" onClick={() => router.push('/dashboard')}>
-              ダッシュボードへ
+              {t.runbook.toDashboard}
             </Button>
           )}
           {(state === 'blocked' || state === 'error') && (
             <Button variant="outlined" onClick={retry}>
-              もう一度試す
+              {t.runbook.retry}
             </Button>
           )}
         </Box>

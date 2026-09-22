@@ -18,9 +18,11 @@ import { apiClient } from '@/lib/api/client';
 import type { Application, Approval } from '@/lib/api/types';
 import { getCurrentUserId, getUserRoleFromId, isHr, isManager, isDirector, isAccounting } from '@/lib/utils/auth';
 import { setNewRelicUserId } from '@/lib/newrelic-browser';
+import { useT } from '@/lib/i18n/LocaleProvider';
 import ChapterMissionPanels from '@/components/ChapterMissionPanels';
 
 export default function DashboardPage() {
+  const t = useT();
   const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [approvals, setApprovals] = useState<Approval[]>([]);
@@ -53,7 +55,7 @@ export default function DashboardPage() {
         setApprovals(approvalsData);
         setCompanyApprovedCount(approvedCount);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'データの取得に失敗しました');
+        setError(err instanceof Error ? err.message : t.dashboard.loadFailed);
         console.error('ダッシュボードデータ取得エラー:', err);
       } finally {
         setLoading(false);
@@ -61,7 +63,7 @@ export default function DashboardPage() {
     };
 
     fetchData();
-  }, []);
+  }, [t.dashboard.loadFailed]);
 
   const pendingApprovals = approvals.filter((app) => app.status === 'pending');
 
@@ -88,7 +90,7 @@ export default function DashboardPage() {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1" fontWeight="bold">
-          ダッシュボード
+          {t.dashboard.heading}
         </Typography>
         <Button
           variant="outlined"
@@ -96,7 +98,7 @@ export default function DashboardPage() {
           startIcon={<LogoutIcon />}
           onClick={handleLogout}
         >
-          ログアウト
+          {t.common.logout}
         </Button>
       </Box>
 
@@ -111,13 +113,13 @@ export default function DashboardPage() {
           <Card>
             <CardContent>
               <Typography variant="h6" component="h2" gutterBottom>
-                申請一覧
+                {t.dashboard.applications}
               </Typography>
               <Typography variant="h4" component="p" fontWeight="bold" color="primary">
                 {applications.length}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                総申請数
+                {t.dashboard.totalApplications}
               </Typography>
               <Button
                 variant="outlined"
@@ -125,7 +127,7 @@ export default function DashboardPage() {
                 sx={{ mt: 2 }}
                 onClick={() => router.push('/dashboard/applications')}
               >
-                詳細を見る
+                {t.common.detail}
               </Button>
             </CardContent>
           </Card>
@@ -134,13 +136,13 @@ export default function DashboardPage() {
           <Card>
             <CardContent>
               <Typography variant="h6" component="h2" gutterBottom>
-                承認待ち
+                {t.dashboard.approvals}
               </Typography>
               <Typography variant="h4" component="p" fontWeight="bold" color="warning.main">
                 {pendingApprovals.length}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                承認待ちの申請
+                {t.dashboard.pendingApprovals}
               </Typography>
               <Button
                 variant="outlined"
@@ -148,7 +150,7 @@ export default function DashboardPage() {
                 sx={{ mt: 2 }}
                 onClick={() => router.push('/dashboard/approvals')}
               >
-                詳細を見る
+                {t.common.detail}
               </Button>
             </CardContent>
           </Card>
@@ -158,13 +160,13 @@ export default function DashboardPage() {
             <Card>
               <CardContent>
                 <Typography variant="h6" component="h2" gutterBottom>
-                  承認済み一覧
+                  {t.dashboard.approved}
                 </Typography>
                 <Typography variant="h4" component="p" fontWeight="bold" color="success.main">
                   {companyApprovedCount}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  自社の承認済みの申請
+                  {t.dashboard.companyApproved}
                 </Typography>
                 <Button
                   variant="outlined"
@@ -172,7 +174,7 @@ export default function DashboardPage() {
                   sx={{ mt: 2 }}
                   onClick={() => router.push('/dashboard/company-applications/approved')}
                 >
-                  詳細を見る
+                  {t.common.detail}
                 </Button>
               </CardContent>
             </Card>
@@ -182,10 +184,10 @@ export default function DashboardPage() {
           <Card>
             <CardContent>
               <Typography variant="h6" component="h2" gutterBottom>
-                マニュアル
+                {t.dashboard.manual}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                各種申請の書き方や承認フローの説明
+                {t.dashboard.manualDetail}
               </Typography>
               <Button
                 variant="outlined"
@@ -193,7 +195,7 @@ export default function DashboardPage() {
                 sx={{ mt: 2 }}
                 onClick={() => router.push('/dashboard/manual')}
               >
-                詳細を見る
+                {t.common.detail}
               </Button>
             </CardContent>
           </Card>
@@ -203,10 +205,10 @@ export default function DashboardPage() {
             <Card>
               <CardContent>
                 <Typography variant="h6" component="h2" gutterBottom>
-                  人事部
+                  {t.dashboard.hr}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  自社ユーザーの直属の上長を編集
+                  {t.dashboard.hrDescription}
                 </Typography>
                 <Button
                   variant="outlined"
@@ -214,7 +216,7 @@ export default function DashboardPage() {
                   sx={{ mt: 2 }}
                   onClick={() => router.push('/dashboard/hr')}
                 >
-                  詳細を見る
+                  {t.common.detail}
                 </Button>
               </CardContent>
             </Card>

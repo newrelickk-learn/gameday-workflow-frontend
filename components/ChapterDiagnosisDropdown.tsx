@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Autocomplete, Box, Button, Paper, TextField, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
+import { useT } from '@/lib/i18n/LocaleProvider';
 
 interface ChapterDiagnosisDropdownProps {
   chapter: number;
@@ -11,6 +12,7 @@ interface ChapterDiagnosisDropdownProps {
 }
 
 export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiagnosisDropdownProps) {
+  const t = useT();
   const [options, setOptions] = useState<string[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(true);
   const [selectedText, setSelectedText] = useState('');
@@ -41,7 +43,7 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : '選択肢の取得に失敗しました');
+          setError(err instanceof Error ? err.message : t.diagnosis.optionsFailed);
         }
       } finally {
         if (!cancelled) {
@@ -53,7 +55,7 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
     return () => {
       cancelled = true;
     };
-  }, [chapter]);
+  }, [chapter, t.diagnosis.optionsFailed]);
 
   const handleSubmit = async () => {
     if (!selectedText.trim()) {
@@ -73,7 +75,7 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
         apiClient.chapters.recordMistake(chapter).catch(() => {});
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '判定に失敗しました');
+      setError(err instanceof Error ? err.message : t.diagnosis.checkFailed);
     } finally {
       setChecking(false);
     }
@@ -85,7 +87,7 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CheckCircleIcon color="success" />
           <Typography variant="h6" color="success.dark">
-            正解です！原因を特定できました。
+            {t.diagnosis.correct}
           </Typography>
         </Box>
         {notChallenging && (
@@ -101,10 +103,10 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
-        {title ?? '原因を診断する'}
+        {title ?? t.diagnosis.title}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        New Relicで調査した内容を元に、原因だと思う選択肢を選ぶか、直接入力してください。
+        {t.diagnosis.description}
       </Typography>
 
       {error && (
@@ -114,7 +116,7 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
       )}
       {result === 'incorrect' && (
         <Alert severity="warning" sx={{ mb: 2 }} onClose={() => setResult(null)}>
-          不正解でした。もう一度New Relicで調査し、選び直してください。
+          {t.diagnosis.incorrect}
         </Alert>
       )}
 

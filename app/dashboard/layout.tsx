@@ -6,6 +6,8 @@ import { AppBar, Toolbar, Typography, Box, CircularProgress } from '@mui/materia
 import { getVirtualToday } from '@/lib/utils/virtual-date';
 import { getCurrentUserId, getCurrentUser } from '@/lib/utils/auth';
 import type { User } from '@/lib/api/types';
+import { useT } from '@/lib/i18n/LocaleProvider';
+import LanguageToggle from '@/components/LanguageToggle';
 
 function formatMonthDay(date: Date): string {
   return `${date.getMonth() + 1}/${date.getDate()}`;
@@ -46,6 +48,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const t = useT();
   const [virtualDateLabel, setVirtualDateLabel] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
@@ -74,7 +77,7 @@ export default function DashboardLayout({
       <AppBar position="static" color="default" elevation={1}>
         <Toolbar sx={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
           <Typography variant="h6" component="div" fontWeight="bold">
-            ワークフローGameday
+            {t.common.appTitle}
             {currentUser && (
               <Typography
                 component="span"
@@ -90,9 +93,10 @@ export default function DashboardLayout({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             {virtualDateLabel && (
               <Typography variant="body1" color="text.secondary">
-                今の日付：{virtualDateLabel}
+                {t.common.today}：{virtualDateLabel}
               </Typography>
             )}
+            <LanguageToggle />
           </Box>
         </Toolbar>
       </AppBar>

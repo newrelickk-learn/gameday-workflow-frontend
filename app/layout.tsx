@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import ThemeRegistry from '@/lib/theme/ThemeRegistry';
+import { LocaleProvider } from '@/lib/i18n/LocaleProvider';
 import { ChatWidget } from '@/components/ui/ChatWidget';
 import NewRelicBrowser from '@/components/NewRelicBrowser';
 import './globals.css';
@@ -15,13 +16,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ja">
+    <html lang="ja">{/* 言語切替時にLocaleProviderがlangを更新する */}
       <body>
         <NewRelicBrowser />
-        <ThemeRegistry>
-          {children}
-          <ChatWidget />
-        </ThemeRegistry>
+        <LocaleProvider>
+          <ThemeRegistry>
+            {children}
+            <ChatWidget />
+          </ThemeRegistry>
+        </LocaleProvider>
       </body>
     </html>
   );

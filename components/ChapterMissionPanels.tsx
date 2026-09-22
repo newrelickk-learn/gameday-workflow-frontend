@@ -19,15 +19,18 @@ import LockIcon from '@mui/icons-material/Lock';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { apiClient } from '@/lib/api/client';
 import type { ChapterMission, ChapterChallengeStatus } from '@/lib/api/types';
+import { useT, format } from '@/lib/i18n/LocaleProvider';
+import type { Messages } from '@/lib/i18n/messages';
 
 /** 挑戦を開始できなかった理由を、参加者向けの文言に変換する。 */
-const START_FAILURE_MESSAGES: Record<string, string> = {
-  another_active: '挑戦中のミッションをクリアするまで、他のミッションには挑戦できません。',
-  locked: 'このミッションはまだ開放されていません。',
-  already_cleared: 'このミッションはすでにクリア済みです。',
-  not_challengeable: 'このミッションは挑戦の対象外です。',
-  unknown_company: 'チームの情報が取得できませんでした。ログインし直してください。',
-};
+const startFailureMessage = (t: Messages, reason: string): string =>
+  ({
+    another_active: t.missions.reasonAnotherActive,
+    locked: t.missions.reasonLocked,
+    already_cleared: t.missions.reasonAlreadyCleared,
+    not_challengeable: t.missions.reasonNotChallengeable,
+    unknown_company: t.missions.reasonUnknownCompany,
+  })[reason] ?? t.missions.startFailed;
 
 const CHALLENGE_STATUS_POLL_INTERVAL_MS = 15000;
 
@@ -35,6 +38,7 @@ const PANEL_WIDTH = 168;
 const PANEL_HEIGHT = 140;
 
 export default function ChapterMissionPanels() {
+  const t = useT();
   const [missions, setMissions] = useState<ChapterMission[]>([]);
   const [status, setStatus] = useState<ChapterChallengeStatus>({ counts: [], activeChapter: null });
   const [selected, setSelected] = useState<ChapterMission | null>(null);
@@ -100,10 +104,10 @@ export default function ChapterMissionPanels() {
         setSelected(missionsData.find((m) => m.chapter === mission.chapter) ?? null);
         return;
       }
-      setStartError(START_FAILURE_MESSAGES[result.reason] ?? '挑戦を開始できませんでした。');
+      setStartError(startFailureMessage(t, result.reason));
       refresh();
     } catch {
-      setStartError('挑戦を開始できませんでした。時間をおいて試してください。');
+      setStartError(t.missions.startFailedRetry);
     } finally {
       setStarting(false);
     }
@@ -208,7 +212,7 @@ export default function ChapterMissionPanels() {
               {(isCleared || isActive) && (
                 <Chip
                   size="small"
-                  label={isCleared ? 'Cleared!!' : '挑戦中'}
+                  label={isCleared ? t.missions.cleared : t.missions.challenging}
                   sx={{
                     alignSelf: 'flex-start',
                     fontWeight: 'bold',
@@ -222,7 +226,7 @@ export default function ChapterMissionPanels() {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <GroupsIcon fontSize="small" color="action" />
                   <Typography variant="caption" color="text.secondary">
-                    {teams}チームが挑戦中
+                    {format(t.missions.challengers, { n: teams })}
                   </Typography>
                 </Box>
               )}
@@ -236,26 +240,26 @@ export default function ChapterMissionPanels() {
   return (
     <Box sx={{ mt: 5 }}>
       <Typography variant="h6" component="h2" fontWeight="bold" gutterBottom>
-        ミッション
+        {t.missions.heading}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        パネルをクリックすると、そのミッションに挑戦できます。挑戦できるのは同時に1つだけで、クリアするまで他のミッションには移れません。
+        {t.missions.intro}
       </Typography>
 
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
-        {firstMission && renderPanel(firstMission, 'ミッションに挑戦')}
+        {firstMission && renderPanel(firstMission, t.missions.sealedSide)}
         <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(2, ${PANEL_WIDTH}px)`, gap: 2 }}>
           {challengeableMissions.map((mission, index) =>
-            renderPanel(mission, `ミッション${index + 1}\nに挑戦`)
+            renderPanel(mission, format(t.missions.sealed, { n: index + 1 }))
           )}
         </Box>
-        {lastMission && renderPanel(lastMission, 'ミッションに挑戦')}
+        {lastMission && renderPanel(lastMission, t.missions.sealedSide)}
       </Box>
 
       {hiddenMissions.length > 0 && (
         <>
           <Typography variant="h6" component="h2" fontWeight="bold" sx={{ mt: 5 }} gutterBottom>
-            裏ミッション
+            {t.missions.hiddenHeading}
           </Typography>
           <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap' }}>
             {hiddenMissions.map((mission) => renderPanel(mission, '？'))}
@@ -264,26 +268,23 @@ export default function ChapterMissionPanels() {
       )}
 
       <Dialog open={!!selected} onClose={closeDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>{selected?.title ?? 'このミッションに挑戦しますか？'}</DialogTitle>
+        <DialogTitle>{selected?.title ?? t.missions.dialogTitleSealed}</DialogTitle>
         <DialogContent>
           {selected && !selected.revealed ? (
-            <Typography color="text.secondary">
-              ミッションの内容は、挑戦を開始すると表示されます。
-              挑戦できるのは同時に1つだけで、クリアするまで他のミッションには移れません。
-            </Typography>
+            <Typography color="text.secondary">{t.missions.dialogSealedBody}</Typography>
           ) : (
             <Typography>{selected?.description}</Typography>
           )}
           {selected?.challengeable && selected.chapter === activeChapter && (
             <Alert severity="info" sx={{ mt: 2 }}>
-              このミッションに挑戦中です。クリアすると次のミッションを選べるようになります。
+              {t.missions.challengingNotice}
             </Alert>
           )}
           {selected?.challengeable &&
             activeChapter !== null &&
             selected.chapter !== activeChapter && (
               <Alert severity="warning" sx={{ mt: 2 }}>
-                {START_FAILURE_MESSAGES.another_active}
+                {t.missions.reasonAnotherActive}
               </Alert>
             )}
           {startError && (
@@ -293,14 +294,14 @@ export default function ChapterMissionPanels() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeDialog}>閉じる</Button>
+          <Button onClick={closeDialog}>{t.common.close}</Button>
           {selected?.challengeable && selected.chapter !== activeChapter && (
             <Button
               variant="contained"
               disabled={starting || activeChapter !== null || !selected.unlocked}
               onClick={() => handleStartChallenge(selected)}
             >
-              このミッションに挑戦する
+              {t.missions.startButton}
             </Button>
           )}
         </DialogActions>

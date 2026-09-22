@@ -13,9 +13,12 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { apiClient } from '@/lib/api/client';
+import { useT } from '@/lib/i18n/LocaleProvider';
+import LanguageToggle from '@/components/LanguageToggle';
 
 function LoginForm() {
   const searchParams = useSearchParams();
+  const t = useT();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [impactedPodName, setImpactedPodName] = useState('');
@@ -48,10 +51,10 @@ function LoginForm() {
       if (code === 'POD_SATURATED') {
         setPodInputRequired(true);
         setError(
-          '現在サーバーが高負荷のためログインできません。New Relicで継続的にCPU % が50以上となっているPodを確認し、Pod名を入力してください'
+          t.login.podSaturated
         );
       } else {
-        setError('ログインに失敗しました');
+        setError(t.login.failed);
       }
 
       console.error(err);
@@ -79,8 +82,11 @@ function LoginForm() {
             width: '100%',
           }}
         >
+          <Box sx={{ alignSelf: 'flex-end', mb: 1 }}>
+            <LanguageToggle />
+          </Box>
           <Typography component="h1" variant="h4" gutterBottom>
-            ログイン
+            {t.login.title}
           </Typography>
           
           {error && (
@@ -95,7 +101,7 @@ function LoginForm() {
               required
               fullWidth
               id="email"
-              label="メールアドレス"
+              label={t.login.email}
               name="email"
               type="email"
               autoComplete="email"
@@ -109,7 +115,7 @@ function LoginForm() {
               required
               fullWidth
               name="password"
-              label="パスワード"
+              label={t.login.password}
               type="password"
               id="password"
               autoComplete="current-password"
@@ -123,9 +129,9 @@ function LoginForm() {
                 required
                 fullWidth
                 name="impactedPodName"
-                label="問題のあるPod名"
+                label={t.login.impactedPod}
                 id="impactedPodName"
-                helperText="ログインはgameday-workflow-userサービスで行っています。APMのSummary画面の下の方にInfrastructureの情報があるので確認してください。'pod: 'の後の文字列をコピペしましょう"
+                helperText={t.login.impactedPodHelper}
                 value={impactedPodName}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setImpactedPodName(e.target.value)}
                 disabled={loading}
@@ -138,10 +144,10 @@ function LoginForm() {
               sx={{ mt: 3, mb: 2 }}
               disabled={loading}
             >
-              {loading ? <CircularProgress size={24} /> : 'ログイン'}
+              {loading ? <CircularProgress size={24} /> : t.login.submit}
             </Button>
             <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2 }}>
-              スタブモード: 任意のメールアドレスとパスワードでログインできます
+              {t.login.stubMode}
             </Typography>
           </Box>
         </Paper>
