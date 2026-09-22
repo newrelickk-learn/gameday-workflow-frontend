@@ -320,7 +320,8 @@ const ja = {
   diagnosis: {
     title: '原因を診断する',
     description: 'New Relicで調査した内容を元に、原因だと思う選択肢を選ぶか、直接入力してください。',
-    placeholder: '原因を選択、または入力',
+    inputLabel: '原因（選択または直接入力）',
+    placeholder: '選択肢を検索、または直接入力',
     check: '判定する',
     correct: '正解です！原因を特定できました。',
     incorrect: '不正解でした。もう一度New Relicで調査し、選び直してください。',
@@ -662,7 +663,8 @@ const en: Messages = {
     title: 'Diagnose the cause',
     description:
       'Based on what you found in New Relic, pick the cause from the list or type it in directly.',
-    placeholder: 'Select or type the cause',
+    inputLabel: 'Cause (select or type)',
+    placeholder: 'Search the options or type your own',
     check: 'Check',
     correct: 'Correct! You identified the cause.',
     incorrect: 'Not quite. Investigate in New Relic once more and pick again.',

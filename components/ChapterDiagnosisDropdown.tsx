@@ -132,7 +132,7 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
           disabled={checking}
           sx={{ flex: 1, minWidth: 280 }}
           renderInput={(params) => (
-            <TextField {...params} label="原因（選択または直接入力）" placeholder="選択肢を検索、または直接入力" />
+            <TextField {...params} label={t.diagnosis.inputLabel} placeholder={t.diagnosis.placeholder} />
           )}
         />
         <Button
