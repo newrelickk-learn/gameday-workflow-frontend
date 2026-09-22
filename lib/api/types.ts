@@ -122,6 +122,8 @@ export interface ApproveWorkflowResponse {
 export interface City {
   id: number;
   nameJa: string;
+  /** 英語表示用の都市名。未設定なら日本語名を表示する */
+  nameEn?: string | null;
   isUnstable: boolean;
 }
 

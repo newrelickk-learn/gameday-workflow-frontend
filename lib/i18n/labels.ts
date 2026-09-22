@@ -66,3 +66,8 @@ export function notificationTypeLabel(t: Messages, type: string): string {
       return type;
   }
 }
+
+/** 表示言語に応じた都市名。英語名が未設定なら日本語名を返す。 */
+export function cityName(city: { nameJa: string; nameEn?: string | null }, locale: string): string {
+  return locale === 'en' && city.nameEn ? city.nameEn : city.nameJa;
+}

@@ -27,12 +27,13 @@ import { getVirtualToday } from '@/lib/utils/virtual-date';
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue';
 import type { City } from '@/lib/api/types';
 import ChapterDiagnosisDropdown from '@/components/ChapterDiagnosisDropdown';
-import { useT, format } from '@/lib/i18n/LocaleProvider';
-import { applicationTypeLabel } from '@/lib/i18n/labels';
+import { useT, useLocale, format } from '@/lib/i18n/LocaleProvider';
+import { applicationTypeLabel, cityName } from '@/lib/i18n/labels';
 import Transaction360DiagnosisQuiz from '@/components/Transaction360DiagnosisQuiz';
 
 export default function NewApplicationPage() {
   const t = useT();
+  const { locale } = useLocale();
   const router = useRouter();
   const [type, setType] = useState('');
   const [title, setTitle] = useState('');
@@ -395,7 +396,7 @@ export default function NewApplicationPage() {
                   <MenuItem value="">{t.applications.selectPlaceholder}</MenuItem>
                   {cities.map((city) => (
                     <MenuItem key={city.id} value={String(city.id)}>
-                      {city.nameJa}
+                      {cityName(city, locale)}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -411,7 +412,7 @@ export default function NewApplicationPage() {
                   <MenuItem value="">{t.applications.selectPlaceholder}</MenuItem>
                   {cities.map((city) => (
                     <MenuItem key={city.id} value={String(city.id)}>
-                      {city.nameJa}
+                      {cityName(city, locale)}
                     </MenuItem>
                   ))}
                 </TextField>

@@ -175,6 +175,7 @@ export const typeDefs = `#graphql
   type City {
     id: ID!
     nameJa: String!
+    nameEn: String
     isUnstable: Boolean!
   }
 

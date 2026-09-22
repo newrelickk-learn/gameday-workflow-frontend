@@ -414,6 +414,7 @@ export const graphqlClient = {
           cities {
             id
             nameJa
+            nameEn
             isUnstable
           }
         }
