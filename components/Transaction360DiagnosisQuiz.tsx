@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Autocomplete, Box, Button, Paper, TextField, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
-import { useT } from '@/lib/i18n/LocaleProvider';
+import { useT, useLocale } from '@/lib/i18n/LocaleProvider';
 
 const CHAPTER = 1;
 const STORAGE_KEY = 'gameday:transaction360-quiz:v1';
@@ -59,6 +59,7 @@ function persist(answers: QuizAnswers, allCorrect: boolean | null) {
 
 export default function Transaction360DiagnosisQuiz() {
   const t = useT();
+  const { locale } = useLocale();
   const [options, setOptions] = useState<QuizOptions>(EMPTY_OPTIONS);
   const [optionsLoading, setOptionsLoading] = useState(true);
   const [answers, setAnswers] = useState<QuizAnswers>(EMPTY_ANSWERS);
@@ -87,7 +88,7 @@ export default function Transaction360DiagnosisQuiz() {
         setAnswers(persisted.answers);
         setAllCorrect(persisted.allCorrect);
 
-        const data = await apiClient.chapters.getTransaction360QuizOptions();
+        const data = await apiClient.chapters.getTransaction360QuizOptions(locale);
         if (!cancelled) {
           setOptions(data);
         }
@@ -105,7 +106,7 @@ export default function Transaction360DiagnosisQuiz() {
     return () => {
       cancelled = true;
     };
-  }, [t.diagnosis.optionsFailed]);
+  }, [locale, t.diagnosis.optionsFailed]);
 
   const canSubmit =
     answers.q1.length > 0 && answers.q2.length > 0 && answers.q3.length > 0 && answers.q4.length > 0;

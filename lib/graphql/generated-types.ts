@@ -114,7 +114,7 @@ export interface Resolvers {
     ) => Promise<EstimateTravelCostResponse>;
     chapterDiagnosisOptions: (
       parent: unknown,
-      args: { chapter: number },
+      args: { chapter: number; locale?: string | null },
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<string[]>;
@@ -126,7 +126,7 @@ export interface Resolvers {
     ) => Promise<number[]>;
     chapterMissions: (
       parent: unknown,
-      args: {},
+      args: { locale?: string | null },
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<ChapterMission[]>;
@@ -138,19 +138,19 @@ export interface Resolvers {
     ) => Promise<ChapterChallengeStatus>;
     nPlusOneQuizOptions: (
       parent: unknown,
-      args: {},
+      args: { locale?: string | null },
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<NPlusOneQuizOptions>;
     rageClickQuizOptions: (
       parent: unknown,
-      args: {},
+      args: { locale?: string | null },
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<RageClickQuizOptions>;
     transaction360QuizOptions: (
       parent: unknown,
-      args: {},
+      args: { locale?: string | null },
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<Transaction360QuizOptions>;

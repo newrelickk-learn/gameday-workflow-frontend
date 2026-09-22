@@ -352,19 +352,19 @@ export const typeDefs = `#graphql
     cities: [City!]!
     estimateTravelCost(input: EstimateTravelCostInput!): EstimateTravelCostResponse!
 
-    chapterDiagnosisOptions(chapter: Int!): [String!]!
+    chapterDiagnosisOptions(chapter: Int!, locale: String): [String!]!
 
     clearedChapters: [Int!]!
 
-    chapterMissions: [ChapterMission!]!
+    chapterMissions(locale: String): [ChapterMission!]!
 
     chapterChallengeStatus: ChapterChallengeStatus!
 
-    nPlusOneQuizOptions: NPlusOneQuizOptions!
+    nPlusOneQuizOptions(locale: String): NPlusOneQuizOptions!
 
-    rageClickQuizOptions: RageClickQuizOptions!
+    rageClickQuizOptions(locale: String): RageClickQuizOptions!
 
-    transaction360QuizOptions: Transaction360QuizOptions!
+    transaction360QuizOptions(locale: String): Transaction360QuizOptions!
   }
 
   type Mutation {

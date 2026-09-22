@@ -508,14 +508,15 @@ export const graphqlClient = {
   },
 
   chapters: {
-    async getDiagnosisOptions(chapter: number): Promise<string[]> {
+    async getDiagnosisOptions(chapter: number, locale?: string): Promise<string[]> {
       const query = `
-        query ChapterDiagnosisOptions($chapter: Int!) {
-          chapterDiagnosisOptions(chapter: $chapter)
+        query ChapterDiagnosisOptions($chapter: Int!, $locale: String) {
+          chapterDiagnosisOptions(chapter: $chapter, locale: $locale)
         }
       `;
       const data = await graphqlRequest<{ chapterDiagnosisOptions: string[] }>(query, {
         chapter,
+        locale,
       });
       return data.chapterDiagnosisOptions;
     },
@@ -537,10 +538,10 @@ export const graphqlClient = {
       return data.checkChapterAnswer;
     },
 
-    async getTransaction360QuizOptions(): Promise<{ q1: string[]; q2: string[]; q3: string[]; q4: string[] }> {
+    async getTransaction360QuizOptions(locale?: string): Promise<{ q1: string[]; q2: string[]; q3: string[]; q4: string[] }> {
       const query = `
-        query Transaction360QuizOptions {
-          transaction360QuizOptions {
+        query Transaction360QuizOptions($locale: String) {
+          transaction360QuizOptions(locale: $locale) {
             q1
             q2
             q3
@@ -550,7 +551,7 @@ export const graphqlClient = {
       `;
       const data = await graphqlRequest<{
         transaction360QuizOptions: { q1: string[]; q2: string[]; q3: string[]; q4: string[] };
-      }>(query);
+      }>(query, { locale });
       return data.transaction360QuizOptions;
     },
 
@@ -599,10 +600,10 @@ export const graphqlClient = {
       return data.clearedChapters;
     },
 
-    async getChapterMissions(): Promise<ChapterMission[]> {
+    async getChapterMissions(locale?: string): Promise<ChapterMission[]> {
       const query = `
-        query ChapterMissions {
-          chapterMissions {
+        query ChapterMissions($locale: String) {
+          chapterMissions(locale: $locale) {
             chapter
             kind
             title
@@ -615,7 +616,7 @@ export const graphqlClient = {
           }
         }
       `;
-      const data = await graphqlRequest<{ chapterMissions: ChapterMission[] }>(query);
+      const data = await graphqlRequest<{ chapterMissions: ChapterMission[] }>(query, { locale });
       return data.chapterMissions;
     },
 
@@ -684,17 +685,17 @@ export const graphqlClient = {
       return data.clearHiddenQuest;
     },
 
-    async getNPlusOneQuizOptions(): Promise<{ q1: string[]; q2: string[]; q3: string[] }> {
+    async getNPlusOneQuizOptions(locale?: string): Promise<{ q1: string[]; q2: string[]; q3: string[] }> {
       const query = `
-        query NPlusOneQuizOptions {
-          nPlusOneQuizOptions {
+        query NPlusOneQuizOptions($locale: String) {
+          nPlusOneQuizOptions(locale: $locale) {
             q1
             q2
             q3
           }
         }
       `;
-      const data = await graphqlRequest<{ nPlusOneQuizOptions: { q1: string[]; q2: string[]; q3: string[] } }>(query);
+      const data = await graphqlRequest<{ nPlusOneQuizOptions: { q1: string[]; q2: string[]; q3: string[] } }>(query, { locale });
       return data.nPlusOneQuizOptions;
     },
 
@@ -719,17 +720,17 @@ export const graphqlClient = {
       return data.checkNPlusOneQuizAnswers;
     },
 
-    async getRageClickQuizOptions(): Promise<{ q1: string[]; q2: string[]; q3: string[] }> {
+    async getRageClickQuizOptions(locale?: string): Promise<{ q1: string[]; q2: string[]; q3: string[] }> {
       const query = `
-        query RageClickQuizOptions {
-          rageClickQuizOptions {
+        query RageClickQuizOptions($locale: String) {
+          rageClickQuizOptions(locale: $locale) {
             q1
             q2
             q3
           }
         }
       `;
-      const data = await graphqlRequest<{ rageClickQuizOptions: { q1: string[]; q2: string[]; q3: string[] } }>(query);
+      const data = await graphqlRequest<{ rageClickQuizOptions: { q1: string[]; q2: string[]; q3: string[] } }>(query, { locale });
       return data.rageClickQuizOptions;
     },
 

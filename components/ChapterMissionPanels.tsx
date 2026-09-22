@@ -19,7 +19,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { apiClient } from '@/lib/api/client';
 import type { ChapterMission, ChapterChallengeStatus } from '@/lib/api/types';
-import { useT, format } from '@/lib/i18n/LocaleProvider';
+import { useT, useLocale, format } from '@/lib/i18n/LocaleProvider';
 import type { Messages } from '@/lib/i18n/messages';
 
 /** 挑戦を開始できなかった理由を、参加者向けの文言に変換する。 */
@@ -39,6 +39,7 @@ const PANEL_HEIGHT = 140;
 
 export default function ChapterMissionPanels() {
   const t = useT();
+  const { locale } = useLocale();
   const [missions, setMissions] = useState<ChapterMission[]>([]);
   const [status, setStatus] = useState<ChapterChallengeStatus>({ counts: [], activeChapter: null });
   const [selected, setSelected] = useState<ChapterMission | null>(null);
@@ -47,7 +48,7 @@ export default function ChapterMissionPanels() {
 
   const refresh = useCallback(() => {
     Promise.all([
-      apiClient.chapters.getChapterMissions(),
+      apiClient.chapters.getChapterMissions(locale),
       apiClient.chapters.getChallengeStatus(),
     ])
       .then(([missionsData, statusData]) => {
@@ -58,7 +59,7 @@ export default function ChapterMissionPanels() {
         setMissions([]);
         setStatus({ counts: [], activeChapter: null });
       });
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     refresh();
@@ -96,7 +97,7 @@ export default function ChapterMissionPanels() {
       if (result.started) {
         // 挑戦を開始すると内容が開示されるので、取り直してそのままダイアログに出す。
         const [missionsData, statusData] = await Promise.all([
-          apiClient.chapters.getChapterMissions(),
+          apiClient.chapters.getChapterMissions(locale),
           apiClient.chapters.getChallengeStatus(),
         ]);
         setMissions(missionsData);

@@ -287,10 +287,10 @@ export const resolvers: Resolvers & {
       }
     },
 
-    chapterDiagnosisOptions: async (_, { chapter }, context) => {
+    chapterDiagnosisOptions: async (_, { chapter, locale }, context) => {
       try {
         const token = getTokenFromRequest(context.request);
-        return await downstreamClient.getChapterDiagnosisOptions(chapter, token);
+        return await downstreamClient.getChapterDiagnosisOptions(chapter, token, locale ?? undefined);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         throw new GraphQLError(`Failed to fetch chapter diagnosis options: ${errorMessage}`, {
@@ -311,10 +311,10 @@ export const resolvers: Resolvers & {
       }
     },
 
-    chapterMissions: async (_, __, context) => {
+    chapterMissions: async (_, { locale }, context) => {
       try {
         const token = getTokenFromRequest(context.request);
-        return await downstreamClient.getChapterMissions(token);
+        return await downstreamClient.getChapterMissions(token, locale ?? undefined);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         throw new GraphQLError(`Failed to fetch chapter missions: ${errorMessage}`, {
@@ -335,10 +335,10 @@ export const resolvers: Resolvers & {
       }
     },
 
-    transaction360QuizOptions: async (_, __, context) => {
+    transaction360QuizOptions: async (_, { locale }, context) => {
       try {
         const token = getTokenFromRequest(context.request);
-        return await downstreamClient.getTransaction360QuizOptions(token);
+        return await downstreamClient.getTransaction360QuizOptions(token, locale ?? undefined);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         throw new GraphQLError(`Failed to fetch Transaction 360 quiz options: ${errorMessage}`, {
@@ -347,10 +347,10 @@ export const resolvers: Resolvers & {
       }
     },
 
-    nPlusOneQuizOptions: async (_, __, context) => {
+    nPlusOneQuizOptions: async (_, { locale }, context) => {
       try {
         const token = getTokenFromRequest(context.request);
-        return await downstreamClient.getNPlusOneQuizOptions(token);
+        return await downstreamClient.getNPlusOneQuizOptions(token, locale ?? undefined);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         throw new GraphQLError(`Failed to fetch N+1 quiz options: ${errorMessage}`, {
@@ -359,10 +359,10 @@ export const resolvers: Resolvers & {
       }
     },
 
-    rageClickQuizOptions: async (_, __, context) => {
+    rageClickQuizOptions: async (_, { locale }, context) => {
       try {
         const token = getTokenFromRequest(context.request);
-        return await downstreamClient.getRageClickQuizOptions(token);
+        return await downstreamClient.getRageClickQuizOptions(token, locale ?? undefined);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         throw new GraphQLError(`Failed to fetch Rage Click quiz options: ${errorMessage}`, {

@@ -41,6 +41,9 @@ import { stubTravelService } from '../api/stubs/travel-service';
 import { buildApplicationCode } from '../travel/application-code';
 import { addCustomAttribute } from '../newrelic-helper';
 
+/** 英語表示のときだけ ?lang=en を付ける(未対応の内容は日本語で返る)。 */
+const localeQuery = (locale?: string) => (locale === 'en' ? '?lang=en' : '');
+
 const TRAVEL_REQUEST_TIMEOUT_MS = 3000;
 
 export class DownstreamClient {
@@ -296,12 +299,16 @@ export class DownstreamClient {
     );
   }
 
-  async getChapterDiagnosisOptions(chapter: number, token?: string): Promise<string[]> {
+  async getChapterDiagnosisOptions(
+    chapter: number,
+    token?: string,
+    locale?: string
+  ): Promise<string[]> {
     if (this.useStubs) {
       return [];
     }
     const data = await this.request<{ options: string[] }>(
-      `${this.gameMasterServiceUrl}/api/v1/chapters/${chapter}/diagnosis-options`,
+      `${this.gameMasterServiceUrl}/api/v1/chapters/${chapter}/diagnosis-options${localeQuery(locale)}`,
       { method: 'GET' },
       token
     );
@@ -385,12 +392,12 @@ export class DownstreamClient {
     return data.cleared;
   }
 
-  async getNPlusOneQuizOptions(token?: string): Promise<NPlusOneQuizOptions> {
+  async getNPlusOneQuizOptions(token?: string, locale?: string): Promise<NPlusOneQuizOptions> {
     if (this.useStubs) {
       return { q1: [], q2: [], q3: [] };
     }
     return this.request<NPlusOneQuizOptions>(
-      `${this.gameMasterServiceUrl}/api/v1/chapters/2/nplus1-quiz/options`,
+      `${this.gameMasterServiceUrl}/api/v1/chapters/2/nplus1-quiz/options${localeQuery(locale)}`,
       { method: 'GET' },
       token
     );
@@ -413,12 +420,12 @@ export class DownstreamClient {
     );
   }
 
-  async getRageClickQuizOptions(token?: string): Promise<RageClickQuizOptions> {
+  async getRageClickQuizOptions(token?: string, locale?: string): Promise<RageClickQuizOptions> {
     if (this.useStubs) {
       return { q1: [], q2: [], q3: [] };
     }
     return this.request<RageClickQuizOptions>(
-      `${this.gameMasterServiceUrl}/api/v1/chapters/4/ragequiz/options`,
+      `${this.gameMasterServiceUrl}/api/v1/chapters/4/ragequiz/options${localeQuery(locale)}`,
       { method: 'GET' },
       token
     );
@@ -441,12 +448,12 @@ export class DownstreamClient {
     );
   }
 
-  async getTransaction360QuizOptions(token?: string): Promise<Transaction360QuizOptions> {
+  async getTransaction360QuizOptions(token?: string, locale?: string): Promise<Transaction360QuizOptions> {
     if (this.useStubs) {
       return { q1: [], q2: [], q3: [], q4: [] };
     }
     return this.request<Transaction360QuizOptions>(
-      `${this.gameMasterServiceUrl}/api/v1/chapters/1/transaction360-quiz/options`,
+      `${this.gameMasterServiceUrl}/api/v1/chapters/1/transaction360-quiz/options${localeQuery(locale)}`,
       { method: 'GET' },
       token
     );
@@ -493,12 +500,14 @@ export class DownstreamClient {
     return data.clearedChapters;
   }
 
-  async getChapterMissions(token?: string): Promise<ChapterMission[]> {
+  async getChapterMissions(token?: string, locale?: string): Promise<ChapterMission[]> {
     if (this.useStubs) {
       return [];
     }
+    // 英語表示のときだけlangを付ける(未対応の文言は日本語で返る)。
+    const query = locale === 'en' ? '?lang=en' : '';
     const data = await this.request<{ missions: ChapterMission[] }>(
-      `${this.gameMasterServiceUrl}/api/v1/chapters/missions`,
+      `${this.gameMasterServiceUrl}/api/v1/chapters/missions${query}`,
       { method: 'GET' },
       token
     );

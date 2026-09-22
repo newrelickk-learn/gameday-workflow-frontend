@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Autocomplete, Box, Button, Paper, TextField, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
-import { useT } from '@/lib/i18n/LocaleProvider';
+import { useT, useLocale } from '@/lib/i18n/LocaleProvider';
 
 const CHAPTER = 2;
 const STORAGE_KEY = 'gameday:nplus1-quiz:v1';
@@ -56,6 +56,7 @@ function persist(answers: QuizAnswers, allCorrect: boolean | null) {
 
 export default function SlowApprovedListDiagnosisQuiz() {
   const t = useT();
+  const { locale } = useLocale();
   const [options, setOptions] = useState<QuizOptions>(EMPTY_OPTIONS);
   const [optionsLoading, setOptionsLoading] = useState(true);
   const [answers, setAnswers] = useState<QuizAnswers>(EMPTY_ANSWERS);
@@ -84,7 +85,7 @@ export default function SlowApprovedListDiagnosisQuiz() {
         setAnswers(persisted.answers);
         setAllCorrect(persisted.allCorrect);
 
-        const data = await apiClient.chapters.getNPlusOneQuizOptions();
+        const data = await apiClient.chapters.getNPlusOneQuizOptions(locale);
         if (!cancelled) {
           setOptions(data);
         }
@@ -102,7 +103,7 @@ export default function SlowApprovedListDiagnosisQuiz() {
     return () => {
       cancelled = true;
     };
-  }, [t.diagnosis.optionsFailed]);
+  }, [locale, t.diagnosis.optionsFailed]);
 
   const canSubmit = answers.q1.trim() !== '' && answers.q2.length > 0 && answers.q3.trim() !== '';
 

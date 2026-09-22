@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Autocomplete, Box, Button, Paper, TextField, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
-import { useT } from '@/lib/i18n/LocaleProvider';
+import { useT, useLocale } from '@/lib/i18n/LocaleProvider';
 
 interface ChapterDiagnosisDropdownProps {
   chapter: number;
@@ -13,6 +13,7 @@ interface ChapterDiagnosisDropdownProps {
 
 export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiagnosisDropdownProps) {
   const t = useT();
+  const { locale } = useLocale();
   const [options, setOptions] = useState<string[]>([]);
   const [optionsLoading, setOptionsLoading] = useState(true);
   const [selectedText, setSelectedText] = useState('');
@@ -37,7 +38,7 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
           return;
         }
 
-        const data = await apiClient.chapters.getDiagnosisOptions(chapter);
+        const data = await apiClient.chapters.getDiagnosisOptions(chapter, locale);
         if (!cancelled) {
           setOptions(data);
         }
@@ -55,7 +56,7 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
     return () => {
       cancelled = true;
     };
-  }, [chapter, t.diagnosis.optionsFailed]);
+  }, [chapter, locale, t.diagnosis.optionsFailed]);
 
   const handleSubmit = async () => {
     if (!selectedText.trim()) {
