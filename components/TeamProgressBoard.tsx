@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import type { TeamProgressItem, TeamProgressResponse } from '@/lib/api/types';
 import { teamNameFromSlot, getProgressColor, getProgressTextColor } from '@/lib/utils/team-progress';
+import { useT, format } from '@/lib/i18n/LocaleProvider';
 
 const POLL_INTERVAL_MS = 5000;
 
 export default function TeamProgressBoard() {
+  const t = useT();
   const [teams, setTeams] = useState<TeamProgressItem[]>([]);
   const [totalChapters, setTotalChapters] = useState(0);
 
@@ -39,10 +41,10 @@ export default function TeamProgressBoard() {
     <Box sx={{ p: 4 }}>
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 3 }}>
         <Typography variant="h3" component="h1" fontWeight="bold">
-          チーム進捗ボード
+          {t.misc.progressBoard}
         </Typography>
         <Typography variant="h6" color="text.secondary">
-          全{totalChapters}チャプター中
+          {format(t.misc.ofChapters, { n: totalChapters })}
         </Typography>
       </Box>
 

@@ -67,7 +67,7 @@ export default function HrUserEditPage({ params }: PageProps) {
     };
 
     fetchData();
-  }, [id, router]);
+  }, [id, router, t.hr.loadUserFailed]);
 
   const handleSave = async () => {
     setSaving(true);

@@ -5,6 +5,7 @@ import { Box, Button, Typography } from '@mui/material';
 import { animated, useSpringRef, useTransition } from 'react-spring';
 import TeamScoreRow from './TeamScoreRow';
 import { teamNameFromSlot } from '@/lib/utils/team-progress';
+import { useT, format } from '@/lib/i18n/LocaleProvider';
 import {
   ROW_HEIGHT,
   cumulativeScoreUpTo,
@@ -22,6 +23,7 @@ const WINNER_REVEAL_DELAY_MS = 1000;
 const EMPTY_RESPONSE: TeamScoreResponse = { totalChapters: 0, maxScore: 0, chapters: [], teams: [] };
 
 export default function TeamScoreBoard() {
+  const t = useT();
   const [data, setData] = useState<TeamScoreResponse>(EMPTY_RESPONSE);
   const [teams, setTeams] = useState<DisplayTeam[]>([]);
   const [isWinnerDetermined, setIsWinnerDetermined] = useState(false);
@@ -193,8 +195,8 @@ export default function TeamScoreBoard() {
             <Box>
               <Typography sx={{ fontSize: 14, color: '#888', fontWeight: 'bold', letterSpacing: '1px' }}>
                 {revealedChapter !== null
-                  ? `CHAPTER ${revealedChapter} まで`
-                  : `LIVE / 全${data.totalChapters}クエスト`}
+                  ? format(t.misc.scoreUpTo, { n: revealedChapter })
+                  : format(t.misc.scoreLive, { n: data.totalChapters })}
               </Typography>
               <Typography
                 variant="h2"
@@ -246,7 +248,7 @@ export default function TeamScoreBoard() {
 
           {teams.length === 0 ? (
             <Typography sx={{ color: '#888', fontSize: '1.5rem', fontWeight: 'bold' }}>
-              まだスコアのあるチームがありません。
+              {t.misc.noTeams}
             </Typography>
           ) : (
             <Box sx={{ position: 'relative', height: Math.max(teams.length * ROW_HEIGHT + 100, 300), width: '100%' }}>

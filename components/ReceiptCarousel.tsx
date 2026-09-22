@@ -4,12 +4,14 @@ import { Box, CircularProgress, IconButton, Typography } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import { useT, format } from '@/lib/i18n/LocaleProvider';
 
 interface ReceiptCarouselProps {
   images: string[];
 }
 
 export default function ReceiptCarousel({ images }: ReceiptCarouselProps) {
+  const t = useT();
   const [current, setCurrent] = useState(0);
   const [loadedSrcs, setLoadedSrcs] = useState<Record<string, string>>({});
   const objectUrlsRef = useRef<string[]>([]);
@@ -86,7 +88,7 @@ export default function ReceiptCarousel({ images }: ReceiptCarouselProps) {
             <img
               key={url}
               src={src}
-              alt={`レシート${index + 1}`}
+              alt={format(t.misc.receiptAlt, { n: index + 1 })}
               style={{
                 position: 'absolute',
                 top: 0,
@@ -102,13 +104,13 @@ export default function ReceiptCarousel({ images }: ReceiptCarouselProps) {
         })}
       </Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-        <IconButton onClick={goPrev} size="small" aria-label="前の画像">
+        <IconButton onClick={goPrev} size="small" aria-label={t.misc.prevImage}>
           <ArrowBackIosNewIcon fontSize="small" />
         </IconButton>
         <Typography variant="body2" color="text.secondary">
           {current + 1} / {images.length}
         </Typography>
-        <IconButton onClick={goNext} size="small" aria-label="次の画像">
+        <IconButton onClick={goNext} size="small" aria-label={t.misc.nextImage}>
           <ArrowForwardIosIcon fontSize="small" />
         </IconButton>
       </Box>

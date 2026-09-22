@@ -14,6 +14,7 @@ import SendIcon from '@mui/icons-material/Send';
 import ChatIcon from '@mui/icons-material/Chat';
 import CloseIcon from '@mui/icons-material/Close';
 import { apiClient } from '@/lib/api/client';
+import { useT } from '@/lib/i18n/LocaleProvider';
 
 interface Message {
   id: string;
@@ -23,6 +24,7 @@ interface Message {
 }
 
 export function ChatWidget() {
+  const t = useT();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -69,7 +71,7 @@ export function ChatWidget() {
     } catch (error) {
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
-        text: 'エラーが発生しました。もう一度お試しください。',
+        text: t.misc.chatError,
         isUser: false,
         timestamp: new Date(),
       };
@@ -159,7 +161,7 @@ export function ChatWidget() {
               AI
             </Avatar>
             <Typography variant="h6" sx={{ flexGrow: 1 }}>
-              AI アシスタント
+              {t.misc.chatTitle}
             </Typography>
             <IconButton
               onClick={() => setIsOpen(false)}
@@ -198,7 +200,7 @@ export function ChatWidget() {
                 }}
               >
                 <Typography variant="body2" align="center">
-                  何かご質問がございましたら、お気軽にお尋ねください。
+                  {t.misc.chatWelcome}
                 </Typography>
               </Box>
             )}
@@ -263,7 +265,7 @@ export function ChatWidget() {
               inputRef={inputRef}
               fullWidth
               size="small"
-              placeholder="メッセージを入力..."
+              placeholder={t.misc.chatPlaceholder}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}

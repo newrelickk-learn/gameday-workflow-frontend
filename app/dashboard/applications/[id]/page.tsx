@@ -25,6 +25,8 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { apiClient } from '@/lib/api/client';
+import { useT, format } from '@/lib/i18n/LocaleProvider';
+import { applicationTypeLabel, applicationStatusLabel } from '@/lib/i18n/labels';
 import type { Application, Approval } from '@/lib/api/types';
 import { getCurrentUser, getCurrentUserId, isManager, isDirector } from '@/lib/utils/auth';
 import WorkflowProgress from '@/components/ui/WorkflowProgress';
@@ -46,32 +48,6 @@ const getStatusColor = (status: 'pending' | 'approved' | 'rejected') => {
   }
 };
 
-const getStatusLabel = (status: 'pending' | 'approved' | 'rejected') => {
-  switch (status) {
-    case 'approved':
-      return '承認済み';
-    case 'rejected':
-      return '却下';
-    case 'pending':
-      return '承認待ち';
-    default:
-      return status;
-  }
-};
-
-const getTypeLabel = (type: string) => {
-  switch (type) {
-    case 'business-trip':
-      return '出張申請';
-    case 'expense':
-      return '経費申請';
-    case 'promotion':
-      return 'プロモーション申請';
-    default:
-      return type;
-  }
-};
-
 interface PageProps {
   params: Promise<{
     id: string;
@@ -79,6 +55,7 @@ interface PageProps {
 }
 
 export default function ApplicationDetailPage({ params }: PageProps) {
+  const t = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { id } = use(params);
@@ -137,7 +114,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
 
       if (applicationData.type === 'promotion') {
         if (!isManager() && !isDirector()) {
-          setError('プロモーション申請は上長・本部長のみ閲覧可能です');
+          setError(t.detail.promotionRestricted);
           setLoading(false);
           return;
         }
@@ -154,7 +131,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
       setApplication(applicationData);
       setApprovals(approvalsData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '申請詳細の取得に失敗しました');
+      setError(err instanceof Error ? err.message : t.detail.loadFailed);
       console.error('申請詳細取得エラー:', err);
     } finally {
       setLoading(false);
@@ -198,7 +175,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
     try {
       const approverId = getCurrentUserId();
       if (!approverId) {
-        setError('ログイン情報が見つかりません。再度ログインしてください。');
+        setError(t.applications.errorNoLogin);
         return;
       }
 
@@ -213,7 +190,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
       await fetchData();
       handleCloseConfirmDialog();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '承認処理に失敗しました');
+      setError(err instanceof Error ? err.message : t.detail.approvalFailed);
       console.error('承認処理エラー:', err);
     } finally {
       setProcessing(false);
@@ -250,10 +227,10 @@ export default function ApplicationDetailPage({ params }: PageProps) {
             }
           }}
         >
-          戻る
+          {t.common.back}
         </Button>
         <Typography variant="h4" component="h1" fontWeight="bold">
-          申請詳細
+          {t.detail.title}
         </Typography>
       </Box>
 
@@ -280,12 +257,12 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                       </Typography>
                       {application.applicationNumber && (
                         <Typography variant="body2" color="text.secondary">
-                          申請書番号: {application.applicationNumber}
+                          {format(t.detail.number, { number: application.applicationNumber ?? '-' })}
                         </Typography>
                       )}
                     </Box>
                     <Chip
-                      label={getStatusLabel(application.status)}
+                      label={applicationStatusLabel(t, application.status)}
                       color={getStatusColor(application.status) as any}
                       size="medium"
                     />
@@ -307,7 +284,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                           handleOpenDialog(myPendingApproval.id, 'approve');
                         }}
                       >
-                        承認
+                        {t.detail.approve}
                       </Button>
                       <Button
                         variant="outlined"
@@ -315,7 +292,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                         startIcon={<CloseIcon />}
                         onClick={() => handleOpenDialog(myPendingApproval.id, 'reject')}
                       >
-                        却下
+                        {t.detail.reject}
                       </Button>
                     </Box>
                     <Box sx={{ mt: 3 }}>
@@ -323,7 +300,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                         <RageClickDiagnosisQuiz />
                       ) : (
                         <Alert severity="info">
-                          承認ボタンで
+                          {t.detail.rageClickHintPrefix}
                           <Link
                             href="https://docs.newrelic.com/jp/docs/browser/new-relic-browser/browser-pro-features/user-impact/"
                             target="_blank"
@@ -337,10 +314,10 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                               verticalAlign: 'middle',
                             }}
                           >
-                            Rage Click(レイジクリック/怒りクリック)
+                            {t.detail.rageClickTerm}
                             <OpenInNewIcon sx={{ fontSize: '1rem' }} />
                           </Link>
-                          を発生させてください。（発生するとこのUIが変わります。リロードしつつ何度かお試しください。データ収集/分析に少し時間がかかります。）
+                          {t.detail.rageClickHintSuffix}
                         </Alert>
                       )}
                     </Box>
@@ -353,15 +330,15 @@ export default function ApplicationDetailPage({ params }: PageProps) {
 
                 <Grid item xs={12} md={6}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    申請タイプ
+                    {t.applications.type}
                   </Typography>
-                  <Typography variant="body1">{getTypeLabel(application.type)}</Typography>
+                  <Typography variant="body1">{applicationTypeLabel(t, application.type)}</Typography>
                 </Grid>
 
                 {application.type === 'expense' && application.amount != null && (
                   <Grid item xs={12} md={6}>
                     <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                      金額
+                      {t.applications.amount}
                     </Typography>
                     <Typography variant="body1" fontWeight="bold" color="primary">
                       ¥{application.amount.toLocaleString()}
@@ -373,7 +350,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                   <>
                     <Grid item xs={12} md={4}>
                       <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                        開始日
+                        {t.applications.startDate}
                       </Typography>
                       <Typography variant="body1">
                         {new Date(application.startDate).toLocaleDateString('ja-JP')}
@@ -381,7 +358,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                     </Grid>
                     <Grid item xs={12} md={4}>
                       <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                        終了日
+                        {t.applications.endDate}
                       </Typography>
                       <Typography variant="body1">
                         {new Date(application.endDate).toLocaleDateString('ja-JP')}
@@ -390,10 +367,10 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                     {application.days !== undefined && (
                       <Grid item xs={12} md={4}>
                         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                          日数
+                          {t.applications.days}
                         </Typography>
                         <Typography variant="body1" fontWeight="bold" color="primary">
-                          {application.days}日
+                          {application.days}{t.applications.daysUnit}
                         </Typography>
                       </Grid>
                     )}
@@ -402,7 +379,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
 
                 <Grid item xs={12} md={6}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    申請ID
+                    {t.detail.applicationId}
                   </Typography>
                   <Typography variant="body1">{application.id}</Typography>
                 </Grid>
@@ -410,7 +387,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                 {}
                 <Grid item xs={12} md={6}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    申請者
+                    {t.lists.applicant}
                   </Typography>
                   <Box>
                     <Typography variant="body1" fontWeight="bold">
@@ -426,7 +403,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
 
                 <Grid item xs={12}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    説明
+                    {t.applications.description}
                   </Typography>
                   <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                     {application.description}
@@ -435,14 +412,14 @@ export default function ApplicationDetailPage({ params }: PageProps) {
 
                 <Grid item xs={12} md={6}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    作成日時
+                    {t.lists.createdAt}
                   </Typography>
                   <Typography variant="body1">{formatDate(application.createdAt)}</Typography>
                 </Grid>
 
                 <Grid item xs={12} md={6}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    更新日時
+                    {t.lists.updatedAt}
                   </Typography>
                   <Typography variant="body1">{formatDate(application.updatedAt)}</Typography>
                 </Grid>
@@ -462,7 +439,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                     </Grid>
                     <Grid item xs={12}>
                       <Typography variant="h6" gutterBottom>
-                        承認履歴
+                        {t.detail.history}
                       </Typography>
                     </Grid>
                     {approvals.map((approval, index) => (
@@ -471,10 +448,10 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                             <Box>
                               <Typography variant="body2" color="text.secondary">
-                                ステップ {approval.step || index + 1}
+                                {format(t.detail.historyStep, { n: approval.step || index + 1 })}
                               </Typography>
                               <Typography variant="body1" fontWeight="bold">
-                                {approval.approverName || `承認者ID: ${approval.approverId}`}
+                                {approval.approverName || format(t.detail.approverId, { id: approval.approverId })}
                               </Typography>
                               {approval.approverDepartment && (
                                 <Typography variant="body2" color="text.secondary">
@@ -483,14 +460,14 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                               )}
                             </Box>
                             <Chip
-                              label={getStatusLabel(approval.status)}
+                              label={applicationStatusLabel(t, approval.status)}
                               color={getStatusColor(approval.status) as any}
                               size="small"
                             />
                           </Box>
                           {approval.comment && (
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                              コメント: {approval.comment}
+                              {format(t.detail.commentWithValue, { comment: approval.comment })}
                             </Typography>
                           )}
                           <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
@@ -509,7 +486,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
             <Grid item xs={12} md={4}>
               <Paper sx={{ p: 2, position: 'sticky', top: 16 }}>
                 <Typography variant="h6" gutterBottom>
-                  レシート画像（{application.receiptImageUrls!.length}枚）
+                  {format(t.detail.receipts, { count: application.receiptImageUrls!.length })}
                 </Typography>
                 <ReceiptCarousel images={application.receiptImageUrls!} />
               </Paper>
@@ -519,7 +496,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
       ) : (
         <Paper sx={{ p: 3 }}>
           <Typography variant="body1" color="text.secondary" align="center">
-            申請が見つかりませんでした
+            {t.detail.notFound}
           </Typography>
         </Paper>
       )}
@@ -527,32 +504,32 @@ export default function ApplicationDetailPage({ params }: PageProps) {
       {}
       <Dialog open={approvalDialog.open} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
-          {approvalDialog.action === 'approve' ? '承認' : '却下'} - コメント入力
+          {format(t.detail.commentDialogTitle, { action: approvalDialog.action === 'approve' ? t.detail.approve : t.detail.reject })}
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            コメントを入力してください（任意）。確認画面に進みます。
+            {t.detail.commentDialogBody}
           </Typography>
           <TextField
             fullWidth
             multiline
             rows={4}
-            label="コメント（任意）"
+            label={t.detail.commentLabel}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="承認または却下の理由を入力してください"
+            placeholder={t.detail.commentPlaceholder}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>
-            キャンセル
+            {t.common.cancel}
           </Button>
           <Button
             onClick={handleOpenConfirmDialog}
             variant="contained"
             color={approvalDialog.action === 'approve' ? 'success' : 'error'}
           >
-            確認画面へ
+            {t.applications.toConfirm}
           </Button>
         </DialogActions>
       </Dialog>
@@ -560,20 +537,20 @@ export default function ApplicationDetailPage({ params }: PageProps) {
       {}
       <Dialog open={confirmDialog.open} onClose={handleCloseConfirmDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          {confirmDialog.action === 'approve' ? '承認' : '却下'} - 確認
+          {format(t.detail.confirmDialogTitle, { action: confirmDialog.action === 'approve' ? t.detail.approve : t.detail.reject })}
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             {confirmDialog.action === 'approve'
-              ? 'この申請を承認しますか？'
-              : 'この申請を却下しますか？'}
+              ? t.detail.confirmApprove
+              : t.detail.confirmReject}
           </Typography>
           <Divider sx={{ mb: 3 }} />
           {application && (
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  申請タイトル
+                  {t.lists.applicationTitle}
                 </Typography>
                 <Typography variant="body1">
                   {application.title}
@@ -582,7 +559,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
               {confirmDialog.comment && (
                 <Grid item xs={12}>
                   <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    コメント
+                    {t.detail.comment}
                   </Typography>
                   <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                     {confirmDialog.comment}
@@ -594,7 +571,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseConfirmDialog} disabled={processing}>
-            キャンセル
+            {t.common.cancel}
           </Button>
           <Button
             onClick={handleSubmitApproval}
@@ -604,10 +581,10 @@ export default function ApplicationDetailPage({ params }: PageProps) {
             startIcon={processing ? <CircularProgress size={20} /> : null}
           >
             {processing
-              ? '処理中...'
+              ? t.detail.processing
               : confirmDialog.action === 'approve'
-              ? '承認する'
-              : '却下する'}
+              ? t.detail.approveButton
+              : t.detail.rejectButton}
           </Button>
         </DialogActions>
       </Dialog>

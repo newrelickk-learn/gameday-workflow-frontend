@@ -55,7 +55,7 @@ export default function HrUsersPage() {
     };
 
     fetchUsers();
-  }, [router]);
+  }, [router, t.hr.loadUsersFailed]);
 
   const getUserName = (id: number | null | undefined) => {
     if (!id) return t.hr.unset;
