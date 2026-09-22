@@ -24,11 +24,15 @@ export default function NewRelicBrowser() {
           session_replay: {
             enabled: true,
             block_selector: '',
-            mask_text_selector: '',
+            // 原因診断クイズの選択肢と、複数選択で選んだチップのラベルは「答え」そのもの。
+            // セッションリプレイに残すと他チームに答えが見えてしまうためマスクする。
+            // Autocompleteはこの診断クイズでしか使っていないので、他の画面には影響しない。
+            mask_text_selector:
+              '.MuiAutocomplete-popper, .MuiAutocomplete-listbox, .MuiAutocomplete-option, .MuiAutocomplete-tag, .MuiAutocomplete-tag .MuiChip-label',
             sampling_rate: 100.0,
             error_sampling_rate: 100.0,
             // 入力値(パスワード・申請内容など)はセッションリプレイに残さない。
-            // 画面のテキストは調査に使うためマスクしない(mask_text_selectorは空のまま)。
+            // 画面の一般的なテキストは調査に使うためマスクしない(上のセレクタに該当するものだけ伏せる)。
             mask_all_inputs: true,
             collect_fonts: true,
             inline_images: false,

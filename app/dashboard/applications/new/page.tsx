@@ -459,6 +459,9 @@ export default function NewApplicationPage() {
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleStartDateChange(e.target.value)}
                   required={isDateRequiredType}
                   disabled={loading}
+                  // 入力欄の中の「年/月/日」はブラウザが描いており、ページ側からは言語を変えられない。
+                  // 何を入れる欄なのかが英語話者にも伝わるよう、形式だけ補助テキストで示す。
+                  helperText={t.applications.dateFormatHint}
                   InputLabelProps={{
                     shrink: true,
                   }}
@@ -471,6 +474,7 @@ export default function NewApplicationPage() {
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleEndDateChange(e.target.value)}
                   required={isDateRequiredType}
                   disabled={loading}
+                  helperText={t.applications.dateFormatHint}
                   InputLabelProps={{
                     shrink: true,
                   }}

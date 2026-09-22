@@ -90,6 +90,7 @@ const ja = {
     daysUnit: '日',
     daysAuto: '自動計算: {days}日',
     daysAutoHint: '開始日と終了日を入力すると自動計算されます',
+    dateFormatHint: '形式: YYYY-MM-DD',
     departureIn: '出発日まであと{days}日です。',
     departurePast: '出発日が既に過去の日付になっています。',
     twoWeekRule:
@@ -431,6 +432,7 @@ const en: Messages = {
     daysUnit: 'day(s)',
     daysAuto: 'Calculated automatically: {days} day(s)',
     daysAutoHint: 'This is calculated automatically once you enter both dates',
+    dateFormatHint: 'Format: YYYY-MM-DD',
     departureIn: '{days} day(s) until departure.',
     departurePast: 'The departure date is already in the past.',
     twoWeekRule:
