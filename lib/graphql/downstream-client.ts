@@ -72,10 +72,13 @@ export class DownstreamClient {
   private async request<T>(
     url: string,
     options: RequestInit = {},
-    token?: string
+    token?: string,
+    locale?: string
   ): Promise<T> {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
+      // 申請・承認APIはこのヘッダで返す文言の言語を決める。
+      ...(locale ? { 'Accept-Language': locale } : {}),
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     };
@@ -516,7 +519,8 @@ export class DownstreamClient {
 
   async createApplication(
     data: CreateApplicationRequest,
-    token?: string
+    token?: string,
+    locale?: string
   ): Promise<Application> {
     if (this.useStubs) {
       if (process.env.NODE_ENV === 'development') {
@@ -530,7 +534,8 @@ export class DownstreamClient {
         method: 'POST',
         body: JSON.stringify(data),
       },
-      token
+      token,
+      locale
     );
   }
 
@@ -738,7 +743,8 @@ export class DownstreamClient {
     id: string,
     data: UpdateApprovalRequest,
     token?: string,
-    applicationId?: string
+    applicationId?: string,
+    locale?: string
   ): Promise<Approval> {
     if (this.useStubs) {
       if (process.env.NODE_ENV === 'development') {
@@ -784,7 +790,8 @@ export class DownstreamClient {
             comment: data.comment,
           }),
         },
-        token
+        token,
+        locale
       );
       
       const approval: Approval = {

@@ -50,3 +50,19 @@ export function userRoleLabel(t: Messages, role: string): string {
       return role;
   }
 }
+
+export function notificationTypeLabel(t: Messages, type: string): string {
+  switch (type) {
+    case 'ApprovalRequest':
+      return t.lists.notificationApprovalRequest;
+    case 'ApprovalCompleted':
+    case 'WorkflowCompleted':
+      return t.lists.notificationApproved;
+    case 'ApprovalRejected':
+      return t.lists.notificationRejected;
+    case 'ApplicationSubmitted':
+      return t.lists.notificationSubmitted;
+    default:
+      return type;
+  }
+}

@@ -20,6 +20,8 @@ import {
 import { useRouter } from 'next/navigation';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { apiClient } from '@/lib/api/client';
+import { useT } from '@/lib/i18n/LocaleProvider';
+import { applicationTypeLabel, applicationStatusLabel } from '@/lib/i18n/labels';
 import type { Application } from '@/lib/api/types';
 import { isManager, isDirector, isAccounting } from '@/lib/utils/auth';
 
@@ -36,35 +38,8 @@ const getStatusColor = (status: Application['status']) => {
   }
 };
 
-const getStatusLabel = (status: Application['status']) => {
-  switch (status) {
-    case 'approved':
-      return '承認済み';
-    case 'rejected':
-      return '却下';
-    case 'pending':
-      return '承認待ち';
-    default:
-      return status;
-  }
-};
-
-const getTypeLabel = (type: string) => {
-  switch (type) {
-    case 'business-trip':
-      return '出張申請';
-    case 'expense':
-      return '経費申請';
-    case 'vacation':
-      return '有給休暇申請';
-    case 'promotion':
-      return 'プロモーション申請';
-    default:
-      return type;
-  }
-};
-
 export default function CompanyApplicationsPage() {
+  const t = useT();
   const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +58,7 @@ export default function CompanyApplicationsPage() {
         const data = await apiClient.applications.getApplications();
         setApplications(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '申請書一覧の取得に失敗しました');
+        setError(err instanceof Error ? err.message : t.lists.loadCompanyFailed);
         console.error('申請書一覧取得エラー:', err);
       } finally {
         setLoading(false);
@@ -91,16 +66,16 @@ export default function CompanyApplicationsPage() {
     };
 
     fetchApplications();
-  }, [router]);
+  }, [router, t.lists.loadCompanyFailed]);
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1" fontWeight="bold">
-          申請書一覧
+          {t.lists.companyApplicationsTitle}
         </Typography>
         <Button startIcon={<ArrowBackIcon />} onClick={() => router.push('/dashboard')}>
-          ダッシュボード
+          {t.lists.toDashboard}
         </Button>
       </Box>
 
@@ -115,35 +90,35 @@ export default function CompanyApplicationsPage() {
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 4 }}>
             <CircularProgress />
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              読み込み中...
+              {t.lists.loading}
             </Typography>
           </Box>
         ) : applications.length === 0 ? (
           <Typography variant="body1" color="text.secondary" align="center" sx={{ py: 4 }}>
-            申請がありません
+            {t.lists.empty}
           </Typography>
         ) : (
           <TableContainer>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>申請者</TableCell>
-                  <TableCell>申請タイプ</TableCell>
-                  <TableCell>タイトル</TableCell>
-                  <TableCell>ステータス</TableCell>
-                  <TableCell>最新コメント</TableCell>
-                  <TableCell>作成日時</TableCell>
+                  <TableCell>{t.lists.applicant}</TableCell>
+                  <TableCell>{t.lists.applicationType}</TableCell>
+                  <TableCell>{t.lists.title}</TableCell>
+                  <TableCell>{t.lists.status}</TableCell>
+                  <TableCell>{t.lists.latestComment}</TableCell>
+                  <TableCell>{t.lists.createdAt}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {applications.map((application) => (
                   <TableRow key={application.id} hover>
                     <TableCell>{application.applicantName || application.applicantId}</TableCell>
-                    <TableCell>{getTypeLabel(application.type)}</TableCell>
+                    <TableCell>{applicationTypeLabel(t, application.type)}</TableCell>
                     <TableCell>{application.title}</TableCell>
                     <TableCell>
                       <Chip
-                        label={getStatusLabel(application.status)}
+                        label={applicationStatusLabel(t, application.status)}
                         color={getStatusColor(application.status)}
                         size="small"
                       />

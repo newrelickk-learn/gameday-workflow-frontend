@@ -17,25 +17,10 @@ import {
 import { useRouter } from 'next/navigation';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { apiClient } from '@/lib/api/client';
+import { useT, format } from '@/lib/i18n/LocaleProvider';
+import { userRoleLabel } from '@/lib/i18n/labels';
 import type { User } from '@/lib/api/types';
 import { isHr } from '@/lib/utils/auth';
-
-const getRoleLabel = (role: User['role']) => {
-  switch (role) {
-    case 'director':
-      return '本部長';
-    case 'accounting':
-      return '経理';
-    case 'manager':
-      return '上長';
-    case 'engineer':
-      return 'エンジニア';
-    case 'hr':
-      return '人事部';
-    default:
-      return role;
-  }
-};
 
 interface PageProps {
   params: Promise<{
@@ -44,6 +29,7 @@ interface PageProps {
 }
 
 export default function HrUserEditPage({ params }: PageProps) {
+  const t = useT();
   const router = useRouter();
   const { id } = use(params);
 
@@ -73,7 +59,7 @@ export default function HrUserEditPage({ params }: PageProps) {
         setCompanyUsers(companyUserList);
         setSelectedManagerId(detail.managerId ? String(detail.managerId) : '');
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'ユーザー情報の取得に失敗しました');
+        setError(err instanceof Error ? err.message : t.hr.loadUserFailed);
         console.error('ユーザー情報取得エラー:', err);
       } finally {
         setLoading(false);
@@ -93,7 +79,7 @@ export default function HrUserEditPage({ params }: PageProps) {
       setTargetUser(updated);
       setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '直属の上長の更新に失敗しました');
+      setError(err instanceof Error ? err.message : t.hr.updateFailed);
       console.error('直属の上長更新エラー:', err);
     } finally {
       setSaving(false);
@@ -118,10 +104,10 @@ export default function HrUserEditPage({ params }: PageProps) {
     <Container maxWidth="sm" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1" fontWeight="bold">
-          直属の上長を編集
+          {t.hr.editManagerTitle}
         </Typography>
         <Button startIcon={<ArrowBackIcon />} onClick={() => router.push('/dashboard/hr')}>
-          一覧へ戻る
+          {t.hr.backToList}
         </Button>
       </Box>
 
@@ -134,28 +120,28 @@ export default function HrUserEditPage({ params }: PageProps) {
       {targetUser && (
         <Paper sx={{ p: 4 }}>
           <Typography variant="body2" color="text.secondary">
-            名前
+            {t.hr.name}
           </Typography>
           <Typography variant="body1" sx={{ mb: 2 }}>
             {targetUser.name}
           </Typography>
 
           <Typography variant="body2" color="text.secondary">
-            メールアドレス
+            {t.hr.email}
           </Typography>
           <Typography variant="body1" sx={{ mb: 2 }}>
             {targetUser.email}
           </Typography>
 
           <Typography variant="body2" color="text.secondary">
-            役職
+            {t.hr.role}
           </Typography>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            {getRoleLabel(targetUser.role)}
+            {userRoleLabel(t, targetUser.role)}
           </Typography>
 
           <Typography variant="body2" color="text.secondary">
-            部署
+            {t.hr.department}
           </Typography>
           <Typography variant="body1" sx={{ mb: 3 }}>
             {targetUser.department || '-'}
@@ -166,24 +152,24 @@ export default function HrUserEditPage({ params }: PageProps) {
           <TextField
             select
             fullWidth
-            label="直属の上長"
+            label={t.hr.manager}
             value={selectedManagerId}
             onChange={(e) => setSelectedManagerId(e.target.value)}
             disabled={saving}
             sx={{ mb: 3 }}
           >
-            <MenuItem value="">未設定</MenuItem>
+            <MenuItem value="">{t.hr.unset}</MenuItem>
             {companyUsers
               .filter((u) => u.id !== targetUser.id)
               .map((u) => (
                 <MenuItem key={u.id} value={u.id}>
-                  {u.name}（{getRoleLabel(u.role)} / ID: {u.id}）
+                  {u.name}（{userRoleLabel(t, u.role)} / ID: {u.id}）
                 </MenuItem>
               ))}
           </TextField>
 
           <Button variant="contained" onClick={handleSave} disabled={saving} fullWidth>
-            {saving ? <CircularProgress size={24} /> : '保存する'}
+            {saving ? <CircularProgress size={24} /> : t.hr.save}
           </Button>
         </Paper>
       )}
@@ -192,7 +178,7 @@ export default function HrUserEditPage({ params }: PageProps) {
         open={success}
         autoHideDuration={3000}
         onClose={handleCloseSnackbar}
-        message="直属の上長を更新しました"
+        message={t.hr.updated}
       />
     </Container>
   );

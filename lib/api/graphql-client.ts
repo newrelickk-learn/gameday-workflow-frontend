@@ -60,10 +60,14 @@ async function graphqlRequest<T>(query: string, variables?: Record<string, any>)
     console.log('[GraphQL Client] Variables:', variables);
   }
   
+  // 選択中の表示言語をサーバー側にも伝える(APIが返す文言の言語がこれで決まる)。
+  const locale = typeof localStorage !== 'undefined' ? localStorage.getItem('locale') : null;
+
   const response = await fetch(GRAPHQL_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...(locale ? { 'Accept-Language': locale } : {}),
       ...(token && { Authorization: `Bearer ${token}` }),
     },
     body: JSON.stringify({

@@ -20,23 +20,10 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
+import { useT } from '@/lib/i18n/LocaleProvider';
+import { notificationTypeLabel } from '@/lib/i18n/labels';
 import type { Notification } from '@/lib/api/types';
 import { getCurrentUserId } from '@/lib/utils/auth';
-
-const getNotificationTypeLabel = (type: Notification['notificationType']) => {
-  switch (type) {
-    case 'ApprovalRequest':
-      return '承認依頼';
-    case 'ApprovalCompleted':
-      return '承認完了';
-    case 'ApprovalRejected':
-      return '却下';
-    case 'WorkflowCompleted':
-      return '申請完了';
-    default:
-      return type;
-  }
-};
 
 const getNotificationTypeColor = (
   type: Notification['notificationType']
@@ -60,6 +47,7 @@ const formatDateTime = (value?: string | null) => {
 };
 
 export default function NotificationsPage() {
+  const t = useT();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,7 +69,7 @@ export default function NotificationsPage() {
         );
         setNotifications(sorted);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '通知の取得に失敗しました');
+        setError(err instanceof Error ? err.message : t.lists.loadNotificationsFailed);
         console.error('通知取得エラー:', err);
       } finally {
         setLoading(false);
@@ -89,7 +77,7 @@ export default function NotificationsPage() {
     };
 
     fetchData();
-  }, []);
+  }, [t.lists.loadNotificationsFailed]);
 
   if (loading) {
     return (
@@ -105,14 +93,14 @@ export default function NotificationsPage() {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1" fontWeight="bold">
-          通知一覧
+          {t.lists.notificationsTitle}
         </Typography>
         <Button
           variant="outlined"
           startIcon={<ArrowBackIcon />}
           onClick={() => router.push('/dashboard')}
         >
-          ダッシュボードへ戻る
+          {t.lists.backToDashboard}
         </Button>
       </Box>
 
@@ -123,16 +111,16 @@ export default function NotificationsPage() {
       )}
 
       {notifications.length === 0 && !error ? (
-        <Alert severity="info">通知はまだありません</Alert>
+        <Alert severity="info">{t.lists.emptyNotifications}</Alert>
       ) : (
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>受信日時</TableCell>
-                <TableCell>種類</TableCell>
-                <TableCell>件名</TableCell>
-                <TableCell>内容</TableCell>
+                <TableCell>{t.lists.receivedAt}</TableCell>
+                <TableCell>{t.lists.kind}</TableCell>
+                <TableCell>{t.lists.subject}</TableCell>
+                <TableCell>{t.lists.body}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -141,7 +129,7 @@ export default function NotificationsPage() {
                   <TableCell>{formatDateTime(notification.createdAt)}</TableCell>
                   <TableCell>
                     <Chip
-                      label={getNotificationTypeLabel(notification.notificationType)}
+                      label={notificationTypeLabel(t, notification.notificationType)}
                       color={getNotificationTypeColor(notification.notificationType)}
                       size="small"
                     />

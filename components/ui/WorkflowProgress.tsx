@@ -7,6 +7,7 @@ import PendingIcon from '@mui/icons-material/Pending';
 import CancelIcon from '@mui/icons-material/Cancel';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import type { Application, Approval } from '@/lib/api/types';
+import { useT, format } from '@/lib/i18n/LocaleProvider';
 
 interface WorkflowProgressProps {
   application: Application;
@@ -26,6 +27,7 @@ interface StepInfo {
 }
 
 export default function WorkflowProgress({ application, approvals }: WorkflowProgressProps) {
+  const t = useT();
   const isRejected = application.status === 'rejected';
   
   const isApproved = application.status === 'approved';
@@ -95,13 +97,13 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
   
   const getStepLabel = (step: StepInfo) => {
     const roleMap: Record<string, string> = {
-      'manager': '上長',
-      'director': '本部長',
-      'accounting': '経理',
-      'engineer': 'エンジニア',
+      'manager': t.roles.manager,
+      'director': t.roles.director,
+      'accounting': t.roles.accounting,
+      'engineer': t.roles.engineer,
     };
     
-    let roleLabel = step.approverName || '承認者';
+    let roleLabel = step.approverName || t.workflow.approver;
     if (step.approverName) {
       Object.entries(roleMap).forEach(([key, value]) => {
         if (step.approverName === value) {
@@ -142,7 +144,7 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
   return (
     <Paper sx={{ p: 3, mt: 2 }}>
       <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
-        承認フロー進捗
+        {t.workflow.title}
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 1 }}>
         {steps.map((step, index) => {
@@ -182,7 +184,7 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
                 
                 {}
                 <Typography variant="caption" sx={{ fontWeight: 'bold', mb: 0.5 }}>
-                  ステップ {step.stepNumber}
+                  {format(t.workflow.step, { n: step.stepNumber })}
                 </Typography>
                 <Typography variant="body2" sx={{ fontWeight: 'bold', textAlign: 'center', mb: 0.5 }}>
                   {getStepLabel(step)}
@@ -203,9 +205,9 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
                 {}
                 <Chip
                   label={
-                    step.status === 'completed' ? '承認済み' :
-                    step.status === 'current' ? '承認待ち' :
-                    step.status === 'rejected' ? '却下' : '未開始'
+                    step.status === 'completed' ? t.workflow.statusCompleted :
+                    step.status === 'current' ? t.workflow.statusCurrent :
+                    step.status === 'rejected' ? t.workflow.statusRejected : t.workflow.statusNotStarted
                   }
                   size="small"
                   sx={{
@@ -248,22 +250,22 @@ export default function WorkflowProgress({ application, approvals }: WorkflowPro
       {application.status === 'pending' && currentStep !== undefined && (
         <Box sx={{ mt: 3, p: 2, bgcolor: '#e8f5e9', borderRadius: 1, border: '1px solid #4caf50' }}>
           <Typography variant="body2" sx={{ color: '#2e7d32', fontWeight: 'bold' }}>
-            現在の状況: ステップ {currentStep} / {totalSteps} の承認待ちです
-            {application.nextApproverName && ` (承認者: ${application.nextApproverName})`}
+            {format(t.workflow.current, { current: currentStep, total: totalSteps })}
+            {application.nextApproverName && format(t.workflow.currentApprover, { name: application.nextApproverName })}
           </Typography>
         </Box>
       )}
       {application.status === 'approved' && (
         <Box sx={{ mt: 3, p: 2, bgcolor: '#e8f5e9', borderRadius: 1, border: '1px solid #4caf50' }}>
           <Typography variant="body2" sx={{ color: '#2e7d32', fontWeight: 'bold' }}>
-            ✓ すべての承認が完了しました。申請は承認されました。
+            {t.workflow.allDone}
           </Typography>
         </Box>
       )}
       {application.status === 'rejected' && (
         <Box sx={{ mt: 3, p: 2, bgcolor: '#ffebee', borderRadius: 1, border: '1px solid #f44336' }}>
           <Typography variant="body2" sx={{ color: '#c62828', fontWeight: 'bold' }}>
-            ✗ 申請は却下されました。
+            {t.workflow.rejected}
           </Typography>
         </Box>
       )}

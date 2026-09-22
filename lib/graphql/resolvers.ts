@@ -98,6 +98,11 @@ const DateTimeScalar = new GraphQLScalarType({
   },
 });
 
+/** ブラウザが送ってきた表示言語。申請・承認APIが返す文言の言語になる。 */
+function getLocaleFromRequest(request?: Request): string | undefined {
+  return request?.headers.get('accept-language') ?? undefined;
+}
+
 export const resolvers: Resolvers & {
   DateTime: GraphQLScalarType;
 } = {
@@ -427,6 +432,7 @@ export const resolvers: Resolvers & {
           ...(input.amount != null ? { 'application.amount': input.amount } : {}),
           ...(input.days != null ? { 'application.days': input.days } : {}),
         });
+        const locale = getLocaleFromRequest(context.request);
         const result = await downstreamClient.createApplication(
           {
             type: input.type,
@@ -438,7 +444,8 @@ export const resolvers: Resolvers & {
             days: input.days ?? undefined,
             applicantId,
           },
-          token
+          token,
+          locale
         );
         if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
           console.log('[GraphQL Resolver] createApplication result:', JSON.stringify(result, null, 2));
@@ -495,7 +502,8 @@ export const resolvers: Resolvers & {
             applicationId: applicationId,
           },
           token,
-          applicationId
+          applicationId,
+          getLocaleFromRequest(context.request)
         );
         
         if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
