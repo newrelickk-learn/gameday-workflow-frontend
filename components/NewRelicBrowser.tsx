@@ -27,7 +27,9 @@ export default function NewRelicBrowser() {
             mask_text_selector: '',
             sampling_rate: 100.0,
             error_sampling_rate: 100.0,
-            mask_all_inputs: false,
+            // 入力値(パスワード・申請内容など)はセッションリプレイに残さない。
+            // 画面のテキストは調査に使うためマスクしない(mask_text_selectorは空のまま)。
+            mask_all_inputs: true,
             collect_fonts: true,
             inline_images: false,
             inline_stylesheet: true,
