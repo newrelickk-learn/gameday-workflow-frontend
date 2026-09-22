@@ -110,6 +110,11 @@ const ja = {
     errorNoLogin: 'ログイン情報が見つかりません。再度ログインしてください。',
     errorCreate: '申請できませんでした',
   },
+  manual: {
+    title: 'マニュアル',
+    intro: '各種申請の書き方や承認フローについて説明しています。申請する前に該当する記事を確認してください。',
+    backToList: 'マニュアル一覧',
+  },
   lists: {
     applicationsTitle: '申請一覧',
     approvalsTitle: '承認一覧',
@@ -348,6 +353,11 @@ const en: Messages = {
     errorDays: 'Enter the number of days',
     errorNoLogin: 'Login information was not found. Please log in again.',
     errorCreate: 'Could not submit the application',
+  },
+  manual: {
+    title: 'Manual',
+    intro: 'These articles explain how to fill in each application and how approvals flow. Read the relevant one before you apply.',
+    backToList: 'Back to the manual',
   },
   lists: {
     applicationsTitle: 'Applications',

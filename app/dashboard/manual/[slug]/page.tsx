@@ -1,12 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Container, Box, Typography, Button, Paper } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Container } from '@mui/material';
 import { getManualArticle, manualArticles } from '@/lib/manual/articles';
+import ManualArticleView from '@/components/ManualArticleView';
 
 interface ManualArticlePageProps {
   params: Promise<{
@@ -16,8 +13,9 @@ interface ManualArticlePageProps {
 
 const MANUAL_CONTENT_DIR = path.join(process.cwd(), 'content', 'manual');
 
-function readManualMarkdown(slug: string): string | null {
-  const filePath = path.join(MANUAL_CONTENT_DIR, `${slug}.md`);
+function readManualMarkdown(slug: string, locale?: 'en'): string | null {
+  const dir = locale === 'en' ? path.join(MANUAL_CONTENT_DIR, 'en') : MANUAL_CONTENT_DIR;
+  const filePath = path.join(dir, `${slug}.md`);
 
   if (!filePath.startsWith(MANUAL_CONTENT_DIR + path.sep)) {
     return null;
@@ -38,6 +36,8 @@ export default async function ManualArticlePage({ params }: ManualArticlePagePro
   const { slug } = await params;
   const article = getManualArticle(slug);
   const markdown = readManualMarkdown(slug);
+  // 英語版が未用意の記事では日本語のまま表示する。
+  const markdownEn = readManualMarkdown(slug, 'en');
 
   if (!article || markdown === null) {
     notFound();
@@ -45,61 +45,7 @@ export default async function ManualArticlePage({ params }: ManualArticlePagePro
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1" fontWeight="bold">
-          {article.title}
-        </Typography>
-        <Link href="/dashboard/manual" style={{ textDecoration: 'none' }}>
-          <Button component="span" startIcon={<ArrowBackIcon />}>
-            マニュアル一覧
-          </Button>
-        </Link>
-      </Box>
-
-      <Paper
-        sx={{
-          p: 4,
-          '& h1': { fontSize: '1.75rem', fontWeight: 'bold', mt: 3, mb: 2 },
-          '& h2': { fontSize: '1.4rem', fontWeight: 'bold', mt: 3, mb: 1.5 },
-          '& h3': { fontSize: '1.15rem', fontWeight: 'bold', mt: 2.5, mb: 1 },
-          '& p': { mb: 1.5, lineHeight: 1.8 },
-          '& ul, & ol': { mb: 1.5, pl: 3 },
-          '& li': { mb: 0.5, lineHeight: 1.8 },
-          '& table': {
-            width: '100%',
-            borderCollapse: 'collapse',
-            mb: 2,
-          },
-          '& th, & td': {
-            border: '1px solid',
-            borderColor: 'divider',
-            p: 1,
-            textAlign: 'left',
-          },
-          '& th': {
-            backgroundColor: 'action.hover',
-            fontWeight: 'bold',
-          },
-          '& code': {
-            backgroundColor: 'action.hover',
-            borderRadius: 0.5,
-            px: 0.5,
-            fontFamily: 'monospace',
-          },
-          '& pre': {
-            backgroundColor: 'action.hover',
-            borderRadius: 1,
-            p: 2,
-            overflowX: 'auto',
-          },
-          '& pre code': {
-            backgroundColor: 'transparent',
-            px: 0,
-          },
-        }}
-      >
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
-      </Paper>
+      <ManualArticleView article={article} markdown={markdown} markdownEn={markdownEn} />
     </Container>
   );
 }
