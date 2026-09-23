@@ -177,6 +177,7 @@ const ja = {
   misc: {
     scoreUpTo: 'CHAPTER {n} まで',
     scoreLive: 'LIVE / 全{n}クエスト',
+    scoreZero: 'スタート前 / 全{n}クエスト',
     noTeams: 'まだスコアのあるチームがありません。',
     transferScores: '点数を転記',
     transferTitle: 'Dojoに点数を転記しますか?',
@@ -528,6 +529,7 @@ const en: Messages = {
   misc: {
     scoreUpTo: 'UP TO CHAPTER {n}',
     scoreLive: 'LIVE / {n} missions',
+    scoreZero: 'BEFORE THE RACE / {n} missions',
     noTeams: 'No team has scored yet.',
     transferScores: 'Send scores',
     transferTitle: 'Send the scores to Dojo?',

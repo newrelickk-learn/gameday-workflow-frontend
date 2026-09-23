@@ -32,6 +32,27 @@ const mockFetch = (transfer: { status: number; body: unknown }) =>
     } as unknown as Response);
   });
 
+describe('TeamScoreBoard の0点表示', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('ZEROを押すとスタート前の表示になる', async () => {
+    global.fetch = mockFetch({ status: 200, body: {} }) as unknown as typeof fetch;
+
+    render(<TeamScoreBoard from="51" to="100" />);
+
+    await screen.findByText('AY');
+    expect(screen.getByText('LIVE / 全9クエスト')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'ZERO' }));
+
+    expect(screen.getByText('スタート前 / 全9クエスト')).toBeInTheDocument();
+    // チームは消えず、ここからチャプターを開けてレースできる
+    expect(screen.getByText('AY')).toBeInTheDocument();
+  });
+});
+
 describe('TeamScoreBoard の点数転記', () => {
   afterEach(() => {
     jest.restoreAllMocks();

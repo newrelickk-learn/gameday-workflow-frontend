@@ -34,6 +34,9 @@ const WINNER_REVEAL_DELAY_MS = 1000;
 
 const EMPTY_RESPONSE: TeamScoreResponse = { totalChapters: 0, maxScore: 0, chapters: [], teams: [] };
 
+// 「0点から」表示。最初のチャプターより前の状態なので、累計は必ず0になる。
+const ZERO_CHAPTER = -1;
+
 interface TeamScoreBoardProps {
   /** 集計・表示するチーム(company_id)のレンジ。未指定なら1〜100。 */
   from?: string;
@@ -50,6 +53,7 @@ export default function TeamScoreBoard({ from, to, eventId }: TeamScoreBoardProp
   const [teams, setTeams] = useState<DisplayTeam[]>([]);
   const [isWinnerDetermined, setIsWinnerDetermined] = useState(false);
   // null = ライブ表示(最新スコアをポーリング)、数値 = そのチャプターまでの累計を再生中
+  // (ZERO_CHAPTERは加点前の0点表示。ここからチャプターを順に開けてレースする)
   const [revealedChapter, setRevealedChapter] = useState<number | null>(null);
 
   const [isTransferOpen, setIsTransferOpen] = useState(false);
@@ -225,6 +229,23 @@ export default function TeamScoreBoard({ from, to, eventId }: TeamScoreBoardProp
     }
   }, [eventId, from, to, t.misc.transferFailed, t.misc.transferDone, t.misc.transferUnmatched]);
 
+  const handleShowZero = useCallback(() => {
+    clearPendingTimeouts();
+    setIsWinnerDetermined(false);
+    setRevealedChapter(ZERO_CHAPTER);
+
+    // バーの長さの基準は最終スコアのままにして、レース中に目盛りが変わらないようにする
+    const highest = Math.max(0, ...(data.teams || []).map((team) => team.totalScore));
+    setTeams(
+      (data.teams || []).map((team) => ({
+        id: team.companyId,
+        score: 0,
+        sortingScore: 0,
+        maxScore: highest,
+      }))
+    );
+  }, [data]);
+
   const handleBackToLive = useCallback(() => {
     clearPendingTimeouts();
     setIsWinnerDetermined(false);
@@ -259,9 +280,11 @@ export default function TeamScoreBoard({ from, to, eventId }: TeamScoreBoardProp
           >
             <Box>
               <Typography sx={{ fontSize: 14, color: '#888', fontWeight: 'bold', letterSpacing: '1px' }}>
-                {revealedChapter !== null
-                  ? format(t.misc.scoreUpTo, { n: revealedChapter })
-                  : format(t.misc.scoreLive, { n: data.totalChapters })}
+                {revealedChapter === ZERO_CHAPTER
+                  ? format(t.misc.scoreZero, { n: data.totalChapters })
+                  : revealedChapter !== null
+                    ? format(t.misc.scoreUpTo, { n: revealedChapter })
+                    : format(t.misc.scoreLive, { n: data.totalChapters })}
               </Typography>
               <Typography
                 variant="h2"
@@ -290,6 +313,21 @@ export default function TeamScoreBoard({ from, to, eventId }: TeamScoreBoardProp
               }}
             >
               LIVE
+            </Button>
+            <Button
+              onClick={handleShowZero}
+              sx={{
+                minWidth: '120px',
+                height: '60px',
+                fontSize: '1.2rem',
+                fontWeight: 'bold',
+                borderRadius: '4px',
+                color: revealedChapter === ZERO_CHAPTER ? '#000' : '#AAA',
+                backgroundColor: revealedChapter === ZERO_CHAPTER ? '#00FFFF' : '#222',
+                '&:hover': { backgroundColor: revealedChapter === ZERO_CHAPTER ? '#00DDDD' : '#333' },
+              }}
+            >
+              ZERO
             </Button>
             {eventId && (
               <Button

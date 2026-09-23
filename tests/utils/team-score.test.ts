@@ -26,6 +26,13 @@ describe('withRanks', () => {
     expect(ranked.map((t) => t.rank)).toEqual([1, 2, 3]);
   });
 
+  it('同点はチーム番号の小さい順に並べる(0点表示で最終順位が透けないように)', () => {
+    const ranked = withRanks([team('52', 0), team('7', 0), team('51', 0)], false);
+
+    expect(ranked.map((t) => t.id)).toEqual(['7', '51', '52']);
+    expect(ranked.map((t) => t.rank)).toEqual([1, 1, 1]);
+  });
+
   it('同点は同順位にし、次の順位は人数分飛ばす', () => {
     const ranked = withRanks([team('1', 2000), team('2', 2000), team('3', 500)], false);
 

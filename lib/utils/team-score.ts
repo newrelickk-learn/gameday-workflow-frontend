@@ -19,12 +19,21 @@ export interface RankedTeam extends DisplayTeam {
 export const ROW_HEIGHT = 120;
 export const FIRST_PLACE_ROW_HEIGHT = 180;
 
+/** 同点はチーム番号の小さい順。全チーム0点のときに最終順位が透けないようにするため。 */
+function byScoreThenTeamNumber(a: DisplayTeam, b: DisplayTeam): number {
+  if (a.sortingScore !== b.sortingScore) {
+    return b.sortingScore - a.sortingScore;
+  }
+
+  return Number(a.id) - Number(b.id);
+}
+
 /**
  * スコアの高い順に並べ、同点は同順位・次の順位は人数分飛ばす(1,1,3,...)。
  * 併せて、各行をボード内のどの高さに置くかも決める。
  */
 export function withRanks(teams: DisplayTeam[], isWinnerDetermined: boolean): RankedTeam[] {
-  const sorted = [...teams].sort((a, b) => b.sortingScore - a.sortingScore);
+  const sorted = [...teams].sort(byScoreThenTeamNumber);
 
   let currentRank = 1;
   let previousScore: number | null = null;
