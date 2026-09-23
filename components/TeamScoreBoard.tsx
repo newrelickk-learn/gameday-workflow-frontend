@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import { animated, useSpringRef, useTransition } from 'react-spring';
 import TeamScoreRow from './TeamScoreRow';
-import { teamNameFromSlot } from '@/lib/utils/team-progress';
+import { teamNameFromSlot, teamRangeQuery } from '@/lib/utils/team-progress';
 import { useT, format } from '@/lib/i18n/LocaleProvider';
 import {
   ROW_HEIGHT,
@@ -22,13 +22,21 @@ const WINNER_REVEAL_DELAY_MS = 1000;
 
 const EMPTY_RESPONSE: TeamScoreResponse = { totalChapters: 0, maxScore: 0, chapters: [], teams: [] };
 
-export default function TeamScoreBoard() {
+interface TeamScoreBoardProps {
+  /** 集計・表示するチーム(company_id)のレンジ。未指定なら1〜100。 */
+  from?: string;
+  to?: string;
+}
+
+export default function TeamScoreBoard({ from, to }: TeamScoreBoardProps) {
   const t = useT();
   const [data, setData] = useState<TeamScoreResponse>(EMPTY_RESPONSE);
   const [teams, setTeams] = useState<DisplayTeam[]>([]);
   const [isWinnerDetermined, setIsWinnerDetermined] = useState(false);
   // null = ライブ表示(最新スコアをポーリング)、数値 = そのチャプターまでの累計を再生中
   const [revealedChapter, setRevealedChapter] = useState<number | null>(null);
+
+  const rangeQuery = teamRangeQuery(from, to);
 
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const transRef = useSpringRef();
@@ -65,7 +73,7 @@ export default function TeamScoreBoard() {
     let mounted = true;
 
     const fetchScores = () => {
-      fetch('/api/team-scores')
+      fetch(`/api/team-scores${rangeQuery}`)
         .then((res) => res.json())
         .then((fetched: TeamScoreResponse) => {
           if (!mounted) return;
@@ -99,7 +107,7 @@ export default function TeamScoreBoard() {
       mounted = false;
       clearInterval(interval);
     };
-  }, [revealedChapter]);
+  }, [revealedChapter, rangeQuery]);
 
   useEffect(() => clearPendingTimeouts, []);
 

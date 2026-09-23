@@ -285,6 +285,9 @@ export interface TeamProgressItem {
 
 export interface TeamProgressResponse {
   totalChapters: number;
+  /** 集計対象にしたチーム(company_id)のレンジ */
+  from?: number;
+  to?: number;
   teams: TeamProgressItem[];
 }
 
@@ -321,6 +324,9 @@ export interface TeamScoreResponse {
   totalChapters: number;
   /** 1チームが取り得る最大得点(全クエストを1位クリア) */
   maxScore: number;
+  /** 集計対象にしたチーム(company_id)のレンジ */
+  from?: number;
+  to?: number;
   chapters: ChapterScoreRule[];
   teams: TeamScoreItem[];
 }

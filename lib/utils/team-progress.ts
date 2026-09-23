@@ -12,6 +12,21 @@ export function teamNameFromSlot(slot: number): string {
   return name;
 }
 
+/**
+ * ボードに表示するチームのレンジ(company_id)をクエリ文字列にする。
+ *
+ * 同じ日に同じGameDayを2回開催することがあり、回ごとに別のスロットを配る。
+ * ボードのURLに ?from=51&to=100 と付けると、その回のチームだけを表示できる。
+ * 未指定なら空文字を返し、game-master側の既定(1〜100)に任せる。
+ */
+export function teamRangeQuery(from?: string | null, to?: string | null): string {
+  const params = new URLSearchParams();
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
 export function getProgressColor(ratio: number): string {
   const clamped = Math.max(0, Math.min(1, ratio));
   const r = Math.round(PROGRESS_BASE_COLOR.r + (PROGRESS_TARGET_COLOR.r - PROGRESS_BASE_COLOR.r) * clamped);

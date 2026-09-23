@@ -3,21 +3,34 @@
 import { useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import type { TeamProgressItem, TeamProgressResponse } from '@/lib/api/types';
-import { teamNameFromSlot, getProgressColor, getProgressTextColor } from '@/lib/utils/team-progress';
+import {
+  teamNameFromSlot,
+  teamRangeQuery,
+  getProgressColor,
+  getProgressTextColor,
+} from '@/lib/utils/team-progress';
 import { useT, format } from '@/lib/i18n/LocaleProvider';
 
 const POLL_INTERVAL_MS = 5000;
 
-export default function TeamProgressBoard() {
+interface TeamProgressBoardProps {
+  /** 表示するチーム(company_id)のレンジ。未指定なら1〜100。 */
+  from?: string;
+  to?: string;
+}
+
+export default function TeamProgressBoard({ from, to }: TeamProgressBoardProps) {
   const t = useT();
   const [teams, setTeams] = useState<TeamProgressItem[]>([]);
   const [totalChapters, setTotalChapters] = useState(0);
+
+  const rangeQuery = teamRangeQuery(from, to);
 
   useEffect(() => {
     let mounted = true;
 
     const fetchProgress = () => {
-      fetch('/api/team-progress')
+      fetch(`/api/team-progress${rangeQuery}`)
         .then((res) => res.json())
         .then((data: TeamProgressResponse) => {
           if (!mounted) return;
@@ -35,7 +48,7 @@ export default function TeamProgressBoard() {
       mounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [rangeQuery]);
 
   return (
     <Box sx={{ p: 4 }}>
