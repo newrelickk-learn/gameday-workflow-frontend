@@ -216,12 +216,6 @@ export default function TeamScoreRow({
             >
               {name}
             </Typography>
-            <Typography
-              variant="body2"
-              sx={{ color: mainColor, fontFamily: 'monospace', fontWeight: 'bold', fontSize: '1rem' }}
-            >
-              TEAM_::{id}
-            </Typography>
           </Box>
 
           <Box sx={{ textAlign: 'right', flexShrink: 0, marginLeft: '16px' }}>
