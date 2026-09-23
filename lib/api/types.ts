@@ -320,6 +320,15 @@ export interface TeamScoreItem {
   chapters: TeamChapterScore[];
 }
 
+/** POST /api/team-scores/transfer のレスポンス(game-master経由でDojoが返したもの) */
+export interface TransferScoresResponse {
+  saved?: { teamId: string; teamSlot: number; name: string; score: number }[];
+  /** この開催のチームに対応しなかった入力。エラーではない */
+  unmatched?: { teamSlot?: number; teamId?: string }[];
+  error?: string;
+  message?: string;
+}
+
 export interface TeamScoreResponse {
   totalChapters: number;
   /** 1チームが取り得る最大得点(全クエストを1位クリア) */

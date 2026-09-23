@@ -1,7 +1,19 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Snackbar,
+  Typography,
+} from '@mui/material';
 import { animated, useSpringRef, useTransition } from 'react-spring';
 import TeamScoreRow from './TeamScoreRow';
 import { teamNameFromSlot, teamRangeQuery } from '@/lib/utils/team-progress';
@@ -12,7 +24,7 @@ import {
   withRanks,
   type DisplayTeam,
 } from '@/lib/utils/team-score';
-import type { TeamScoreResponse } from '@/lib/api/types';
+import type { TeamScoreResponse, TransferScoresResponse } from '@/lib/api/types';
 
 const POLL_INTERVAL_MS = 5000;
 // 総括の演出タイミング。加点 → 少し置いて並び替え → さらに置いて1位確定、の順に見せる。
@@ -26,15 +38,23 @@ interface TeamScoreBoardProps {
   /** 集計・表示するチーム(company_id)のレンジ。未指定なら1〜100。 */
   from?: string;
   to?: string;
+  /** Dojoの開催ID。指定されたときだけ点数転記ボタンを出す。 */
+  eventId?: string;
 }
 
-export default function TeamScoreBoard({ from, to }: TeamScoreBoardProps) {
+type TransferFeedback = { severity: 'success' | 'error'; text: string };
+
+export default function TeamScoreBoard({ from, to, eventId }: TeamScoreBoardProps) {
   const t = useT();
   const [data, setData] = useState<TeamScoreResponse>(EMPTY_RESPONSE);
   const [teams, setTeams] = useState<DisplayTeam[]>([]);
   const [isWinnerDetermined, setIsWinnerDetermined] = useState(false);
   // null = ライブ表示(最新スコアをポーリング)、数値 = そのチャプターまでの累計を再生中
   const [revealedChapter, setRevealedChapter] = useState<number | null>(null);
+
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [transferFeedback, setTransferFeedback] = useState<TransferFeedback | null>(null);
 
   const rangeQuery = teamRangeQuery(from, to);
 
@@ -168,6 +188,43 @@ export default function TeamScoreBoard({ from, to }: TeamScoreBoardProps) {
     [data]
   );
 
+  const handleTransfer = useCallback(async () => {
+    setIsTransferring(true);
+    try {
+      const response = await fetch('/api/team-scores/transfer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId, from, to }),
+      });
+      const result: TransferScoresResponse = await response.json();
+
+      if (!response.ok) {
+        setTransferFeedback({
+          severity: 'error',
+          text: format(t.misc.transferFailed, {
+            message: result.message || result.error || String(response.status),
+          }),
+        });
+      } else {
+        const messages = [format(t.misc.transferDone, { n: result.saved?.length ?? 0 })];
+        if (result.unmatched?.length) {
+          messages.push(format(t.misc.transferUnmatched, { n: result.unmatched.length }));
+        }
+        setTransferFeedback({ severity: 'success', text: messages.join(' ') });
+      }
+    } catch (error) {
+      setTransferFeedback({
+        severity: 'error',
+        text: format(t.misc.transferFailed, {
+          message: error instanceof Error ? error.message : String(error),
+        }),
+      });
+    } finally {
+      setIsTransferring(false);
+      setIsTransferOpen(false);
+    }
+  }, [eventId, from, to, t.misc.transferFailed, t.misc.transferDone, t.misc.transferUnmatched]);
+
   const handleBackToLive = useCallback(() => {
     clearPendingTimeouts();
     setIsWinnerDetermined(false);
@@ -234,6 +291,27 @@ export default function TeamScoreBoard({ from, to }: TeamScoreBoardProps) {
             >
               LIVE
             </Button>
+            {eventId && (
+              <Button
+                onClick={() => setIsTransferOpen(true)}
+                disabled={isTransferring || teams.length === 0}
+                sx={{
+                  order: 1,
+                  marginLeft: 'auto',
+                  minWidth: '180px',
+                  height: '60px',
+                  fontSize: '1.1rem',
+                  fontWeight: 'bold',
+                  borderRadius: '4px',
+                  color: '#000',
+                  backgroundColor: '#00FF88',
+                  '&:hover': { backgroundColor: '#00DD77' },
+                  '&.Mui-disabled': { backgroundColor: '#333', color: '#777' },
+                }}
+              >
+                {isTransferring ? t.misc.transferring : t.misc.transferScores}
+              </Button>
+            )}
             {data.chapters.map((chapter) => (
               <Button
                 key={`chapter-${chapter.chapter}`}
@@ -253,6 +331,48 @@ export default function TeamScoreBoard({ from, to }: TeamScoreBoardProps) {
               </Button>
             ))}
           </Box>
+
+          <Dialog open={isTransferOpen} onClose={() => setIsTransferOpen(false)}>
+            <DialogTitle>{t.misc.transferTitle}</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                {format(t.misc.transferBody, {
+                  eventId: eventId ?? '',
+                  from: data.from ?? 1,
+                  to: data.to ?? 100,
+                  n: teams.length,
+                })}
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setIsTransferOpen(false)} disabled={isTransferring}>
+                {t.misc.transferCancel}
+              </Button>
+              <Button
+                onClick={handleTransfer}
+                disabled={isTransferring}
+                variant="contained"
+                startIcon={isTransferring ? <CircularProgress size={16} /> : undefined}
+              >
+                {t.misc.transferSubmit}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          <Snackbar
+            open={transferFeedback !== null}
+            autoHideDuration={10000}
+            onClose={() => setTransferFeedback(null)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          >
+            <Alert
+              severity={transferFeedback?.severity ?? 'success'}
+              onClose={() => setTransferFeedback(null)}
+              sx={{ fontSize: '1.1rem' }}
+            >
+              {transferFeedback?.text}
+            </Alert>
+          </Snackbar>
 
           {teams.length === 0 ? (
             <Typography sx={{ color: '#888', fontSize: '1.5rem', fontWeight: 'bold' }}>
