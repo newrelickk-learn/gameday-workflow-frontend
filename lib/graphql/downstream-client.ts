@@ -46,6 +46,15 @@ const localeQuery = (locale?: string) => (locale === 'en' ? '?lang=en' : '');
 
 const TRAVEL_REQUEST_TIMEOUT_MS = 3000;
 
+/**
+ * game-masterを呼ぶのはこのBFFだけにする(issue #3)。他サービスはgame-masterを直接呼ばず、
+ * game-masterの状態が必要なときはBFFが取得した署名付きスナップショットをこのヘッダで受け取る。
+ */
+const GAME_STATE_HEADER = 'X-Game-State';
+
+/** 仮想日付(出張申請)や前提章のクリア状況(プロモーション申請)を参照する申請の種類。 */
+const APPLICATION_TYPES_NEEDING_GAME_STATE = new Set(['business-trip', 'promotion']);
+
 export class DownstreamClient {
   private userServiceUrl: string;
   private applicationServiceUrl: string;
@@ -192,7 +201,10 @@ export class DownstreamClient {
       throw error;
     }
 
-    return response.json();
+    const loginResponse: LoginResponse = await response.json();
+    // 章0のクリアはuserサービスが発行した引換券を、ログイン直後のトークンでgame-masterへ届ける。
+    await this.relayChapterClearTokens(loginResponse.chapterClearTokens, loginResponse.token);
+    return loginResponse;
   }
 
   async getUser(id: string, token?: string): Promise<User> {
@@ -340,9 +352,14 @@ export class DownstreamClient {
     if (this.useStubs) {
       return { applied: false, alreadyApplied: false, reason: 'stub', hiddenQuestTokens: null };
     }
+    // 適用条件(原因の切り分けの章をクリア済み)は、game-masterのスナップショットで判定してもらう。
+    const gameStateToken = await this.getGameStateSnapshot(token);
     return this.request<RemediationResult>(
       `${this.applicationServiceUrl}/api/v1/remediations/approved-list-slow`,
-      { method: 'POST' },
+      {
+        method: 'POST',
+        headers: gameStateToken ? { [GAME_STATE_HEADER]: gameStateToken } : undefined,
+      },
       token
     );
   }
@@ -393,6 +410,66 @@ export class DownstreamClient {
       token
     );
     return data.cleared;
+  }
+
+  /**
+   * 他サービスが発行した章クリアの引換券をgame-masterへ届ける。記録に失敗しても
+   * 元の操作(ログイン・申請)は成功しているので、例外は投げずにログだけ残す。
+   */
+  private async relayChapterClearTokens(chapterClearTokens: string[] | null | undefined, token?: string): Promise<void> {
+    for (const chapterClearToken of chapterClearTokens ?? []) {
+      try {
+        await this.clearHiddenQuest(chapterClearToken, token);
+      } catch (error) {
+        console.error('[Downstream Client] Failed to relay chapter clear token:', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+  }
+
+  /**
+   * game-masterの状態(仮想日付・当日クリア済みの章)の署名付きスナップショットを取得する。
+   * 取得できなかった場合はnullで、受け取った側はgame-masterに問い合わせられなかったときと同じ扱いにする。
+   */
+  private async getGameStateSnapshot(token?: string): Promise<string | null> {
+    try {
+      const data = await this.request<{ token: string | null }>(
+        `${this.gameMasterServiceUrl}/api/v1/game-progress/snapshot`,
+        { method: 'GET' },
+        token
+      );
+      return data.token;
+    } catch (error) {
+      console.error('[Downstream Client] Failed to get game state snapshot:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return null;
+    }
+  }
+
+  /**
+   * 承認完了でapplication-approvalが発行した引換券をgame-masterへ届け、仮想時間を進める。
+   * 承認自体は成功しているので、失敗しても例外は投げずにログだけ残す。
+   */
+  private async relayGameProgressToken(gameProgressToken: string | null | undefined, token?: string): Promise<void> {
+    if (!gameProgressToken) {
+      return;
+    }
+    try {
+      await this.request<{ applied: boolean }>(
+        `${this.gameMasterServiceUrl}/api/v1/game-progress/apply-approved-application`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ token: gameProgressToken }),
+        },
+        token
+      );
+    } catch (error) {
+      console.error('[Downstream Client] Failed to relay game progress token:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
 
   async getNPlusOneQuizOptions(token?: string, locale?: string): Promise<NPlusOneQuizOptions> {
@@ -528,15 +605,22 @@ export class DownstreamClient {
       }
       return stubApplicationService.createApplication(data);
     }
-    return this.request<Application>(
+    const gameStateToken = APPLICATION_TYPES_NEEDING_GAME_STATE.has(data.type)
+      ? await this.getGameStateSnapshot(token)
+      : null;
+    const application = await this.request<Application>(
       `${this.applicationServiceUrl}/api/v1/applications`,
       {
         method: 'POST',
         body: JSON.stringify(data),
+        headers: gameStateToken ? { [GAME_STATE_HEADER]: gameStateToken } : undefined,
       },
       token,
       locale
     );
+    // プロモーション(章5)のクリアは、application-approvalが発行した引換券をgame-masterへ届ける。
+    await this.relayChapterClearTokens(application.chapterClearTokens, token);
+    return application;
   }
 
   async getApprovals(token?: string, recipientId?: string): Promise<Approval[]> {
@@ -775,6 +859,8 @@ export class DownstreamClient {
       success: boolean;
       message: string;
       applicationStatus?: string;
+      /** 承認完了で仮想時間を進めるための引換券。game-masterへ届ける */
+      gameProgressToken?: string | null;
     }
     
     try {
@@ -793,6 +879,8 @@ export class DownstreamClient {
         token,
         locale
       );
+
+      await this.relayGameProgressToken(updateResult.gameProgressToken, token);
       
       const approval: Approval = {
         id: actualApprovalId,

@@ -7,6 +7,8 @@ export interface LoginRequest {
 export interface LoginResponse {
   token: string;
   user: User;
+  /** 章クリアの引換券(章0)。BFFがその場でgame-masterへ届ける(GraphQLには出さない)。 */
+  chapterClearTokens?: string[] | null;
 }
 
 export interface User {
@@ -44,6 +46,8 @@ export interface Application {
   updatedAt: string;
   /** 裏クエストのクリア引換券。申請が成立したときだけ返る（ブラウザからgame-masterへ渡す） */
   hiddenQuestTokens?: string[] | null;
+  /** メインストリームの章クリアの引換券(章5)。BFFがその場でgame-masterへ届ける(GraphQLには出さない)。 */
+  chapterClearTokens?: string[] | null;
 }
 
 export interface CreateApplicationRequest {
