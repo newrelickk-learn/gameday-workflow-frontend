@@ -321,5 +321,6 @@ export interface EstimateTravelCostInput {
   arrivalCityId: string;
   description: string;
   companyId?: number | null;
+  isChapter3Cleared?: boolean | null;
 }
 

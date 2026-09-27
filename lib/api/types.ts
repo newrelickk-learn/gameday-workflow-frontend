@@ -132,6 +132,13 @@ export interface EstimateTravelCostRequest {
   arrivalCityId: number;
   description: string;
   companyId?: number;
+  /**
+   * chapter3(旅費概算のタイムアウト障害)をクリア済みかどうか。ブラウザは既に
+   * getClearedChapters()で自分のクリア状況を持っているため、ここで渡してもらう。
+   * サーバー側(このBFF)からgame-masterへ問い合わせ直すと、申請作成の一連の流れに
+   * game-masterがサーバー間呼び出しとして混ざってしまうため、それを避けるためのもの。
+   */
+  isChapter3Cleared?: boolean;
 }
 
 export interface EstimateTravelCostResponse {

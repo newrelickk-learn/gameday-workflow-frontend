@@ -184,6 +184,9 @@ export const typeDefs = `#graphql
     arrivalCityId: ID!
     description: String!
     companyId: Int
+    # ブラウザが既に把握しているchapter3のクリア状況。BFFがgame-masterに問い合わせ直さずに
+    # 済むよう、ここで渡してもらう(サーバー間呼び出しを増やさないため)。
+    isChapter3Cleared: Boolean
   }
 
   type EstimateTravelCostResponse {

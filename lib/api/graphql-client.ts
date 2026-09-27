@@ -428,6 +428,7 @@ export const graphqlClient = {
       arrivalCityId: string;
       description: string;
       companyId?: number;
+      isChapter3Cleared?: boolean;
     }): Promise<EstimateTravelCostResponse> {
       const query = `
         query EstimateTravelCost($input: EstimateTravelCostInput!) {

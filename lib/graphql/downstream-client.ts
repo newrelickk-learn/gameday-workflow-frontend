@@ -1031,14 +1031,14 @@ export class DownstreamClient {
     const arrivalCity = cities.find((c) => c.id === data.arrivalCityId);
     const isUnstableRoute = Boolean(departureCity?.isUnstable || arrivalCity?.isUnstable);
 
-    const clearedChapters = await this.getClearedChapters(token).catch(() => [] as number[]);
-    const isChapter3Cleared = clearedChapters.includes(3);
-
+    // chapter3のクリア状況はブラウザ側から渡してもらう(呼び出し元のclearedChaptersクエリで
+    // 既に取得済みのもの)。ここでgame-masterに問い合わせ直すと、旅費概算というapplication
+    // 作成に付随する処理にgame-masterへのサーバー間呼び出しが混ざってしまうため。
     const { header: applicationCode, isRisky, resolutionCode } = buildApplicationCode({
       isUnstableRoute,
       description: data.description,
       companyId: data.companyId ?? 'unknown',
-      forceResolved: isChapter3Cleared,
+      forceResolved: data.isChapter3Cleared ?? false,
     });
 
     if (isRisky) {

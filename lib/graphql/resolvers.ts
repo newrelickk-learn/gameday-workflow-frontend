@@ -281,6 +281,7 @@ export const resolvers: Resolvers & {
             arrivalCityId: Number(input.arrivalCityId),
             description: input.description,
             companyId: input.companyId ?? undefined,
+            isChapter3Cleared: input.isChapter3Cleared ?? false,
           },
           token
         );
