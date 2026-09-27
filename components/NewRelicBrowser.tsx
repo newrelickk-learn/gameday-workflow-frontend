@@ -52,8 +52,12 @@ export default function NewRelicBrowser() {
             // Autocompleteはこの診断クイズでしか使っていないので、他の画面には影響しない。
             // ダッシュボードのミッションパネル(gameday-mission-panels)は、クエストの
             // タイトル・説明文が原因診断の手がかりや答えに直結するため全文マスクする。
+            // .gameday-quiz: 各原因診断クイズ(ChapterDiagnosisDropdown/RageClickDiagnosisQuiz/
+            // SlowApprovedListDiagnosisQuiz/Transaction360DiagnosisQuiz)の問題文・選択肢一式。
+            // .MuiAutocomplete-*はドロップダウンの選択肢がPortalでdocument.body直下に描画され、
+            // .gameday-quizの子孫にならないため別途指定している。
             mask_text_selector:
-              '.MuiAutocomplete-popper, .MuiAutocomplete-listbox, .MuiAutocomplete-option, .MuiAutocomplete-tag, .MuiAutocomplete-tag .MuiChip-label, .gameday-mission-panels',
+              '.MuiAutocomplete-popper, .MuiAutocomplete-listbox, .MuiAutocomplete-option, .MuiAutocomplete-tag, .MuiAutocomplete-tag .MuiChip-label, .gameday-mission-panels, .gameday-quiz',
             sampling_rate: 100.0,
             error_sampling_rate: 100.0,
             // 入力値(パスワード・申請内容など)はセッションリプレイに残さない。

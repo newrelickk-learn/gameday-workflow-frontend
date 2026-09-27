@@ -84,7 +84,10 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
 
   if (result === 'correct') {
     return (
-      <Paper sx={{ p: 3, mb: 3, bgcolor: 'success.50', border: '1px solid', borderColor: 'success.light' }}>
+      <Paper
+        className="gameday-quiz"
+        sx={{ p: 3, mb: 3, bgcolor: 'success.50', border: '1px solid', borderColor: 'success.light' }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CheckCircleIcon color="success" />
           <Typography variant="h6" color="success.dark">
@@ -101,8 +104,10 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
     );
   }
 
+  // 問題文・選択肢は原因診断クイズの答えの手がかりそのものなので、正解表示のときも含めて
+  // Paper全体をSession Replayでマスクする(class名はNewRelicBrowser.tsxのmask_text_selectorで指定)。
   return (
-    <Paper sx={{ p: 3, mb: 3 }}>
+    <Paper className="gameday-quiz" sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
         {title ?? t.diagnosis.title}
       </Typography>
