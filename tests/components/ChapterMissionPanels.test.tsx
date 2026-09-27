@@ -197,4 +197,22 @@ describe('ChapterMissionPanels', () => {
     const panel = screen.getByText('第5章 プロモーション').closest('.MuiCardContent-root');
     expect(panel).not.toHaveTextContent('チームが挑戦中');
   });
+
+  it('パネル一式にSession Replay用のマスキングclassが付いている(クエストのタイトル・説明は答えの手がかりになるため)', async () => {
+    render(<ChapterMissionPanels />);
+
+    await waitFor(() => expect(screen.getByText('第1章 経費申請')).toBeInTheDocument());
+    expect(document.querySelector('.gameday-mission-panels')).toBeInTheDocument();
+    expect(screen.getByText('第1章 経費申請').closest('.gameday-mission-panels')).not.toBeNull();
+  });
+
+  it('ミッション詳細ダイアログにもマスキングclassが付いている', async () => {
+    render(<ChapterMissionPanels />);
+
+    await waitFor(() => expect(screen.getByText('第1章 経費申請')).toBeInTheDocument());
+    fireEvent.click(screen.getByText('第1章 経費申請'));
+
+    await waitFor(() => expect(screen.getByText('第1章の説明')).toBeInTheDocument());
+    expect(screen.getByText('第1章の説明').closest('.gameday-mission-panels')).not.toBeNull();
+  });
 });

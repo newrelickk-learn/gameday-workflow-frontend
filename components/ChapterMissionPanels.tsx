@@ -239,7 +239,10 @@ export default function ChapterMissionPanels() {
   };
 
   return (
-    <Box sx={{ mt: 5 }}>
+    // クエストのタイトル・説明文は原因診断クイズの手がかりや答えに直結するため、
+    // Session Replayでは全文マスキングする(NewRelicBrowser.tsxのmask_text_selectorで
+    // この class を指定している)。
+    <Box className="gameday-mission-panels" sx={{ mt: 5 }}>
       <Typography variant="h6" component="h2" fontWeight="bold" gutterBottom>
         {t.missions.heading}
       </Typography>
@@ -268,7 +271,15 @@ export default function ChapterMissionPanels() {
         </>
       )}
 
-      <Dialog open={!!selected} onClose={closeDialog} maxWidth="sm" fullWidth>
+      <Dialog
+        open={!!selected}
+        onClose={closeDialog}
+        maxWidth="sm"
+        fullWidth
+        // Dialogはポータルでdocument.body直下に描画されるため、上のBoxのclassNameでは
+        // 覆えない。詳細ダイアログにもmission.descriptionが出るので、Paperの方に付ける。
+        PaperProps={{ className: 'gameday-mission-panels' }}
+      >
         <DialogTitle>{selected?.title ?? t.missions.dialogTitleSealed}</DialogTitle>
         <DialogContent>
           {selected && !selected.revealed ? (

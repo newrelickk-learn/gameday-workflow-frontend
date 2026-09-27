@@ -50,8 +50,10 @@ export default function NewRelicBrowser() {
             // 原因診断クイズの選択肢と、複数選択で選んだチップのラベルは「答え」そのもの。
             // セッションリプレイに残すと他チームに答えが見えてしまうためマスクする。
             // Autocompleteはこの診断クイズでしか使っていないので、他の画面には影響しない。
+            // ダッシュボードのミッションパネル(gameday-mission-panels)は、クエストの
+            // タイトル・説明文が原因診断の手がかりや答えに直結するため全文マスクする。
             mask_text_selector:
-              '.MuiAutocomplete-popper, .MuiAutocomplete-listbox, .MuiAutocomplete-option, .MuiAutocomplete-tag, .MuiAutocomplete-tag .MuiChip-label',
+              '.MuiAutocomplete-popper, .MuiAutocomplete-listbox, .MuiAutocomplete-option, .MuiAutocomplete-tag, .MuiAutocomplete-tag .MuiChip-label, .gameday-mission-panels',
             sampling_rate: 100.0,
             error_sampling_rate: 100.0,
             // 入力値(パスワード・申請内容など)はセッションリプレイに残さない。
