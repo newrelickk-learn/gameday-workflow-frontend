@@ -43,6 +43,20 @@ function LoginForm() {
         localStorage.setItem('user', JSON.stringify(response.user));
       }
 
+      // 章0(ログイン)のクリアは、userサービスが発行した引換券をここからgame-masterへ届ける
+      // (ログインのリクエストにgame-masterへのサーバー間呼び出しを混ぜないため、別リクエストにする)。
+      // この後の画面遷移はwindow.location.href(フルリロード)で、直前の非同期処理を
+      // 待たずに行うと途中でリクエストが打ち切られるため、遷移前にawaitしておく。
+      // 記録に失敗してもログイン自体は成立しているので、失敗はもみ消す。
+      const chapterClearTokens = response.chapterClearTokens ?? [];
+      if (chapterClearTokens.length > 0) {
+        await Promise.all(
+          chapterClearTokens.map((questToken) =>
+            apiClient.chapters.clearHiddenQuest(questToken).catch(() => false)
+          )
+        );
+      }
+
       const redirect = searchParams.get('redirect');
       window.location.href = redirect && redirect.startsWith('/') ? redirect : '/dashboard';
     } catch (err) {

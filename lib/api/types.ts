@@ -7,7 +7,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   token: string;
   user: User;
-  /** 章クリアの引換券(章0)。BFFがその場でgame-masterへ届ける(GraphQLには出さない)。 */
+  /** 章クリアの引換券(章0)。ブラウザがgame-masterへ届ける(ログインのリクエストにgame-masterを混ぜないため) */
   chapterClearTokens?: string[] | null;
 }
 
@@ -46,7 +46,7 @@ export interface Application {
   updatedAt: string;
   /** 裏クエストのクリア引換券。申請が成立したときだけ返る（ブラウザからgame-masterへ渡す） */
   hiddenQuestTokens?: string[] | null;
-  /** メインストリームの章クリアの引換券(章5)。BFFがその場でgame-masterへ届ける(GraphQLには出さない)。 */
+  /** メインストリームの章クリアの引換券(章5)。ブラウザがgame-masterへ届ける(申請作成のリクエストにgame-masterを混ぜないため) */
   chapterClearTokens?: string[] | null;
 }
 
@@ -59,6 +59,12 @@ export interface CreateApplicationRequest {
   endDate?: string;
   days?: number;
   applicantId: string;
+  /**
+   * game-masterの状態(仮想日付・クリア済みの章)の署名付きスナップショット。ブラウザが
+   * gameStateSnapshotクエリで事前に取得して添える(申請作成にgame-masterへのサーバー間
+   * 呼び出しを混ぜないため)。
+   */
+  gameStateToken?: string;
 }
 
 export interface Approval {
@@ -72,6 +78,8 @@ export interface Approval {
   step?: number;
   createdAt: string;
   updatedAt?: string;
+  /** 承認完了で仮想時間を進めるための引換券。ブラウザがgame-masterへ届ける */
+  gameProgressToken?: string | null;
 }
 
 export interface UpdateApprovalRequest {

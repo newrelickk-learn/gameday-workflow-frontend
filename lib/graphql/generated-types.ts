@@ -124,6 +124,12 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<number[]>;
+    gameStateSnapshot: (
+      parent: unknown,
+      args: Record<string, never>,
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<string | null>;
     chapterMissions: (
       parent: unknown,
       args: { locale?: string | null },
@@ -234,9 +240,15 @@ export interface Resolvers {
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<boolean>;
+    applyGameProgress: (
+      parent: unknown,
+      args: { token: string },
+      context: GraphQLContext,
+      info: GraphQLResolveInfo
+    ) => Promise<boolean>;
     applyApprovedListRemediation: (
       parent: unknown,
-      args: Record<string, never>,
+      args: { gameStateToken?: string | null },
       context: GraphQLContext,
       info: GraphQLResolveInfo
     ) => Promise<RemediationResult>;
@@ -280,6 +292,7 @@ export interface CreateApplicationInput {
   endDate?: string | null;
   days?: number | null;
   applicantId: string;
+  gameStateToken?: string | null;
 }
 
 export interface UpdateApprovalInput {

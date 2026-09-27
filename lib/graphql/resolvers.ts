@@ -317,6 +317,18 @@ export const resolvers: Resolvers & {
       }
     },
 
+    gameStateSnapshot: async (_, __, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.getGameStateSnapshot(token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to fetch game state snapshot: ${errorMessage}`, {
+          extensions: { code: 'GAME_STATE_SNAPSHOT_FETCH_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
     chapterMissions: async (_, { locale }, context) => {
       try {
         const token = getTokenFromRequest(context.request);
@@ -444,6 +456,7 @@ export const resolvers: Resolvers & {
             endDate: input.endDate ?? undefined,
             days: input.days ?? undefined,
             applicantId,
+            gameStateToken: input.gameStateToken ?? undefined,
           },
           token,
           locale
@@ -565,10 +578,10 @@ export const resolvers: Resolvers & {
       }
     },
 
-    applyApprovedListRemediation: async (_, __, context) => {
+    applyApprovedListRemediation: async (_, { gameStateToken }, context) => {
       try {
         const token = getTokenFromRequest(context.request);
-        return await downstreamClient.applyApprovedListRemediation(token);
+        return await downstreamClient.applyApprovedListRemediation(gameStateToken, token);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         throw new GraphQLError(`Failed to apply remediation: ${errorMessage}`, {
@@ -597,6 +610,18 @@ export const resolvers: Resolvers & {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         throw new GraphQLError(`Failed to clear hidden quest: ${errorMessage}`, {
           extensions: { code: 'CLEAR_HIDDEN_QUEST_ERROR', originalError: errorMessage },
+        });
+      }
+    },
+
+    applyGameProgress: async (_, { token: gameProgressToken }, context) => {
+      try {
+        const token = getTokenFromRequest(context.request);
+        return await downstreamClient.applyGameProgress(gameProgressToken, token);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        throw new GraphQLError(`Failed to apply game progress: ${errorMessage}`, {
+          extensions: { code: 'APPLY_GAME_PROGRESS_ERROR', originalError: errorMessage },
         });
       }
     },

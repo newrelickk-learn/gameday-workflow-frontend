@@ -268,6 +268,7 @@ export default function NewApplicationPage() {
         endDate?: string;
         days?: number;
         applicantId: string;
+        gameStateToken?: string;
       } = {
         type,
         title,
@@ -285,14 +286,28 @@ export default function NewApplicationPage() {
         requestData.days = parseInt(days);
       }
 
+      // 出張申請(14日前ルール)とプロモーション申請(前提クエストのクリア判定)はgame-masterの
+      // 状態を参照する。ここで取得して添えることで、申請作成のリクエストにgame-masterへの
+      // サーバー間呼び出しを混ぜない(取得できなくても未設定のまま送り、通常の未クリア扱いにする)。
+      if (isBusinessTripType || type === 'promotion') {
+        const gameStateToken = await apiClient.chapters.getGameStateSnapshot().catch(() => null);
+        if (gameStateToken) {
+          requestData.gameStateToken = gameStateToken;
+        }
+      }
+
       const created = await apiClient.applications.createApplication(requestData);
 
-      // 裏クエストのクリアは、申請サービスが発行した引換券をブラウザから渡して記録する
-      // (申請そのもののトレースにgame-masterを混ぜないため)。失敗しても申請は成立しているので握りつぶす。
-      const hiddenQuestTokens = created?.hiddenQuestTokens ?? [];
-      if (hiddenQuestTokens.length > 0) {
+      // 裏クエスト・メインストリーム(プロモーション=章5)のクリアは、申請サービスが発行した
+      // 引換券をブラウザから渡して記録する(申請そのもののトレースにgame-masterを混ぜないため)。
+      // 失敗しても申請は成立しているので握りつぶす。
+      const clearTokens = [
+        ...(created?.hiddenQuestTokens ?? []),
+        ...(created?.chapterClearTokens ?? []),
+      ];
+      if (clearTokens.length > 0) {
         await Promise.all(
-          hiddenQuestTokens.map((questToken) =>
+          clearTokens.map((questToken) =>
             apiClient.chapters.clearHiddenQuest(questToken).catch(() => false)
           )
         );

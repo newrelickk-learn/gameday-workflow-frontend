@@ -114,6 +114,7 @@ export const graphqlClient = {
               department
               companyId
             }
+            chapterClearTokens
           }
         }
       `;
@@ -301,6 +302,7 @@ export const graphqlClient = {
             createdAt
             updatedAt
             hiddenQuestTokens
+            chapterClearTokens
           }
         }
       `;
@@ -391,6 +393,7 @@ export const graphqlClient = {
             step
             createdAt
             updatedAt
+            gameProgressToken
           }
         }
       `;
@@ -606,6 +609,38 @@ export const graphqlClient = {
       return data.clearedChapters;
     },
 
+    /**
+     * game-masterの状態(仮想日付・クリア済みの章)の署名付きスナップショットを取得する。
+     * business-trip/promotionの申請作成やランブックの暫定対応の直前に呼び、その結果を
+     * それぞれのAPIへ渡す(申請・適用のリクエストにgame-masterへのサーバー間呼び出しを
+     * 混ぜないため)。60秒で失効するので取得したらすぐ使う。
+     */
+    async getGameStateSnapshot(): Promise<string | null> {
+      const query = `
+        query GameStateSnapshot {
+          gameStateSnapshot
+        }
+      `;
+      const data = await graphqlRequest<{ gameStateSnapshot: string | null }>(query);
+      return data.gameStateSnapshot;
+    },
+
+    /**
+     * 承認完了で仮想時間を進める。updateApprovalの結果に含まれるgameProgressTokenを渡す
+     * (承認のリクエストとは別に呼ぶことで、game-masterへのサーバー間呼び出しを混ぜない)。
+     */
+    async applyGameProgress(gameProgressToken: string): Promise<boolean> {
+      const query = `
+        mutation ApplyGameProgress($token: String!) {
+          applyGameProgress(token: $token)
+        }
+      `;
+      const data = await graphqlRequest<{ applyGameProgress: boolean }>(query, {
+        token: gameProgressToken,
+      });
+      return data.applyGameProgress;
+    },
+
     async getChapterMissions(locale?: string): Promise<ChapterMission[]> {
       const query = `
         query ChapterMissions($locale: String) {
@@ -662,10 +697,10 @@ export const graphqlClient = {
     /**
      * ランブックの暫定対応を、ログイン中のユーザーが所属する会社にのみ適用する。
      */
-    async applyApprovedListRemediation(): Promise<RemediationResult> {
+    async applyApprovedListRemediation(gameStateToken?: string | null): Promise<RemediationResult> {
       const query = `
-        mutation ApplyApprovedListRemediation {
-          applyApprovedListRemediation {
+        mutation ApplyApprovedListRemediation($gameStateToken: String) {
+          applyApprovedListRemediation(gameStateToken: $gameStateToken) {
             applied
             alreadyApplied
             reason
@@ -673,7 +708,9 @@ export const graphqlClient = {
           }
         }
       `;
-      const data = await graphqlRequest<{ applyApprovedListRemediation: RemediationResult }>(query);
+      const data = await graphqlRequest<{ applyApprovedListRemediation: RemediationResult }>(query, {
+        gameStateToken,
+      });
       return data.applyApprovedListRemediation;
     },
 

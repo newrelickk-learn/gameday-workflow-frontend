@@ -40,7 +40,10 @@ export default function ApprovedListSlowRunbookPage() {
     }
 
     try {
-      const result = await apiClient.chapters.applyApprovedListRemediation();
+      // 適用条件(原因の切り分けの章をクリア済みか)の判定に使うgame-masterのスナップショットを
+      // 先に取得して渡す(適用のリクエストにgame-masterへのサーバー間呼び出しを混ぜないため)。
+      const gameStateToken = await apiClient.chapters.getGameStateSnapshot().catch(() => null);
+      const result = await apiClient.chapters.applyApprovedListRemediation(gameStateToken);
 
       if (!result.applied) {
         return result.reason === 'investigation_incomplete' ? 'blocked' : 'error';

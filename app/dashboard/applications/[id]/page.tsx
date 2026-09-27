@@ -180,12 +180,21 @@ export default function ApplicationDetailPage({ params }: PageProps) {
       }
 
       setProcessing(true);
-      await apiClient.approvals.updateApproval(confirmDialog.approvalId, {
+      const updatedApproval = await apiClient.approvals.updateApproval(confirmDialog.approvalId, {
         status: confirmDialog.action === 'approve' ? 'approved' : 'rejected',
         comment: confirmDialog.comment || undefined,
         approverId,
         applicationId: id,
       });
+
+      // 承認完了で仮想時間を進める引換券は、ブラウザから別リクエストとしてgame-masterへ届ける
+      // (承認のリクエストにgame-masterへのサーバー間呼び出しを混ぜないため)。
+      // 記録に失敗しても承認自体は成立しているので握りつぶす。
+      if (updatedApproval.gameProgressToken) {
+        await apiClient.chapters
+          .applyGameProgress(updatedApproval.gameProgressToken)
+          .catch(() => false);
+      }
 
       await fetchData();
       handleCloseConfirmDialog();

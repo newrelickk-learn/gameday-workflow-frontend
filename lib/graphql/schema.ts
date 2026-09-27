@@ -27,6 +27,9 @@ export const typeDefs = `#graphql
   type LoginResponse {
     token: String!
     user: User!
+    # 章0(ログイン)クリアの引換券。ブラウザがgame-masterへ届けてクリアを記録する
+    # (ログインのリクエストにgame-masterへのサーバー間呼び出しを混ぜないため)。
+    chapterClearTokens: [String!]
   }
 
   input LoginInput {
@@ -59,6 +62,10 @@ export const typeDefs = `#graphql
     createdAt: DateTime!
     updatedAt: DateTime!
     hiddenQuestTokens: [String!]
+    # メインストリームの章クリア(プロモーション=章5)の引換券。ブラウザがgame-masterへ
+    # 届けてクリアを記録する(申請作成のリクエストにgame-masterへのサーバー間呼び出しを
+    # 混ぜないため)。
+    chapterClearTokens: [String!]
   }
 
   enum ApplicationStatus {
@@ -76,6 +83,10 @@ export const typeDefs = `#graphql
     endDate: String
     days: Int
     applicantId: String!
+    # game-masterの状態(仮想日付・クリア済みの章)の署名付きスナップショット。ブラウザが
+    # gameStateSnapshotクエリで事前に取得して添える(申請作成のリクエストにgame-masterへの
+    # サーバー間呼び出しを混ぜないため)。
+    gameStateToken: String
   }
 
   type Approval {
@@ -89,6 +100,9 @@ export const typeDefs = `#graphql
     step: Int
     createdAt: DateTime!
     updatedAt: DateTime
+    # 承認完了で仮想時間を進めるための引換券。ブラウザがgame-masterへ届ける
+    # (承認のリクエストにgame-masterへのサーバー間呼び出しを混ぜないため)。
+    gameProgressToken: String
   }
 
   enum ApprovalStatus {
@@ -360,6 +374,10 @@ export const typeDefs = `#graphql
 
     clearedChapters: [Int!]!
 
+    # game-masterの状態(仮想日付・クリア済みの章)の署名付きスナップショット。business-trip/
+    # promotionの申請作成やランブックの暫定対応の前に、ブラウザが取得して添えるためのもの。
+    gameStateSnapshot: String
+
     chapterMissions(locale: String): [ChapterMission!]!
 
     chapterChallengeStatus: ChapterChallengeStatus!
@@ -395,7 +413,11 @@ export const typeDefs = `#graphql
 
     clearHiddenQuest(token: String!): Boolean!
 
-    applyApprovedListRemediation: RemediationResult!
+    # 承認完了で仮想時間を進める。ブラウザがupdateApprovalの結果から受け取った
+    # gameProgressTokenをここで届ける(承認のリクエストとは別にする)。
+    applyGameProgress(token: String!): Boolean!
+
+    applyApprovedListRemediation(gameStateToken: String): RemediationResult!
 
     checkNPlusOneQuizAnswers(input: NPlusOneQuizAnswersInput!): NPlusOneQuizResult!
 
