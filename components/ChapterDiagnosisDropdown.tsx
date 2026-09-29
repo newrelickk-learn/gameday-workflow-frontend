@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Autocomplete, Box, Button, Paper, TextField, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
-import { useT, useLocale } from '@/lib/i18n/LocaleProvider';
+import { useT, useLocale, format } from '@/lib/i18n/LocaleProvider';
 
 interface ChapterDiagnosisDropdownProps {
   chapter: number;
@@ -91,7 +91,7 @@ export default function ChapterDiagnosisDropdown({ chapter, title }: ChapterDiag
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CheckCircleIcon color="success" />
           <Typography variant="h6" color="success.dark">
-            {t.diagnosis.correct}
+            {format(t.diagnosis.correct, { n: chapter })}
           </Typography>
         </Box>
         {notChallenging && (

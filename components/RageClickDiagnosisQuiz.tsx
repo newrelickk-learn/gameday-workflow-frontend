@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Autocomplete, Box, Button, Paper, TextField, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
-import { useT, useLocale } from '@/lib/i18n/LocaleProvider';
+import { useT, useLocale, format } from '@/lib/i18n/LocaleProvider';
 
 const CHAPTER = 4;
 const STORAGE_KEY = 'gameday:ragequiz:v1';
@@ -145,7 +145,7 @@ export default function RageClickDiagnosisQuiz() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CheckCircleIcon color="success" />
           <Typography variant="h6" color="success.dark">
-            {t.quiz.rageClick.correct}
+            {format(t.quiz.rageClick.correct, { n: CHAPTER })}
           </Typography>
         </Box>
       </Paper>

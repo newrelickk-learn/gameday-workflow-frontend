@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Autocomplete, Box, Button, Paper, TextField, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
-import { useT, useLocale } from '@/lib/i18n/LocaleProvider';
+import { useT, useLocale, format } from '@/lib/i18n/LocaleProvider';
 
 const CHAPTER = 2;
 const STORAGE_KEY = 'gameday:nplus1-quiz:v1';
@@ -145,7 +145,7 @@ export default function SlowApprovedListDiagnosisQuiz() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CheckCircleIcon color="success" />
           <Typography variant="h6" color="success.dark">
-            {t.quiz.slowList.correct}
+            {format(t.quiz.slowList.correct, { n: CHAPTER })}
           </Typography>
         </Box>
       </Paper>
