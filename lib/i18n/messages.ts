@@ -258,7 +258,7 @@ const ja = {
       heading: 'gameday-workflow-frontendのCreateApplicationトランザクションを理解する',
       intro: '実際に申請して確認してみましょう。ヒント：CreateApplication /',
       introTail: 'を確認し、以下の4つの質問に回答してください（当てはまるものをすべて選んでください）。',
-      correct: '正解です！CreateApplicationトランザクションの理解を深めることができました。',
+      correct: '正解です！ミッション{n}クリア！CreateApplicationトランザクションの理解を深めることができました。',
       correctHint: '申請エラーが発生している場合はエラーの内容も確認して解決しましょう',
       q1: 'Q1. CreateApplicationというリクエストに関連しているアプリケーションを全て選びましょう',
       q1Label: '関連アプリケーション（複数選択可）',
@@ -272,7 +272,7 @@ const ja = {
     rageClick: {
       heading: 'Rage Clickが検知されました。設問に答えてください。',
       intro: 'New Relicで調査した内容を元に、3つの質問に回答してください。',
-      correct: '正解です！',
+      correct: '正解です！ミッション{n}クリア！',
       q1: 'Q1. 検知に使用されたクエリはどれでしょうか',
       q1Label: 'NRQLクエリ（選択または直接入力）',
       q2: 'Q2. Rage Clickが検知された後、通知に成功した通知先はどれでしょうか',
@@ -284,7 +284,7 @@ const ja = {
       heading: 'この画面が遅い原因を診断する',
       intro:
         'New RelicのPerformance Risks Inboxを使いましょう。調査した内容を元に、3つの質問に回答してください。ヒント：gameday-workflow-application-approval',
-      correct: '正解です！原因を特定できました。',
+      correct: '正解です！ミッション{n}クリア！原因を特定できました。',
       q1: 'Q1. どんなパフォーマンス問題が起こっているか',
       q1Label: '問題の種類（選択または直接入力）',
       q2: 'Q2. 問題が発生しているテーブル（複数選択可）',
@@ -334,7 +334,7 @@ const ja = {
     inputLabel: '原因（選択または直接入力）',
     placeholder: '選択肢を検索、または直接入力',
     check: '判定する',
-    correct: '正解です！原因を特定できました。',
+    correct: '正解です！ミッション{n}クリア！原因を特定できました。',
     incorrect: '不正解でした。もう一度New Relicで調査し、選び直してください。',
     notChallenging:
       'このミッションにはまだ挑戦していないため、クリアとして記録されていません。ダッシュボードでこのミッションのパネルを開いてから、もう一度回答してください。',
@@ -611,7 +611,7 @@ const en: Messages = {
       heading: 'Understand the CreateApplication transaction of gameday-workflow-frontend',
       intro: 'Submit an application and take a look. Hint: CreateApplication /',
       introTail: 'Review it and answer the four questions below (select every option that applies).',
-      correct: 'Correct! You now understand the CreateApplication transaction.',
+      correct: 'Correct! Mission {n} cleared! You now understand the CreateApplication transaction.',
       correctHint: 'If an application error is showing, check the error details and resolve it too',
       q1: 'Q1. Select every application related to the CreateApplication request',
       q1Label: 'Related applications (multiple)',
@@ -625,7 +625,7 @@ const en: Messages = {
     rageClick: {
       heading: 'A rage click was detected. Please answer the questions.',
       intro: 'Based on what you found in New Relic, answer the three questions below.',
-      correct: 'Correct!',
+      correct: 'Correct! Mission {n} cleared!',
       q1: 'Q1. Which query was used for the detection?',
       q1Label: 'NRQL query (select or type)',
       q2: 'Q2. After the rage click was detected, which destination was notified successfully?',
@@ -637,7 +637,7 @@ const en: Messages = {
       heading: 'Diagnose why this screen is slow',
       intro:
         "Use New Relic's Performance Risks Inbox. Based on what you find, answer the three questions below. Hint: gameday-workflow-application-approval",
-      correct: 'Correct! You identified the cause.',
+      correct: 'Correct! Mission {n} cleared! You identified the cause.',
       q1: 'Q1. What kind of performance problem is happening?',
       q1Label: 'Type of problem (select or type)',
       q2: 'Q2. Which tables are involved? (multiple)',
@@ -689,7 +689,7 @@ const en: Messages = {
     inputLabel: 'Cause (select or type)',
     placeholder: 'Search the options or type your own',
     check: 'Check',
-    correct: 'Correct! You identified the cause.',
+    correct: 'Correct! Mission {n} cleared! You identified the cause.',
     incorrect: 'Not quite. Investigate in New Relic once more and pick again.',
     notChallenging:
       'You have not taken on this mission yet, so the clear was not recorded. Open this mission from the dashboard and answer again.',

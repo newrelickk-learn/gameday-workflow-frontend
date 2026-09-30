@@ -36,6 +36,8 @@ const CHALLENGE_STATUS_POLL_INTERVAL_MS = 15000;
 
 const PANEL_WIDTH = 168;
 const PANEL_HEIGHT = 140;
+// 裏ミッションはクリア後に説明文も出すため、横幅を広めに取る(メインの並びとは別の行)。
+const HIDDEN_PANEL_WIDTH = 240;
 
 export default function ChapterMissionPanels() {
   const t = useT();
@@ -135,7 +137,10 @@ export default function ChapterMissionPanels() {
     const teams = mission.challengeable ? challengerCount(mission.chapter) : 0;
 
     return (
-      <Box key={mission.chapter} sx={{ width: PANEL_WIDTH, height: PANEL_HEIGHT, perspective: 900 }}>
+      <Box
+        key={mission.chapter}
+        sx={{ width: isHidden ? HIDDEN_PANEL_WIDTH : PANEL_WIDTH, height: PANEL_HEIGHT, perspective: 900 }}
+      >
         <Box
           onClick={() => {
             if (isClickable) {
@@ -210,6 +215,12 @@ export default function ChapterMissionPanels() {
               >
                 {mission.title ?? (isSealed ? sealedLabel : '？')}
               </Typography>
+              {/* 裏ミッションはクリアすると、何を達成したかの説明が見える。 */}
+              {isHidden && isCleared && mission.description && (
+                <Typography variant="caption" color="text.primary" sx={{ lineHeight: 1.4 }}>
+                  {mission.description}
+                </Typography>
+              )}
               {(isCleared || isActive) && (
                 <Chip
                   size="small"

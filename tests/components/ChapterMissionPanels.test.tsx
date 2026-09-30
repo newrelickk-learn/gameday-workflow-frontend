@@ -134,14 +134,14 @@ describe('ChapterMissionPanels', () => {
     expect(screen.queryByRole('button', { name: 'このミッションに挑戦する' })).not.toBeInTheDocument();
   });
 
-  it('クリア済みの裏クエストはタイトルが見える', async () => {
+  it('クリア済みの裏ミッションはタイトルと説明が見える', async () => {
     getChapterMissions.mockResolvedValue([
       ...MISSIONS.slice(0, 4),
       {
         chapter: 101,
         kind: 'hidden',
-        title: '裏クエスト1',
-        description: null,
+        title: '裏ミッション1',
+        description: '経費申請を正しく申請できました。',
         clearKeyword: null,
         cleared: true,
         challengeable: false,
@@ -151,7 +151,8 @@ describe('ChapterMissionPanels', () => {
     ]);
     render(<ChapterMissionPanels />);
 
-    await waitFor(() => expect(screen.getByText('裏クエスト1')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('裏ミッション1')).toBeInTheDocument());
+    expect(screen.getByText('経費申請を正しく申請できました。')).toBeInTheDocument();
   });
 
   it('未開封のクエストは問題文もタイトルも表示しない', async () => {

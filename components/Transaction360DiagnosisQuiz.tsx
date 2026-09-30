@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Autocomplete, Box, Button, Paper, TextField, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { apiClient } from '@/lib/api/client';
-import { useT, useLocale } from '@/lib/i18n/LocaleProvider';
+import { useT, useLocale, format } from '@/lib/i18n/LocaleProvider';
 
 const CHAPTER = 1;
 const STORAGE_KEY = 'gameday:transaction360-quiz:v1';
@@ -18,13 +18,14 @@ interface QuizOptions {
 
 interface QuizAnswers {
   q1: string[];
-  q2: string[];
+  // Q2はYes/Noの単一選択。
+  q2: string;
   q3: string[];
   q4: string[];
 }
 
 const EMPTY_OPTIONS: QuizOptions = { q1: [], q2: [], q3: [], q4: [] };
-const EMPTY_ANSWERS: QuizAnswers = { q1: [], q2: [], q3: [], q4: [] };
+const EMPTY_ANSWERS: QuizAnswers = { q1: [], q2: '', q3: [], q4: [] };
 
 function loadPersisted(): { answers: QuizAnswers; allCorrect: boolean | null } {
   if (typeof window === 'undefined') {
@@ -39,7 +40,7 @@ function loadPersisted(): { answers: QuizAnswers; allCorrect: boolean | null } {
     return {
       answers: {
         q1: Array.isArray(parsed.answers?.q1) ? parsed.answers.q1 : [],
-        q2: Array.isArray(parsed.answers?.q2) ? parsed.answers.q2 : [],
+        q2: typeof parsed.answers?.q2 === 'string' ? parsed.answers.q2 : '',
         q3: Array.isArray(parsed.answers?.q3) ? parsed.answers.q3 : [],
         q4: Array.isArray(parsed.answers?.q4) ? parsed.answers.q4 : [],
       },
@@ -109,7 +110,7 @@ export default function Transaction360DiagnosisQuiz() {
   }, [locale, t.diagnosis.optionsFailed]);
 
   const canSubmit =
-    answers.q1.length > 0 && answers.q2.length > 0 && answers.q3.length > 0 && answers.q4.length > 0;
+    answers.q1.length > 0 && answers.q2.trim() !== '' && answers.q3.length > 0 && answers.q4.length > 0;
 
   const handleSubmit = async () => {
     if (!canSubmit) {
@@ -120,7 +121,7 @@ export default function Transaction360DiagnosisQuiz() {
       setError('');
       const result = await apiClient.chapters.checkTransaction360QuizAnswers({
         q1: answers.q1.map((v) => v.trim()),
-        q2: answers.q2.map((v) => v.trim()),
+        q2: [answers.q2.trim()],
         q3: answers.q3.map((v) => v.trim()),
         q4: answers.q4.map((v) => v.trim()),
       });
@@ -150,7 +151,7 @@ export default function Transaction360DiagnosisQuiz() {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
           <CheckCircleIcon color="success" />
           <Typography variant="h6" color="success.dark">
-            {t.quiz.transaction360.correct}
+            {format(t.quiz.transaction360.correct, { n: CHAPTER })}
           </Typography>
         </Box>
         <Typography variant="body2" color="success.dark">
@@ -218,15 +219,14 @@ export default function Transaction360DiagnosisQuiz() {
           </Box>
           <Autocomplete
             freeSolo
-            multiple
             fullWidth
             loading={optionsLoading}
             options={options.q2}
             value={answers.q2}
-            onChange={(_, newValue) => setAnswers((prev) => ({ ...prev, q2: newValue }))}
+            onInputChange={(_, value) => setAnswers((prev) => ({ ...prev, q2: value }))}
             disabled={checking}
             renderInput={(params) => (
-              <TextField {...params} label={t.quiz.transaction360.q2Label} placeholder={t.quiz.searchOrTypeEnter} />
+              <TextField {...params} label={t.quiz.transaction360.q2Label} placeholder={t.quiz.searchOrType} />
             )}
           />
         </Box>
